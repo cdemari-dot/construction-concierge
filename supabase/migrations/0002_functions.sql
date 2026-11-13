@@ -97,7 +97,7 @@ returns table (id uuid, full_name text, role user_role)
 language sql
 stable
 security definer
-set search_path = public
+set search_path = public, extensions
 as $$
   select p.id, p.full_name, p.role
   from profiles p
