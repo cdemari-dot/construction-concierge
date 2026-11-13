@@ -1,36 +1,63 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Construction Concierge
 
-## Getting Started
+Owner's CFO + back-office app for small Ontario construction contractors.
+See [`CLAUDE.md`](./CLAUDE.md) for the product scope and architecture decisions.
 
-First, run the development server:
+## Setup
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+1. **Create a Supabase project** at [supabase.com](https://supabase.com), region `ca-central-1` (Montreal).
+2. **Link the CLI and push the schema:**
+   ```bash
+   npx supabase link --project-ref <your-project-ref>
+   npx supabase db push
+   ```
+   This runs everything in `supabase/migrations/` in order: tables, RLS
+   policies, the `current_company_id()`/`verify_worker_pin()` helper
+   functions, the computed views, and the storage buckets.
+3. **(Optional) Load demo data** — run `supabase/seed.sql` in the Supabase SQL
+   editor. It creates a demo company with sample jobs, crew, and invoices,
+   but leaves every profile's `auth_user_id` unset. To sign in as the demo
+   Owner, sign up through `/login` → "Start a new company" is for a *real*
+   new tenant — instead, sign up with email `owner@demo.constructionconcierge.ai`
+   via Supabase Auth directly (Authentication → Users → Add user, or
+   `supabase.auth.signUp` from the browser console on `/login`); the
+   `handle_new_auth_user` trigger links that login to the seeded Owner
+   profile automatically.
+4. **Environment variables:** copy `.env.local.example` to `.env.local` and
+   fill in your project's URL + anon key + service role key (Project
+   Settings → API).
+5. **Run it:**
+   ```bash
+   npm run dev
+   ```
+   Open [http://localhost:3000](http://localhost:3000). You'll land on
+   `/login`. "Start a new company" creates a brand-new tenant and makes you
+   its Owner.
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Where things live
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+- `/dashboard`, `/jobs`, `/finance`, `/cashflow`, `/change-orders`,
+  `/payroll-export` — Owner/PM desktop app.
+- `/kiosk/[jobId]` — the shared-iPad punch clock. Sign in as a Foreman (or
+  Owner/PM) first, then leave the device on this page; workers identify
+  themselves with their 4-digit PIN. See CLAUDE.md "Roles & the kiosk/PIN
+  problem" for why it works this way.
+- `/m` — the Foreman's own mobile app: punch clock (same PIN flow, with a
+  job picker), daily log, extras, T&M tickets, incident reports.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Full schema and design decisions: [`CLAUDE.md`](./CLAUDE.md).
 
-## Learn More
+## Known limitations (Phase 1, by design)
 
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- No Docker/local Supabase stack was available while building this, so the
+  schema has been reviewed carefully but **not run against a live Postgres
+  instance**. Run `npx supabase db push` against a throwaway project first
+  and sanity-check the demo data before pointing it at anything real.
+- A worker with no Supabase Auth account of their own can only use the
+  punch clock on a device where a Foreman/PM/Owner is signed in (the kiosk,
+  or a Foreman's own phone at `/m`) — they can't yet use their own personal
+  phone independently. Giving a worker their own login (the schema already
+  supports it) is the way to unlock that later.
+- Payroll CSV export streams straight to the browser as a download; it
+  isn't also archived to Storage (`payroll_export_batches.file_path` stays
+  null). Easy to add later if you want a permanent copy per export.

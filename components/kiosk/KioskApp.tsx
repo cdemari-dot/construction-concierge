@@ -1,0 +1,311 @@
+"use client";
+
+import { useEffect, useRef, useState } from "react";
+import { createClient } from "@/lib/supabase/client";
+import { getCurrentPosition, type GeoResult } from "@/lib/geo";
+import { stampPhoto } from "@/lib/kiosk/stampPhoto";
+import { PPE_ITEMS } from "@/lib/kiosk/constants";
+import { PinPad } from "./PinPad";
+import { PhotoStep } from "./PhotoStep";
+import { PpeStep } from "./PpeStep";
+import { ToolboxTalkStep } from "./ToolboxTalkStep";
+import { InjuryFormStep, InjuryQuestionStep, ReportStep } from "./ClockOutSteps";
+
+type Step = "pin" | "photo" | "ppe" | "ppe-missing" | "toolbox" | "done-in" | "injury-q" | "injury-form" | "report" | "done-out";
+
+interface KioskJob {
+  id: string;
+  company_id: string;
+  job_number: string;
+  name: string;
+  geofence_lat: number | null;
+  geofence_lon: number | null;
+  geofence_radius_m: number;
+}
+
+interface KioskToolboxTalk {
+  id: string;
+  title: string;
+  body: string;
+}
+
+interface Worker {
+  id: string;
+  full_name: string;
+  role: string;
+}
+
+export function KioskApp({ job, toolboxTalk }: { job: KioskJob; toolboxTalk: KioskToolboxTalk | null }) {
+  const supabase = useRef(createClient()).current;
+
+  const [step, setStep] = useState<Step>("pin");
+  const [pin, setPin] = useState("");
+  const [pinError, setPinError] = useState<string | null>(null);
+  const [worker, setWorker] = useState<Worker | null>(null);
+  const [mode, setMode] = useState<"in" | "out">("in");
+  const [openEntryId, setOpenEntryId] = useState<string | null>(null);
+  const [geo, setGeo] = useState<GeoResult>({ lat: null, lon: null, withinGeofence: null });
+  const [photoFile, setPhotoFile] = useState<File | null>(null);
+  const [ppeChecked, setPpeChecked] = useState<Record<number, boolean>>({});
+  const [injury, setInjury] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [doneMessage, setDoneMessage] = useState("");
+  const resetTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => () => {
+    if (resetTimer.current) clearTimeout(resetTimer.current);
+  }, []);
+
+  function resetAll() {
+    setStep("pin");
+    setPin("");
+    setPinError(null);
+    setWorker(null);
+    setOpenEntryId(null);
+    setPhotoFile(null);
+    setPpeChecked({});
+    setInjury(false);
+    setDoneMessage("");
+  }
+
+  function scheduleReset(ms = 4000) {
+    resetTimer.current = setTimeout(resetAll, ms);
+  }
+
+  async function handleDigit(n: number) {
+    if (pin.length >= 4) return;
+    const next = pin + String(n);
+    setPin(next);
+    if (next.length === 4) {
+      setPinError(null);
+      await verifyPin(next);
+    }
+  }
+
+  async function verifyPin(candidate: string) {
+    setBusy(true);
+    const { data, error } = await supabase.rpc("verify_worker_pin", { p_pin: candidate });
+    if (error || !data || data.length === 0) {
+      setBusy(false);
+      setPin("");
+      setPinError("PIN not recognized. Try again or see your foreman.");
+      return;
+    }
+
+    const w = data[0] as Worker;
+    setWorker(w);
+
+    const { data: openEntries } = await supabase
+      .from("time_entries")
+      .select("id")
+      .eq("worker_id", w.id)
+      .eq("job_id", job.id)
+      .is("clock_out_at", null)
+      .limit(1);
+
+    const isClockingOut = Boolean(openEntries && openEntries.length > 0);
+    setMode(isClockingOut ? "out" : "in");
+    setOpenEntryId(isClockingOut ? openEntries![0].id : null);
+
+    getCurrentPosition(job.geofence_lat, job.geofence_lon, job.geofence_radius_m).then(setGeo);
+
+    setBusy(false);
+    setStep("photo");
+  }
+
+  function handlePhotoCaptured(file: File | null) {
+    setPhotoFile(file);
+    setStep(mode === "in" ? "ppe" : "injury-q");
+  }
+
+  function handlePpeAllGood() {
+    if (toolboxTalk) setStep("toolbox");
+    else submitClockIn();
+  }
+
+  function handleForemanSupplied() {
+    const all: Record<number, boolean> = {};
+    PPE_ITEMS.forEach((_, i) => (all[i] = true));
+    setPpeChecked(all);
+    if (toolboxTalk) setStep("toolbox");
+    else submitClockIn(all);
+  }
+
+  async function submitClockIn(overridePpeChecked?: Record<number, boolean>) {
+    if (!worker) return;
+    setBusy(true);
+    try {
+      const blob = await stampPhoto(photoFile, { label: "IN", lat: geo.lat, lon: geo.lon, geofenceOk: geo.withinGeofence });
+      const path = `${job.company_id}/${job.id}/${worker.id}-${Date.now()}-in.jpg`;
+      await supabase.storage.from("punch-photos").upload(path, blob, { contentType: "image/jpeg" });
+
+      const effectivePpe = overridePpeChecked ?? ppeChecked;
+      const missing = PPE_ITEMS.filter((_, i) => !effectivePpe[i]);
+
+      const { data: entry, error } = await supabase
+        .from("time_entries")
+        .insert({
+          company_id: job.company_id,
+          job_id: job.id,
+          worker_id: worker.id,
+          clock_in_lat: geo.lat,
+          clock_in_lon: geo.lon,
+          clock_in_photo_path: path,
+          geofence_ok: geo.withinGeofence,
+          ppe_confirmed: missing.length === 0,
+          ppe_missing_items: missing,
+          toolbox_talk_id: toolboxTalk?.id ?? null,
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      if (toolboxTalk && entry) {
+        await supabase.from("toolbox_talk_acknowledgements").insert({
+          toolbox_talk_id: toolboxTalk.id,
+          worker_id: worker.id,
+          time_entry_id: entry.id,
+        });
+      }
+
+      setDoneMessage(`Clocked in ${new Date().toLocaleTimeString("en-CA", { hour: "2-digit", minute: "2-digit" })}`);
+      setStep("done-in");
+      scheduleReset();
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function submitIncidentReport(data: { incident_type: string; description: string; first_aid_given?: boolean; needs_medical?: boolean }) {
+    if (!worker) return;
+    await supabase.from("incident_reports").insert({
+      company_id: job.company_id,
+      job_id: job.id,
+      worker_id: worker.id,
+      time_entry_id: openEntryId,
+      incident_type: data.incident_type,
+      description: data.description,
+      first_aid_given: data.first_aid_given ?? false,
+      needs_medical: data.needs_medical ?? false,
+    });
+  }
+
+  async function submitClockOut() {
+    if (!worker || !openEntryId) return;
+    setBusy(true);
+    try {
+      const blob = await stampPhoto(photoFile, { label: "OUT", lat: geo.lat, lon: geo.lon, geofenceOk: geo.withinGeofence });
+      const path = `${job.company_id}/${job.id}/${worker.id}-${Date.now()}-out.jpg`;
+      await supabase.storage.from("punch-photos").upload(path, blob, { contentType: "image/jpeg" });
+
+      await supabase
+        .from("time_entries")
+        .update({
+          clock_out_at: new Date().toISOString(),
+          clock_out_lat: geo.lat,
+          clock_out_lon: geo.lon,
+          clock_out_photo_path: path,
+          injury_reported: injury,
+        })
+        .eq("id", openEntryId);
+
+      setDoneMessage(`Clocked out ${new Date().toLocaleTimeString("en-CA", { hour: "2-digit", minute: "2-digit" })}`);
+      setStep("done-out");
+      scheduleReset();
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div
+      className="cc-card"
+      style={{ maxWidth: 480, margin: "40px auto", padding: 28, minHeight: 520, display: "flex", flexDirection: "column", justifyContent: "center" }}
+    >
+      {step === "pin" && (
+        <PinPad pin={pin} onDigit={handleDigit} onClear={() => setPin("")} onBackspace={() => setPin((p) => p.slice(0, -1))} error={pinError} />
+      )}
+
+      {step === "photo" && worker && (
+        <PhotoStep title={`${mode === "in" ? "Clock in" : "Clock out"} · Hi ${worker.full_name.split(" ")[0]}`} onCaptured={handlePhotoCaptured} onCancel={resetAll} />
+      )}
+
+      {step === "ppe" && (
+        <PpeStep
+          checked={ppeChecked}
+          onToggle={(i) => setPpeChecked((p) => ({ ...p, [i]: !p[i] }))}
+          onAllGood={handlePpeAllGood}
+          onMissing={() => setStep("ppe-missing")}
+        />
+      )}
+
+      {step === "ppe-missing" && (
+        <div style={{ textAlign: "center" }}>
+          <div style={{ fontSize: 56 }}>⛔</div>
+          <div className="display" style={{ fontSize: 22, margin: "10px 0" }}>
+            Don&apos;t start work yet
+          </div>
+          <div style={{ color: "var(--amber)", marginBottom: 8, fontSize: 14 }}>
+            Missing: {PPE_ITEMS.filter((_, i) => !ppeChecked[i]).join(", ") || "items not confirmed"}
+          </div>
+          <div style={{ color: "var(--mute)", marginBottom: 16 }}>Your foreman has been notified.</div>
+          <button className="cc-btn" style={{ width: "100%", padding: 16, marginBottom: 8 }} onClick={handleForemanSupplied} type="button">
+            Foreman supplied it
+          </button>
+          <button className="cc-btn ghost" style={{ width: "100%", padding: 14 }} onClick={resetAll} type="button">
+            Cancel
+          </button>
+        </div>
+      )}
+
+      {step === "toolbox" && toolboxTalk && (
+        <ToolboxTalkStep title={toolboxTalk.title} body={toolboxTalk.body} onAcknowledge={() => submitClockIn()} />
+      )}
+
+      {step === "injury-q" && (
+        <InjuryQuestionStep
+          onAnswer={(hurt) => {
+            setInjury(hurt);
+            setStep(hurt ? "injury-form" : "report");
+          }}
+        />
+      )}
+
+      {step === "injury-form" && (
+        <InjuryFormStep
+          onSubmit={async (data) => {
+            await submitIncidentReport({ incident_type: "Injury", description: data.description, first_aid_given: data.firstAidGiven, needs_medical: data.needsMedical });
+            setStep("report");
+          }}
+        />
+      )}
+
+      {step === "report" && (
+        <ReportStep
+          onSubmit={async (data) => {
+            if (data.category !== "Nothing to report") {
+              await submitIncidentReport({ incident_type: data.category, description: data.details });
+            }
+            await submitClockOut();
+          }}
+        />
+      )}
+
+      {(step === "done-in" || step === "done-out") && (
+        <div style={{ textAlign: "center" }}>
+          <div style={{ fontSize: 60 }}>{step === "done-in" ? "✅" : "👋"}</div>
+          <div className="display" style={{ fontSize: 24, margin: "10px 0" }}>
+            {doneMessage}
+          </div>
+          <div style={{ color: "var(--mute)", fontSize: 13.5, lineHeight: 1.7 }}>
+            📍 GPS + photo saved
+            {step === "done-in" ? " · PPE confirmed · toolbox talk signed" : injury ? " · Injury reported, office notified" : " · No injury reported"}
+          </div>
+        </div>
+      )}
+
+      {busy && <div style={{ textAlign: "center", color: "var(--mute)", fontSize: 12, marginTop: 14 }}>Working…</div>}
+    </div>
+  );
+}

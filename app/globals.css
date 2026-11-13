@@ -1,26 +1,202 @@
 @import "tailwindcss";
 
+/* Design tokens ported from construction-concierge-dashboard.html — see
+   CLAUDE.md "Design reference". Dark is the default brand look; light mode
+   follows the OS preference, same as the prototype. */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --bg: #0b0b0d;
+  --panel: #121214;
+  --panel2: #18181b;
+  --line: #232326;
+  --line2: #2f2e31;
+  --cyan: #c8a464;
+  --lime: #3fbf7f;
+  --amber: #f5a524;
+  --red: #e5484d;
+  --violet: #a89f91;
+  --text: #f4f1ea;
+  --mute: #8a877f;
+  --text2: #d6d2c8;
+  --sunk: rgba(255, 255, 255, 0.025);
+  --card-a: #151517;
+  --card-b: #111113;
+  --glass: rgba(11, 11, 13, 0.94);
+  --radius: 14px;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
+@media (prefers-color-scheme: light) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --bg: #f4f1ea;
+    --panel: #fffdf8;
+    --panel2: #f9f6f0;
+    --line: #e6e0d4;
+    --line2: #d6cfc0;
+    --cyan: #9a7b3f;
+    --lime: #2e8b5b;
+    --amber: #b7791f;
+    --red: #c93c3f;
+    --violet: #7d7466;
+    --text: #121212;
+    --mute: #6e6a62;
+    --text2: #3a3833;
+    --sunk: #f7f3ec;
+    --card-a: #fffdf8;
+    --card-b: #fcf9f3;
+    --glass: rgba(250, 247, 241, 0.95);
   }
 }
 
+* {
+  box-sizing: border-box;
+}
+
+html,
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  height: 100%;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-inter), system-ui, sans-serif;
+  font-size: 14px;
+}
+
+h1,
+h2,
+.display {
+  font-family: var(--font-bodoni), Didot, serif;
+}
+
+.mono {
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+}
+
+.cc-card {
+  background: linear-gradient(180deg, var(--card-a), var(--card-b));
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 16px;
+}
+
+.cc-chip {
+  border: 1px solid var(--line2);
+  background: var(--panel);
+  color: var(--text);
+  padding: 7px 12px;
+  border-radius: 30px;
+  font-size: 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.cc-btn {
+  border: 1px solid rgba(200, 164, 100, 0.45);
+  background: rgba(200, 164, 100, 0.1);
+  color: var(--cyan);
+  padding: 8px 14px;
+  border-radius: 10px;
+  font-size: 12.5px;
+  font-weight: 600;
+}
+.cc-btn:hover {
+  background: rgba(200, 164, 100, 0.2);
+}
+.cc-btn.ghost {
+  border-color: var(--line2);
+  background: transparent;
+  color: var(--text);
+}
+.cc-btn.lime {
+  border-color: rgba(63, 191, 127, 0.5);
+  background: rgba(63, 191, 127, 0.1);
+  color: var(--lime);
+}
+.cc-btn.red {
+  border-color: rgba(229, 72, 77, 0.5);
+  background: rgba(229, 72, 77, 0.1);
+  color: var(--red);
+}
+.cc-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+.cc-btn.sm {
+  padding: 5px 10px;
+  font-size: 11.5px;
+  border-radius: 8px;
+}
+
+.cc-tag {
+  display: inline-block;
+  font-size: 10.5px;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 20px;
+  border: 1px solid;
+  white-space: nowrap;
+}
+.cc-tag.cyan {
+  color: var(--cyan);
+  border-color: rgba(200, 164, 100, 0.4);
+  background: rgba(200, 164, 100, 0.08);
+}
+.cc-tag.lime {
+  color: var(--lime);
+  border-color: rgba(63, 191, 127, 0.4);
+  background: rgba(63, 191, 127, 0.08);
+}
+.cc-tag.amber {
+  color: var(--amber);
+  border-color: rgba(245, 165, 36, 0.4);
+  background: rgba(245, 165, 36, 0.08);
+}
+.cc-tag.red {
+  color: var(--red);
+  border-color: rgba(229, 72, 77, 0.4);
+  background: rgba(229, 72, 77, 0.08);
+}
+.cc-tag.mute {
+  color: var(--mute);
+  border-color: var(--line2);
+}
+
+.cc-logo {
+  width: 34px;
+  height: 34px;
+  border-radius: 9px;
+  background: conic-gradient(from 200deg, #c8a464, #f3e3bd, #8c6a2e, #e9d3a2, #c8a464);
+  display: grid;
+  place-items: center;
+  box-shadow: 0 0 22px rgba(200, 164, 100, 0.35);
+  flex-shrink: 0;
+}
+.cc-logo span {
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  background: var(--bg);
+  display: grid;
+  place-items: center;
+  font-weight: 700;
+  color: var(--cyan);
+  font-size: 12px;
+}
+
+.cc-dot {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--lime);
+  box-shadow: 0 0 10px var(--lime);
+  margin-right: 6px;
+  animation: cc-pulse 1.8s infinite;
+}
+@keyframes cc-pulse {
+  50% {
+    opacity: 0.35;
+  }
 }
