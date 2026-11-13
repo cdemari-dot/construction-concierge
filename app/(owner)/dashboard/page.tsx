@@ -42,7 +42,7 @@ export default async function DashboardPage() {
         </span>
       </div>
 
-      <div className="grid" style={{ display: "grid", gridTemplateColumns: "repeat(4, minmax(0,1fr))", gap: 16, marginBottom: 20 }}>
+      <div className="grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(170px, 1fr))", gap: 16, marginBottom: 20 }}>
         <StatCard
           label="Cash on hand"
           value={cash?.bank_balance != null ? fmt(cash.bank_balance) : "—"}

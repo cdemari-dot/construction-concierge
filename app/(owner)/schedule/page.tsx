@@ -41,7 +41,8 @@ export default async function SchedulePage() {
         <AddScheduleForm jobs={jobList} crew={crewList} />
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: `160px repeat(${dates.length}, 1fr)`, gap: 1, background: "var(--line)", borderRadius: 12, overflow: "hidden" }}>
+      <div style={{ overflowX: "auto" }}>
+      <div style={{ minWidth: 820, display: "grid", gridTemplateColumns: `150px repeat(${dates.length}, minmax(0, 1fr))`, gap: 1, background: "var(--line)", borderRadius: 12, overflow: "hidden" }}>
         <div style={{ background: "var(--panel)", padding: 10, fontSize: 11, color: "var(--mute)" }}>JOB</div>
         {dates.map((d) => (
           <div key={d} style={{ background: "var(--panel)", padding: 10, fontSize: 11, color: "var(--mute)", textAlign: "center" }}>
@@ -63,7 +64,7 @@ export default async function SchedulePage() {
                     <div
                       key={e.id}
                       className="cc-tag lime"
-                      style={{ display: "flex", alignItems: "center", gap: 4, marginBottom: 3, width: "fit-content" }}
+                      style={{ display: "flex", alignItems: "center", gap: 4, marginBottom: 3, maxWidth: "100%", overflow: "hidden", textOverflow: "ellipsis" }}
                     >
                       {crewName.get(e.worker_id) ?? "?"}
                       <RemoveScheduleButton id={e.id} />
@@ -79,6 +80,7 @@ export default async function SchedulePage() {
             No active jobs to schedule yet.
           </div>
         )}
+      </div>
       </div>
     </div>
   );

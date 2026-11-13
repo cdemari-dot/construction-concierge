@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { getCurrentUser } from "@/lib/auth/session";
 import { isSupabaseConfigured } from "@/lib/supabase/env";
 import { SetupBanner } from "@/components/ui/SetupBanner";
 import { AddCrewForm, CrewRow, InviteTeamForm } from "@/components/dashboard/TeamForms";
@@ -8,7 +9,10 @@ export default async function TeamPage() {
   if (!isSupabaseConfigured) return <SetupBanner />;
 
   const supabase = await createClient();
-  const { data: profiles } = await supabase.from("profiles").select("*").order("created_at", { ascending: true });
+  const [{ data: profiles }, me] = await Promise.all([
+    supabase.from("profiles").select("*").order("created_at", { ascending: true }),
+    getCurrentUser(),
+  ]);
   const list = (profiles ?? []) as Profile[];
 
   return (
@@ -20,7 +24,7 @@ export default async function TeamPage() {
         Foreman and Worker get a PIN for the kiosk, not a login. Owner and PM get a real login by invite.
       </p>
 
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 16 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 16, marginBottom: 16 }}>
         <AddCrewForm />
         <InviteTeamForm />
       </div>
@@ -31,7 +35,7 @@ export default async function TeamPage() {
         </h3>
         <div>
           {list.map((p) => (
-            <CrewRow key={p.id} profile={p} />
+            <CrewRow key={p.id} profile={p} isSelf={p.id === me?.profile.id} />
           ))}
           {list.length === 0 && <div style={{ color: "var(--mute)", fontSize: 13, paddingTop: 10 }}>No one yet.</div>}
         </div>

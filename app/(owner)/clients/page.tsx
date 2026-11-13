@@ -16,7 +16,7 @@ export default async function ClientsPage() {
       <h1 className="display" style={{ fontSize: 22, marginBottom: 16 }}>
         Clients (GCs)
       </h1>
-      <div style={{ display: "grid", gridTemplateColumns: "320px 1fr", gap: 16 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 16 }}>
         <AddClientForm />
         <section className="cc-card">
           <h3 style={{ fontSize: 11.5, letterSpacing: 1.6, textTransform: "uppercase", color: "var(--mute)", marginBottom: 4 }}>

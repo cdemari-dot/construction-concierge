@@ -17,7 +17,7 @@ export function StatCard({
       <div
         className="mono"
         style={{
-          fontSize: 26,
+          fontSize: "clamp(20px, 2.2vw, 26px)",
           fontWeight: 600,
           marginTop: 6,
           color: color ? `var(--${color})` : "var(--text)",

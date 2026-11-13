@@ -11,6 +11,8 @@ const inputStyle: React.CSSProperties = {
   color: "var(--text)",
   padding: "9px 10px",
   fontSize: 14,
+  width: "100%",
+  minWidth: 0,
 };
 
 export function AddCrewForm() {
@@ -101,7 +103,7 @@ export function InviteTeamForm() {
   );
 }
 
-export function CrewRow({ profile }: { profile: Profile }) {
+export function CrewRow({ profile, isSelf }: { profile: Profile; isSelf: boolean }) {
   const [editingPin, setEditingPin] = useState(false);
   const [pin, setPin] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -157,7 +159,7 @@ export function CrewRow({ profile }: { profile: Profile }) {
               Change PIN
             </button>
           ))}
-        {profile.status === "active" && (
+        {profile.status === "active" && !isSelf && (
           <button
             className="cc-btn ghost sm"
             disabled={pending}
