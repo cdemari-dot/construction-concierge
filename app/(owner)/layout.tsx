@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import { requireRole } from "@/lib/auth/session";
 import { isSupabaseConfigured } from "@/lib/supabase/env";
@@ -31,9 +32,7 @@ export default async function OwnerLayout({ children }: { children: React.ReactN
         }}
       >
         <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "4px 8px 18px" }}>
-          <div className="cc-logo">
-            <span>CC</span>
-          </div>
+          <Image src="/brand/logo-mark.png" alt="" width={34} height={34} />
           <div>
             <b style={{ fontSize: 15 }}>Concierge</b>
             <small style={{ display: "block", color: "var(--mute)", fontSize: 10.5, letterSpacing: 1.5 }}>

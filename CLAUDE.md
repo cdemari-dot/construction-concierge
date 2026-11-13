@@ -17,6 +17,19 @@ Visual language: near-black (`#0B0B0D`) card UI, gold/cyan accent (`#C8A464`),
 Bodoni Moda (display) + Inter (body) + JetBrains Mono (numbers), light mode via
 `[data-theme=light]` CSS variable overrides.
 
+### Real logo asset
+The actual brand mark (black rounded-square icon, white "CC" + green accent
+dot, plus a wordmark lockup) lives at `public/brand/logo-mark.png` (icon only,
+background flood-filled transparent so it sits cleanly on the dark theme) and
+`public/brand/logo-lockup.jpg` (icon + wordmark, as originally supplied). It's
+used as: the app icon / favicon / apple touch icon (`app/icon.png`,
+`app/apple-icon.png`), and the actual logo badge on the login page, the
+onboarding page, and the owner sidebar header (replacing the CSS-drawn gold
+`.cc-logo` placeholder in those three spots). The gold/black dashboard theme
+and accent color from the prototypes are otherwise unchanged — this was a
+deliberate, scoped swap of the logo graphic only, not a rebrand. Don't extend
+the black/white/green palette elsewhere without asking again.
+
 The dashboard prototype also shows CRM/bids, inventory, scheduler, an integrations
 marketplace and an AI agent chat drawer. **Those are later-phase ideas, not Phase 1.**
 See "Explicitly out of scope" below.

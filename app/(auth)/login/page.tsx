@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { isSupabaseConfigured } from "@/lib/supabase/env";
@@ -81,9 +82,7 @@ export default function LoginPage() {
     >
       <div style={{ width: "100%", maxWidth: 400 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 28 }}>
-          <div className="cc-logo">
-            <span>CC</span>
-          </div>
+          <Image src="/brand/logo-mark.png" alt="" width={34} height={34} />
           <div>
             <b className="display" style={{ fontSize: 17, letterSpacing: ".08em" }}>
               Construction Concierge

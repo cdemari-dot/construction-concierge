@@ -4,6 +4,12 @@ import { isSupabaseConfigured, supabaseAnonKey, supabaseUrl } from "@/lib/supaba
 
 const PUBLIC_PATHS = ["/login", "/accept-invite"];
 
+function redirectTo(request: NextRequest, pathname: string) {
+  const url = request.nextUrl.clone();
+  url.pathname = pathname;
+  return NextResponse.redirect(url);
+}
+
 export async function proxy(request: NextRequest) {
   let response = NextResponse.next({ request });
 
@@ -26,21 +32,30 @@ export async function proxy(request: NextRequest) {
     },
   });
 
-  const { data } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
   const pathname = request.nextUrl.pathname;
   const isPublic = PUBLIC_PATHS.some((p) => pathname.startsWith(p));
 
-  if (!data.user && !isPublic && pathname !== "/") {
-    const url = request.nextUrl.clone();
-    url.pathname = "/login";
-    return NextResponse.redirect(url);
+  if (!user) {
+    if (!isPublic && pathname !== "/") return redirectTo(request, "/login");
+    return response;
   }
 
-  if (data.user && pathname === "/login") {
-    const url = request.nextUrl.clone();
-    url.pathname = "/dashboard";
-    return NextResponse.redirect(url);
-  }
+  // Signed in. /onboarding is where an authenticated user with no `profiles`
+  // row yet (signup requires email confirmation, so the company/profile
+  // can't be created until the *next* sign-in, after confirming) finishes
+  // setup — never redirect away from it based on profile state, or a user
+  // who hasn't finished onboarding would bounce in a loop between here and
+  // whatever page sent them to /login.
+  if (pathname === "/onboarding") return response;
+
+  const { data: profile } = await supabase.from("profiles").select("id").eq("auth_user_id", user.id).maybeSingle();
+
+  if (!profile) return redirectTo(request, "/onboarding");
+
+  if (isPublic) return redirectTo(request, "/dashboard");
 
   return response;
 }
