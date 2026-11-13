@@ -3,10 +3,14 @@ import Link from "next/link";
 import { requireRole } from "@/lib/auth/session";
 import { isSupabaseConfigured } from "@/lib/supabase/env";
 import { SignOutButton } from "@/components/dashboard/SignOutButton";
+import { AgentDrawer } from "@/components/agent/AgentDrawer";
 
 const NAV = [
   { href: "/dashboard", label: "Command" },
   { href: "/jobs", label: "Jobs" },
+  { href: "/clients", label: "Clients" },
+  { href: "/schedule", label: "Schedule" },
+  { href: "/team", label: "Team" },
   { href: "/finance", label: "Finance & Cash" },
   { href: "/cashflow", label: "13-Week Forecast" },
   { href: "/change-orders", label: "Change Orders" },
@@ -79,6 +83,7 @@ export default async function OwnerLayout({ children }: { children: React.ReactN
       </aside>
 
       <main style={{ padding: "22px 26px 60px", minWidth: 0 }}>{children}</main>
+      {user && <AgentDrawer />}
     </div>
   );
 }

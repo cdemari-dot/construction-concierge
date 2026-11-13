@@ -3,19 +3,22 @@ import { isSupabaseConfigured } from "@/lib/supabase/env";
 import { SetupBanner } from "@/components/ui/SetupBanner";
 import { Tag } from "@/components/ui/Tag";
 import { fmt, fmtDate } from "@/lib/format";
-import type { Bill, Invoice } from "@/lib/types/database";
+import { AddBillForm, AddInvoiceForm, MarkBillPaidButton, MarkInvoicePaidButton } from "@/components/dashboard/FinanceForms";
+import type { Bill, Invoice, Job } from "@/lib/types/database";
 
 export default async function FinancePage() {
   if (!isSupabaseConfigured) return <SetupBanner />;
 
   const supabase = await createClient();
-  const [{ data: invoices }, { data: bills }] = await Promise.all([
+  const [{ data: invoices }, { data: bills }, { data: jobs }] = await Promise.all([
     supabase.from("invoices").select("*").order("issued_at", { ascending: false }),
     supabase.from("bills").select("*").order("due_date", { ascending: true }),
+    supabase.from("jobs").select("*").order("job_number"),
   ]);
 
   const invoiceList = (invoices ?? []) as Invoice[];
   const billList = (bills ?? []) as Bill[];
+  const jobList = (jobs ?? []) as Job[];
 
   return (
     <div>
@@ -24,47 +27,59 @@ export default async function FinancePage() {
       </h1>
 
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
-        <section className="cc-card">
-          <h3 style={{ fontSize: 11.5, letterSpacing: 1.6, textTransform: "uppercase", color: "var(--mute)", marginBottom: 12 }}>
-            Accounts receivable
-          </h3>
-          <div style={{ display: "grid", gap: 8 }}>
-            {invoiceList.map((inv) => (
-              <div key={inv.id} style={{ display: "flex", justifyContent: "space-between", borderTop: "1px solid var(--line)", paddingTop: 8, fontSize: 13 }}>
-                <div>
-                  <b>{inv.invoice_number}</b>
-                  <div style={{ color: "var(--mute)", fontSize: 11.5 }}>due {fmtDate(inv.due_at)}</div>
+        <div style={{ display: "grid", gap: 16, alignContent: "start" }}>
+          <AddInvoiceForm jobs={jobList} />
+          <section className="cc-card">
+            <h3 style={{ fontSize: 11.5, letterSpacing: 1.6, textTransform: "uppercase", color: "var(--mute)", marginBottom: 12 }}>
+              Accounts receivable
+            </h3>
+            <div style={{ display: "grid", gap: 8 }}>
+              {invoiceList.map((inv) => (
+                <div key={inv.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderTop: "1px solid var(--line)", paddingTop: 8, fontSize: 13 }}>
+                  <div>
+                    <b>{inv.invoice_number}</b>
+                    <div style={{ color: "var(--mute)", fontSize: 11.5 }}>due {fmtDate(inv.due_at)}</div>
+                  </div>
+                  <div style={{ textAlign: "right", display: "flex", gap: 8, alignItems: "center" }}>
+                    <div>
+                      <div className="mono">{fmt(inv.total_amount)}</div>
+                      <Tag color={inv.status === "paid" ? "lime" : inv.status === "overdue" ? "red" : "amber"}>{inv.status}</Tag>
+                    </div>
+                    {inv.status !== "paid" && <MarkInvoicePaidButton invoiceId={inv.id} />}
+                  </div>
                 </div>
-                <div style={{ textAlign: "right" }}>
-                  <div className="mono">{fmt(inv.total_amount)}</div>
-                  <Tag color={inv.status === "paid" ? "lime" : inv.status === "overdue" ? "red" : "amber"}>{inv.status}</Tag>
-                </div>
-              </div>
-            ))}
-            {invoiceList.length === 0 && <div style={{ color: "var(--mute)", fontSize: 13 }}>No invoices yet.</div>}
-          </div>
-        </section>
+              ))}
+              {invoiceList.length === 0 && <div style={{ color: "var(--mute)", fontSize: 13 }}>No invoices yet.</div>}
+            </div>
+          </section>
+        </div>
 
-        <section className="cc-card">
-          <h3 style={{ fontSize: 11.5, letterSpacing: 1.6, textTransform: "uppercase", color: "var(--mute)", marginBottom: 12 }}>
-            Accounts payable
-          </h3>
-          <div style={{ display: "grid", gap: 8 }}>
-            {billList.map((b) => (
-              <div key={b.id} style={{ display: "flex", justifyContent: "space-between", borderTop: "1px solid var(--line)", paddingTop: 8, fontSize: 13 }}>
-                <div>
-                  <b>{b.vendor_name}</b>
-                  <div style={{ color: "var(--mute)", fontSize: 11.5 }}>due {fmtDate(b.due_date)}</div>
+        <div style={{ display: "grid", gap: 16, alignContent: "start" }}>
+          <AddBillForm jobs={jobList} />
+          <section className="cc-card">
+            <h3 style={{ fontSize: 11.5, letterSpacing: 1.6, textTransform: "uppercase", color: "var(--mute)", marginBottom: 12 }}>
+              Accounts payable
+            </h3>
+            <div style={{ display: "grid", gap: 8 }}>
+              {billList.map((b) => (
+                <div key={b.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderTop: "1px solid var(--line)", paddingTop: 8, fontSize: 13 }}>
+                  <div>
+                    <b>{b.vendor_name}</b>
+                    <div style={{ color: "var(--mute)", fontSize: 11.5 }}>due {fmtDate(b.due_date)}</div>
+                  </div>
+                  <div style={{ textAlign: "right", display: "flex", gap: 8, alignItems: "center" }}>
+                    <div>
+                      <div className="mono">{fmt(b.amount)}</div>
+                      <Tag color={b.status === "paid" ? "lime" : "amber"}>{b.status}</Tag>
+                    </div>
+                    {b.status !== "paid" && <MarkBillPaidButton billId={b.id} />}
+                  </div>
                 </div>
-                <div style={{ textAlign: "right" }}>
-                  <div className="mono">{fmt(b.amount)}</div>
-                  <Tag color={b.status === "paid" ? "lime" : "amber"}>{b.status}</Tag>
-                </div>
-              </div>
-            ))}
-            {billList.length === 0 && <div style={{ color: "var(--mute)", fontSize: 13 }}>No bills yet.</div>}
-          </div>
-        </section>
+              ))}
+              {billList.length === 0 && <div style={{ color: "var(--mute)", fontSize: 13 }}>No bills yet.</div>}
+            </div>
+          </section>
+        </div>
       </div>
     </div>
   );

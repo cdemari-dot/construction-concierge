@@ -285,6 +285,17 @@ export interface CompanyCashPosition {
   open_ap: number;
 }
 
+export interface ScheduleEntry {
+  id: string;
+  company_id: string;
+  job_id: string;
+  worker_id: string;
+  work_date: string;
+  notes: string | null;
+  created_by: string | null;
+  created_at: string;
+}
+
 export interface WhoIsClockedIn {
   time_entry_id: string;
   company_id: string;

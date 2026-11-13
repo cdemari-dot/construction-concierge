@@ -17,9 +17,14 @@ export default async function JobsPage() {
 
   return (
     <div>
-      <h1 className="display" style={{ fontSize: 22, marginBottom: 16 }}>
-        Jobs
-      </h1>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+        <h1 className="display" style={{ fontSize: 22 }}>
+          Jobs
+        </h1>
+        <Link href="/jobs/new" className="cc-btn lime">
+          + New job
+        </Link>
+      </div>
       <div style={{ display: "grid", gap: 12 }}>
         {jobList.map((j) => (
           <Link key={j.id} href={`/jobs/${j.id}`} className="cc-card" style={{ display: "block", textDecoration: "none", color: "var(--text)" }}>

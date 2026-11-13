@@ -48,12 +48,38 @@ See "Explicitly out of scope" below.
    We never run payroll ourselves.
 6. 13-week cash flow forecast + CFO playbook, fed by manually entered data.
 
-### Explicitly out of scope for Phase 1 (seen in the dashboard prototype, deferred)
-CRM/bid tracking & kanban, inventory/equipment tracking, the scheduler, the
-integrations marketplace, the AI agent chat drawer, detailed job-cost category
-breakdowns (labour/AP/material/equipment variance), and worker certification
-tracking. Build the schema so these can be added later without a rewrite, but
-don't build the tables or UI for them now.
+### Added after Phase 1 went live
+Once the app was actually deployed, it became clear Phase 1 was missing the
+basic *write* side of its own scope — there was no way to add a job, a
+client, an invoice, a bill, or a crew member at all. Fixed by adding:
+- **Team** (`/team`): Owner/PM add Foreman/Worker (full name, phone, a
+  4-digit PIN set via the `set_worker_pin` RPC — never hashed client-side)
+  or invite an Owner/PM by email (`/accept-invite` + the existing
+  `handle_new_auth_user` trigger claims their profile the moment they sign
+  up, no onboarding step needed since the company already exists).
+- **Clients** (`/clients`): add/list the GCs jobs bill to.
+- **Jobs** (`/jobs/new`): create a job (number, name, client, address,
+  geofence, contract value, foreman, start date).
+- **Finance** (`/finance`): add an invoice (AR) or a bill (AP), mark either
+  paid.
+- **Schedule** (`/schedule`, `schedule_entries` table): a simple 7-day
+  grid — assign a crew member to a job on a date. Deliberately minimal, no
+  shift times or recurrence.
+
+At the same time, the user asked to pull the AI agent and the Scheduler in
+from "later-phase" into now (the CRM/bids, inventory, and integrations
+marketplace are still deferred — only the agent and scheduler moved up):
+- **AI agent** (`components/agent/AgentDrawer.tsx`, `app/api/agent/route.ts`,
+  `lib/ai/tools.ts`): a chat drawer for Owner/PM, backed by the Anthropic
+  Messages API with tool use. Every tool runs through the signed-in user's
+  own RLS-scoped Supabase client — the agent can only ever see what that
+  user could already see. Needs `ANTHROPIC_API_KEY` in the environment;
+  the route returns a clear 503 instead of crashing if it's unset.
+
+### Still explicitly out of scope
+CRM/bid tracking & kanban, inventory/equipment tracking, the integrations
+marketplace, detailed job-cost category breakdowns (labour/AP/material/
+equipment variance), and worker certification tracking.
 
 ## Stack decisions
 
