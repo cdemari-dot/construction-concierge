@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
-import createGlobe from "cobe";
+import type { GlobeInstance } from "globe.gl";
 import { fmt } from "@/lib/format";
 
 export interface JobCard {
@@ -24,123 +24,128 @@ export interface JobCard {
   onSite: number;
 }
 
-const STATUS_RGB: Record<JobCard["status"], [number, number, number]> = {
-  active: [0.25, 0.75, 0.5],
-  holdback: [0.96, 0.65, 0.14],
-  closed: [0.55, 0.53, 0.5],
+const STATUS_COLOR: Record<JobCard["status"], string> = {
+  active: "#3fbf7f",
+  holdback: "#f5a623",
+  closed: "#9a9690",
 };
 
-const toAngles = (lat: number, lon: number): [number, number] => [Math.PI - ((lon * Math.PI) / 180 - Math.PI / 2), (lat * Math.PI) / 180];
-
 export function JobsGlobe({ jobs }: { jobs: JobCard[] }) {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
   const wrapRef = useRef<HTMLDivElement>(null);
-  const [selected, setSelected] = useState<string | null>(null);
+  const globeRef = useRef<GlobeInstance | null>(null);
   const selectedRef = useRef<string | null>(null);
+  const [selected, setSelected] = useState<string | null>(null);
+  const [ready, setReady] = useState(false);
 
-  useEffect(() => {
-    selectedRef.current = selected;
-  }, [selected]);
-
-  const selectedJob = jobs.find((j) => j.id === selected) ?? null;
   const located = jobs.filter((j) => j.lat != null && j.lon != null);
+  const selectedJob = jobs.find((j) => j.id === selected) ?? null;
 
+  // Build the globe once (client only, lazy-loaded: it is a big library).
   useEffect(() => {
-    const canvas = canvasRef.current;
     const wrap = wrapRef.current;
-    if (!canvas || !wrap) return;
+    if (!wrap) return;
+    let disposed = false;
+    let observer: ResizeObserver | null = null;
 
-    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    const size = Math.min(wrap.clientWidth, 520);
-    const dpr = Math.min(window.devicePixelRatio || 1, 2);
-    const first = located[0];
-    let [phi, theta] = first ? toAngles(first.lat as number, first.lon as number) : [0, 0.3];
-    let dragging = false;
-    let lastX = 0;
-    let raf = 0;
-    // Intro: the globe spins in from far away and settles on the first job.
-    let spinIn = reduce ? 0 : 2.6;
-    let scale = reduce ? 1 : 0.55;
-    const ZOOM = 2.6;
+    (async () => {
+      const { default: Globe } = await import("globe.gl");
+      if (disposed || !wrapRef.current) return;
 
-    const globe = createGlobe(canvas, {
-      devicePixelRatio: dpr,
-      width: size * dpr,
-      height: size * dpr,
-      phi,
-      theta,
-      dark: 1,
-      diffuse: 1.2,
-      mapSamples: 16000,
-      mapBrightness: 5,
-      baseColor: [0.16, 0.15, 0.14],
-      markerColor: [0.25, 0.75, 0.5],
-      glowColor: [0.35, 0.3, 0.2],
-      scale,
-      markers: located.map((j) => ({ id: j.id, location: [j.lat as number, j.lon as number], size: 0.07, color: STATUS_RGB[j.status] })),
-    });
+      const size = () => Math.min(wrap.clientWidth, 520);
+      const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-    const tick = (now: number) => {
-      const sel = located.find((j) => j.id === selectedRef.current);
-      if (sel) {
-        const [tp, tt] = toAngles(sel.lat as number, sel.lon as number);
-        let d = tp - phi;
-        d = Math.atan2(Math.sin(d), Math.cos(d));
-        phi += d * (reduce ? 1 : 0.07);
-        theta += (tt - theta) * (reduce ? 1 : 0.07);
-      } else if (!dragging && !reduce) {
-        phi += 0.004;
-      }
-      // Zoom in on the selected job, ease back out when deselected.
-      const targetScale = sel ? ZOOM : 1;
-      scale += (targetScale - scale) * (reduce ? 1 : 0.06);
-      spinIn *= 0.955;
-      const pulse = sel && !reduce ? 0.025 * Math.sin(now / 180) : 0;
-      const keep = Math.max(1, scale); // markers grow with the globe, so shrink them to keep the on-screen size steady
-      globe.update({
-        phi: phi + spinIn,
-        theta,
-        scale,
-        markers: located.map((j) => ({
-          id: j.id,
-          location: [j.lat as number, j.lon as number],
-          size: (j.id === selectedRef.current ? 0.1 + pulse : 0.07) / keep,
-          color: STATUS_RGB[j.status],
-        })),
-      });
-      raf = requestAnimationFrame(tick);
-    };
-    raf = requestAnimationFrame(tick);
+      const world = new Globe(wrap, { animateIn: !reduce, rendererConfig: { alpha: true, antialias: true } })
+        .globeImageUrl("/globe/earth.jpg")
+        .bumpImageUrl("/globe/bump.png")
+        .backgroundColor("rgba(0,0,0,0)")
+        .atmosphereColor("#C8A464")
+        .atmosphereAltitude(0.22)
+        .width(size())
+        .height(size())
+        .pointLat("lat")
+        .pointLng("lon")
+        .pointColor((d) => STATUS_COLOR[(d as JobCard).status])
+        .pointAltitude((d) => ((d as JobCard).id === selectedRef.current ? 0.03 : 0.015))
+        .pointRadius((d) => ((d as JobCard).id === selectedRef.current ? 0.22 : 0.32))
+        .pointLabel((d) => {
+          const j = d as JobCard;
+          return `<div style="font:600 12px Inter,sans-serif;padding:6px 8px;background:#111;border:1px solid #444;border-radius:8px;color:#eee"><b>${j.jobNumber}</b> · ${j.name}</div>`;
+        })
+        .onPointClick((d) => setSelected((cur) => ((d as JobCard).id === cur ? null : (d as JobCard).id)))
+        .ringLat("lat")
+        .ringLng("lon")
+        .ringColor((d: object) => {
+          const c = STATUS_COLOR[(d as JobCard).status];
+          return (t: number) => `${c}${Math.round((1 - t) * 255).toString(16).padStart(2, "0")}`;
+        })
+        .ringMaxRadius(2.6)
+        .ringPropagationSpeed(2.2)
+        .ringRepeatPeriod(1400);
 
-    const down = (e: PointerEvent) => {
-      dragging = true;
-      lastX = e.clientX;
-      setSelected(null);
-    };
-    const move = (e: PointerEvent) => {
-      if (!dragging) return;
-      phi += (e.clientX - lastX) / 120;
-      lastX = e.clientX;
-    };
-    const up = () => (dragging = false);
-    canvas.addEventListener("pointerdown", down);
-    window.addEventListener("pointermove", move);
-    window.addEventListener("pointerup", up);
+      world.pointsData(located);
+      world.ringsData(located);
+
+      const controls = world.controls();
+      controls.autoRotate = !reduce;
+      controls.autoRotateSpeed = 0.45;
+      controls.minDistance = 130;
+      controls.maxDistance = 520;
+      controls.enablePan = false;
+
+      // Intro: start far away and fly in to the first job (or a North America view).
+      const first = located[0];
+      world.pointOfView({ lat: first?.lat ?? 40, lng: first?.lon ?? -80, altitude: 4 }, 0);
+      world.pointOfView({ lat: first?.lat ?? 40, lng: first?.lon ?? -80, altitude: 2.1 }, reduce ? 0 : 2600);
+
+      observer = new ResizeObserver(() => world.width(size()).height(size()));
+      observer.observe(wrap);
+
+      globeRef.current = world;
+      setReady(true);
+    })();
 
     return () => {
-      cancelAnimationFrame(raf);
-      globe.destroy();
-      canvas.removeEventListener("pointerdown", down);
-      window.removeEventListener("pointermove", move);
-      window.removeEventListener("pointerup", up);
+      disposed = true;
+      observer?.disconnect();
+      const world = globeRef.current as (GlobeInstance & { _destructor?: () => void }) | null;
+      world?._destructor?.();
+      globeRef.current = null;
+      if (wrap) wrap.innerHTML = "";
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [jobs]);
 
+  // Fly to the selected job (zoom in) or back out.
+  useEffect(() => {
+    selectedRef.current = selected;
+    const world = globeRef.current;
+    if (!world || !ready) return;
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const job = located.find((j) => j.id === selected);
+    const controls = world.controls();
+    if (job) {
+      controls.autoRotate = false;
+      world.pointOfView({ lat: job.lat as number, lng: job.lon as number, altitude: 0.22 }, reduce ? 0 : 1800);
+    } else {
+      const cur = world.pointOfView();
+      world.pointOfView({ lat: cur.lat, lng: cur.lng, altitude: 2.1 }, reduce ? 0 : 1400);
+      controls.autoRotate = !reduce;
+    }
+    // Re-run the point accessors so the selected pin grows.
+    world.pointAltitude(world.pointAltitude()).pointRadius(world.pointRadius());
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selected, ready]);
+
   return (
     <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: 16, alignItems: "start" }}>
       <div className="cc-card" style={{ display: "grid", placeItems: "center", padding: 12 }}>
-        <div ref={wrapRef} style={{ width: "100%", maxWidth: 520, aspectRatio: "1", display: "grid", placeItems: "center", position: "relative", overflow: "hidden", borderRadius: 16 }}>
+        <div style={{ width: "100%", maxWidth: 520, aspectRatio: "1", position: "relative", overflow: "hidden", borderRadius: 16 }}>
+          <div ref={wrapRef} style={{ width: "100%", height: "100%", display: "grid", placeItems: "center", cursor: "grab" }} />
+          {!ready && (
+            <div style={{ position: "absolute", inset: 0, display: "grid", placeItems: "center", color: "var(--mute)", fontSize: 13 }}>
+              🌍 Loading globe…
+            </div>
+          )}
           <div
             aria-live="polite"
             style={{
@@ -163,7 +168,9 @@ export function JobsGlobe({ jobs }: { jobs: JobCard[] }) {
           >
             {selectedJob && (
               <>
-                <b>📍 {selectedJob.jobNumber} · {selectedJob.name}</b>
+                <b>
+                  📍 {selectedJob.jobNumber} · {selectedJob.name}
+                </b>
                 <div style={{ color: "var(--mute)", fontSize: 11.5 }}>{selectedJob.address ?? "No address"}</div>
                 <button type="button" className="cc-btn ghost sm" style={{ marginTop: 6 }} onClick={() => setSelected(null)}>
                   ↩ Zoom out
@@ -171,16 +178,12 @@ export function JobsGlobe({ jobs }: { jobs: JobCard[] }) {
               </>
             )}
           </div>
-          <canvas
-            ref={canvasRef}
-            style={{ width: "100%", maxWidth: 520, aspectRatio: "1", cursor: "grab", touchAction: "none", contain: "layout paint size" }}
-          />
         </div>
-        <div style={{ display: "flex", gap: 14, fontSize: 11.5, color: "var(--mute)", marginTop: 4 }}>
+        <div style={{ display: "flex", gap: 14, fontSize: 11.5, color: "var(--mute)", marginTop: 6, flexWrap: "wrap", justifyContent: "center" }}>
           <Legend color="var(--lime)" label="Active" />
           <Legend color="var(--amber)" label="Holdback" />
           <Legend color="var(--mute)" label="Closed" />
-          <span>· drag to spin · tap a job to zoom in</span>
+          <span>· drag to spin · scroll to zoom · tap a pin or a job</span>
         </div>
         {located.length === 0 && (
           <div style={{ color: "var(--mute)", fontSize: 12.5, marginTop: 8, textAlign: "center" }}>
@@ -198,7 +201,13 @@ export function JobsGlobe({ jobs }: { jobs: JobCard[] }) {
               key={j.id}
               className="cc-card"
               onClick={() => hasGps && setSelected(on ? null : j.id)}
-              style={{ cursor: hasGps ? "pointer" : "default", borderColor: on ? "var(--cyan)" : undefined, transform: on ? "scale(1.015)" : "scale(1)", boxShadow: on ? "0 0 0 1px var(--cyan), 0 8px 30px rgba(200,164,100,.18)" : undefined, transition: "transform .3s ease, box-shadow .3s ease, border-color .3s ease" }}
+              style={{
+                cursor: hasGps ? "pointer" : "default",
+                borderColor: on ? "var(--cyan)" : undefined,
+                transform: on ? "scale(1.015)" : "scale(1)",
+                boxShadow: on ? "0 0 0 1px var(--cyan), 0 8px 30px rgba(200,164,100,.18)" : undefined,
+                transition: "transform .3s ease, box-shadow .3s ease, border-color .3s ease",
+              }}
             >
               <div style={{ display: "flex", justifyContent: "space-between", gap: 8, alignItems: "start" }}>
                 <div>
