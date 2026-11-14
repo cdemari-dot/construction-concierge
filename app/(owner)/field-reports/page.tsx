@@ -114,7 +114,7 @@ export default async function FieldReportsPage({ searchParams }: { searchParams:
             <div style={{ fontSize: 11.5, color: "var(--mute)" }}>{job.get(r.job_id) ?? "Job"} · {r.ticket_date}</div>
             <b>{r.super_name}</b>{r.super_email ? <span style={{ color: "var(--mute)", fontSize: 12 }}> · {r.super_email}</span> : null}
           </div>
-          <Tag color={r.status === "draft" ? "amber" : r.status === "billed" ? "mute" : "lime"}>{r.status.replace("_", " ")}</Tag>
+          <Tag color={r.status === "draft" ? "amber" : r.status === "billed" ? "mute" : "lime"}>{r.status.replaceAll("_", " ")}</Tag>
         </div>
         <div style={{ fontSize: 12.5, color: "var(--mute)" }}>
           {r.hours} h · equipment {fmt(r.equipment_cost)} · materials {fmt(r.materials_cost)}

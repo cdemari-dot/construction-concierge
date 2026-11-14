@@ -72,7 +72,7 @@ export function TmTicketForm({ companyId, jobId, createdBy }: { companyId: strin
       {error && <div style={{ color: "var(--red)", fontSize: 12.5 }}>{error}</div>}
       <input placeholder="GC superintendent name" value={superName} onChange={(e) => setSuperName(e.target.value)} style={inputStyle} />
       <input placeholder="Super email (optional)" value={superEmail} onChange={(e) => setSuperEmail(e.target.value)} style={inputStyle} />
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr))", gap: 8 }}>
         <input placeholder="Hours" type="number" value={hours} onChange={(e) => setHours(e.target.value)} style={inputStyle} />
         <input placeholder="Equipment $" type="number" value={equipmentCost} onChange={(e) => setEquipmentCost(e.target.value)} style={inputStyle} />
         <input placeholder="Materials $" type="number" value={materialsCost} onChange={(e) => setMaterialsCost(e.target.value)} style={inputStyle} />
@@ -92,4 +92,7 @@ const inputStyle: React.CSSProperties = {
   color: "var(--text)",
   padding: "9px 10px",
   fontSize: 14,
+  width: "100%",
+  minWidth: 0,
+  boxSizing: "border-box",
 };

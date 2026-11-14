@@ -26,7 +26,7 @@ export function ChangeOrderRow({ co, jobLabel }: { co: ChangeOrder; jobLabel: st
           <div style={{ fontSize: 11.5, color: "var(--mute)" }}>{jobLabel}</div>
           <div style={{ fontSize: 13.5 }}>{co.description}</div>
         </div>
-        <Tag color={TAG_COLOR[co.status]}>{co.status.replace("_", " ")}</Tag>
+        <Tag color={TAG_COLOR[co.status]}>{co.status.replaceAll("_", " ")}</Tag>
       </div>
 
       <div style={{ display: "flex", gap: 8, alignItems: "center" }}>

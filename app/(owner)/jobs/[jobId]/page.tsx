@@ -51,7 +51,7 @@ export default async function JobDetailPage({ params }: { params: Promise<{ jobI
                     c.status === "approved" ? "lime" : c.status === "disputed" || c.status === "rejected" ? "red" : "amber"
                   }
                 >
-                  {c.status.replace("_", " ")}
+                  {c.status.replaceAll("_", " ")}
                 </Tag>
                 <span className="mono">{fmt(c.amount)}</span>
               </div>
