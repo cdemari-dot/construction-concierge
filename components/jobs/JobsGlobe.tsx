@@ -31,15 +31,14 @@ const STATUS_COLOR: Record<JobCard["status"], string> = {
 };
 
 
-// A real map pin (teardrop) in the job's status colour. Fixed pixel size, so it never
-// balloons when the globe zooms. Its tip sits exactly on the job's coordinates.
+// The 📍 emoji as the job marker (Apple's red pin on Apple devices). Fixed pixel size, so it never
+// balloons when the globe zooms. Status colour comes from the pulsing ring under it.
 function makePin(j: JobCard, selected: boolean, onPick: (id: string) => void): HTMLElement {
-  const color = STATUS_COLOR[j.status];
-  const w = selected ? 34 : 24;
   const el = document.createElement("div");
   el.title = `${j.jobNumber} · ${j.name}`;
-  el.style.cssText = `transform:translate(-50%,-100%);cursor:pointer;transition:opacity .3s;filter:drop-shadow(0 3px 4px rgba(0,0,0,.6));${selected ? "animation:cc-pin-bounce 1.1s ease-in-out infinite;" : ""}`;
-  el.innerHTML = `<svg width="${w}" height="${Math.round(w * 1.35)}" viewBox="0 0 24 32" xmlns="http://www.w3.org/2000/svg" style="display:block"><path d="M12 0C5.4 0 0 5.3 0 11.8 0 20.6 12 32 12 32s12-11.4 12-20.2C24 5.3 18.6 0 12 0z" fill="${color}" stroke="#0b0b0d" stroke-width="1.5"/><circle cx="12" cy="11.5" r="4.6" fill="#0b0b0d"/><circle cx="12" cy="11.5" r="2.4" fill="#fff"/></svg>`;
+  // translate(-50%,-100%) puts the pin's tip on the job's coordinates.
+  el.style.cssText = `transform:translate(-50%,-92%);cursor:pointer;transition:opacity .3s;font-size:${selected ? 40 : 30}px;line-height:1;font-family:"Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif;filter:drop-shadow(0 3px 3px rgba(0,0,0,.55));${selected ? "animation:cc-pin-bounce 1.1s ease-in-out infinite;" : ""}`;
+  el.textContent = "📍";
   el.addEventListener("click", (e) => {
     e.stopPropagation();
     onPick(j.id);
@@ -74,6 +73,9 @@ export function JobsGlobe({ jobs }: { jobs: JobCard[] }) {
       const world = new Globe(wrap, { animateIn: !reduce, rendererConfig: { alpha: true, antialias: true } })
         .globeImageUrl("/globe/earth.jpg")
         .bumpImageUrl("/globe/bump.png")
+        // Sharp satellite tiles stream in as you zoom (the 2K texture above is only the far view).
+        .globeTileEngineUrl((x: number, y: number, l: number) => `https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/${l}/${y}/${x}`)
+        .globeTileEngineMaxLevel(17)
         .backgroundColor("rgba(0,0,0,0)")
         .atmosphereColor("#C8A464")
         .atmosphereAltitude(0.22)
@@ -81,7 +83,7 @@ export function JobsGlobe({ jobs }: { jobs: JobCard[] }) {
         .height(size())
         .htmlLat("lat")
         .htmlLng("lon")
-        .htmlAltitude(0.005)
+        .htmlAltitude(0)
         .htmlElement((d: object) => makePin(d as JobCard, (d as JobCard).id === selectedRef.current, (id) => setSelected((cur) => (id === cur ? null : id))))
         .htmlElementVisibilityModifier((el: HTMLElement, visible: boolean) => {
           el.style.opacity = visible ? "1" : "0";
@@ -103,7 +105,7 @@ export function JobsGlobe({ jobs }: { jobs: JobCard[] }) {
       const controls = world.controls();
       controls.autoRotate = !reduce;
       controls.autoRotateSpeed = 0.45;
-      controls.minDistance = 130;
+      controls.minDistance = 100.15; // street level
       controls.maxDistance = 520;
       controls.enablePan = false;
 
@@ -140,7 +142,7 @@ export function JobsGlobe({ jobs }: { jobs: JobCard[] }) {
     const controls = world.controls();
     if (job) {
       controls.autoRotate = false;
-      world.pointOfView({ lat: job.lat as number, lng: job.lon as number, altitude: 0.22 }, reduce ? 0 : 1800);
+      world.pointOfView({ lat: job.lat as number, lng: job.lon as number, altitude: 0.005 }, reduce ? 0 : 2600);
     } else {
       const cur = world.pointOfView();
       world.pointOfView({ lat: cur.lat, lng: cur.lng, altitude: 2.1 }, reduce ? 0 : 1400);
@@ -199,6 +201,7 @@ export function JobsGlobe({ jobs }: { jobs: JobCard[] }) {
           <Legend color="var(--amber)" label="Holdback" />
           <Legend color="var(--mute)" label="Closed" />
           <span>· drag to spin · scroll to zoom · tap a pin or a job</span>
+          <span style={{ width: "100%", textAlign: "center", fontSize: 10 }}>Imagery © Esri, Maxar, Earthstar Geographics</span>
         </div>
         {located.length === 0 && (
           <div style={{ color: "var(--mute)", fontSize: 12.5, marginTop: 8, textAlign: "center" }}>

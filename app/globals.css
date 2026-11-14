@@ -439,6 +439,6 @@ h2,
 }
 
 @keyframes cc-pin-bounce {
-  0%, 100% { transform: translate(-50%, -100%); }
-  50% { transform: translate(-50%, calc(-100% - 7px)); }
+  0%, 100% { transform: translate(-50%, -92%); }
+  50% { transform: translate(-50%, calc(-92% - 7px)); }
 }
