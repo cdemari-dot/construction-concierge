@@ -59,8 +59,9 @@ export function BidForm({ clients }: { clients: { id: string; name: string }[] }
             </option>
           ))}
         </select>
-        <input name="contact" placeholder="Contact (estimator, PM…)" style={input} />
+        <input name="contact" placeholder="Contact name" style={input} />
       </div>
+      <input name="contact_email" type="email" placeholder="Contact email (used for automatic follow-ups)" style={input} />
       <input name="address" placeholder="Site address" style={input} />
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", gap: 8 }}>
         <input name="value" inputMode="decimal" placeholder="Bid value ($)" style={input} />

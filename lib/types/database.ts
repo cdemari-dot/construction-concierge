@@ -342,4 +342,9 @@ export interface Bid {
   created_by: string | null;
   created_at: string;
   stage_changed_at: string;
+  contact_email: string | null;
+  auto_follow_up: boolean;
+  follow_up_count: number;
+  last_follow_up_at: string | null;
+  submitted_at: string | null;
 }

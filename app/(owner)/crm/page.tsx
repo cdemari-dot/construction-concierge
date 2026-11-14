@@ -4,6 +4,7 @@ import { SetupBanner } from "@/components/ui/SetupBanner";
 import { StatCard } from "@/components/ui/StatCard";
 import { BidBoard } from "@/components/crm/BidBoard";
 import { BidForm } from "@/components/crm/BidForm";
+import { ConversionFunnel } from "@/components/crm/ConversionFunnel";
 import { fmt } from "@/lib/format";
 import { todayToronto } from "@/lib/today";
 import type { Bid, Client } from "@/lib/types/database";
@@ -49,11 +50,22 @@ export default async function CrmPage() {
       </p>
 
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(170px, 1fr))", gap: 16, marginBottom: 18 }}>
-        <StatCard label="Open pipeline" value={fmt(pipeline)} hint={`${open.length} open bid${open.length === 1 ? "" : "s"}`} />
-        <StatCard label="Won" value={fmt(won.reduce((s, b) => s + Number(b.value), 0))} color="lime" hint={`${won.length} bid${won.length === 1 ? "" : "s"}`} />
-        <StatCard label="Win rate" value={winRate == null ? "—" : `${winRate}%`} color="cyan" hint={decided ? `${won.length} won of ${decided} decided` : "no decided bids yet"} />
-        <StatCard label="Follow-ups due" value={String(followUps)} color={followUps > 0 ? "amber" : undefined} hint={followUps > 0 ? "call these today" : "all caught up"} />
+        <StatCard index={0} label="Open pipeline" value={fmt(pipeline)} hint={`${open.length} open bid${open.length === 1 ? "" : "s"}`} />
+        <StatCard index={1} label="Won" value={fmt(won.reduce((s, b) => s + Number(b.value), 0))} color="lime" hint={`${won.length} bid${won.length === 1 ? "" : "s"}`} />
+        <StatCard index={2} label="Win rate" value={winRate == null ? "—" : `${winRate}%`} color="cyan" hint={decided ? `${won.length} won of ${decided} decided` : "no decided bids yet"} />
+        <StatCard index={3} label="Follow-ups due" value={String(followUps)} color={followUps > 0 ? "amber" : undefined} hint={followUps > 0 ? "call these today" : "all caught up"} />
       </div>
+
+      <ConversionFunnel
+        d={{
+          created: bids.length,
+          sent: bids.filter((b) => b.submitted_at != null || b.stage === "submitted" || b.stage === "won").length,
+          won: won.length,
+          lost: lost.length,
+          wonValue: won.reduce((s, b) => s + Number(b.value), 0),
+          lostValue: lost.reduce((s, b) => s + Number(b.value), 0),
+        }}
+      />
 
       <BidBoard bids={bids} clientNames={Object.fromEntries(clients.map((c) => [c.id, c.name]))} />
     </div>

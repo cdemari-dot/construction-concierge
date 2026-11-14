@@ -116,6 +116,8 @@ over name, client, address, geocodes it, and sets contract value to the bid valu
 to the job. Stats: open pipeline, won, win rate, follow-ups due. Dashboard shows the pipeline
 stat and a "bid follow-ups due" banner. Estimation-log spreadsheet import is NOT built.
 
+Conversion funnel on /crm: created -> bid sent -> won, with lead->sent, sent->won, lead->won and win-rate ratios (a bid counts as "sent" via `bids.submitted_at`, set on reaching Bid sent or Won). Automated follow-ups (migration 0010): a bid in Bid sent with a contact email gets up to 3 emails at +3/+7/+14 days (`lib/crm/followup.ts`), sent by the daily Vercel cron `/api/cron/follow-ups` (`vercel.json`, needs CRON_SECRET + SUPABASE_SERVICE_ROLE_KEY + Resend), from the app sender with the bid creator as Reply-To/CC; each send is logged in `bid_follow_ups`; pause per bid; "Send now" button. UI rule: every grid, card list and graph gets an entrance animation (`.cc-in` stagger, `.cc-barx`, `CountUp`).
+
 ### Still explicitly out of scope
 inventory/equipment tracking, the integrations
 marketplace, detailed job-cost category breakdowns (labour/AP/material/

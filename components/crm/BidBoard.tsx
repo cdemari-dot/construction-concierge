@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { useState, useTransition } from "react";
-import { createJobFromBid, moveBid, setBidFollowUp, updateBidValue } from "@/app/(owner)/crm/actions";
+import { createJobFromBid, moveBid, sendFollowUpNow, setAutoFollowUp, setBidEmail, setBidFollowUp, updateBidValue } from "@/app/(owner)/crm/actions";
+import { FOLLOW_UP_DAYS, nextFollowUpInDays } from "@/lib/crm/followup";
 import { fmt } from "@/lib/format";
 import { todayToronto } from "@/lib/today";
 import type { Bid, BidStage } from "@/lib/types/database";
@@ -54,6 +55,7 @@ export function BidBoard({ bids, clientNames }: { bids: Bid[]; clientNames: Reco
           return (
             <section
               key={col.stage}
+              className="cc-in"
               onDragOver={(e) => {
                 e.preventDefault();
                 setOverStage(col.stage);
@@ -67,13 +69,14 @@ export function BidBoard({ bids, clientNames }: { bids: Bid[]; clientNames: Reco
                 if (bid) move(bid, col.stage);
               }}
               style={{
+                "--i": COLUMNS.indexOf(col) + 5,
                 background: "var(--panel)",
                 border: `1px solid ${over ? "var(--cyan)" : "var(--line)"}`,
                 borderRadius: 16,
                 padding: 10,
                 minHeight: 160,
                 transition: "border-color .2s, background .2s",
-              }}
+              } as React.CSSProperties}
             >
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", padding: "2px 4px 10px" }}>
                 <b style={{ fontSize: 13 }}>
@@ -84,9 +87,10 @@ export function BidBoard({ bids, clientNames }: { bids: Bid[]; clientNames: Reco
                 </span>
               </div>
               <div style={{ display: "grid", gap: 8 }}>
-                {items.map((b) => (
+                {items.map((b, idx) => (
                   <BidCardView
                     key={b.id}
+                    index={idx}
                     bid={b}
                     client={b.client_id ? clientNames[b.client_id] : undefined}
                     onDragStart={() => setDragId(b.id)}
@@ -107,11 +111,13 @@ export function BidBoard({ bids, clientNames }: { bids: Bid[]; clientNames: Reco
 function BidCardView({
   bid,
   client,
+  index,
   onDragStart,
   onMove,
   run,
 }: {
   bid: Bid;
+  index: number;
   client?: string;
   onDragStart: () => void;
   onMove: (s: BidStage) => void;
@@ -126,10 +132,10 @@ function BidCardView({
 
   return (
     <div
-      className="cc-card"
+      className="cc-card cc-in"
       draggable
       onDragStart={onDragStart}
-      style={{ padding: 12, cursor: "grab", display: "grid", gap: 6, borderColor: overdue ? "var(--amber)" : undefined }}
+      style={{ "--i": index + 6, padding: 12, cursor: "grab", display: "grid", gap: 6, borderColor: overdue ? "var(--amber)" : undefined } as React.CSSProperties}
     >
       <b style={{ fontSize: 13.5, lineHeight: 1.3 }}>{bid.name}</b>
       {(client || bid.contact) && (
@@ -168,6 +174,47 @@ function BidCardView({
             />
           </label>
           {overdue && <div style={{ color: "var(--amber)", fontWeight: 600 }}>Follow-up is due, give them a call</div>}
+        </div>
+      )}
+
+      {(bid.stage === "submitted" || bid.stage === "estimating" || bid.stage === "lead") && (
+        <div style={{ display: "grid", gap: 4, fontSize: 11.5 }}>
+          <input
+            type="email"
+            placeholder="Contact email (for follow-ups)"
+            defaultValue={bid.contact_email ?? ""}
+            onBlur={(e) => {
+              if ((e.target.value || "") !== (bid.contact_email ?? "")) run(() => setBidEmail(bid.id, e.target.value));
+            }}
+            style={{ background: "transparent", border: "1px solid var(--line2)", borderRadius: 8, color: "var(--text)", padding: "4px 8px", fontSize: 12 }}
+          />
+          {bid.stage === "submitted" && (
+            <div style={{ color: "var(--mute)" }}>
+              🤖 Auto follow-ups {bid.auto_follow_up ? "on" : "off"} · {bid.follow_up_count} of {FOLLOW_UP_DAYS.length} sent
+              {bid.auto_follow_up && bid.contact_email && nextFollowUpInDays(bid) != null && (
+                <> · {nextFollowUpInDays(bid) === 0 ? "due at the next daily run" : `next in ${nextFollowUpInDays(bid)} day${nextFollowUpInDays(bid) === 1 ? "" : "s"}`}</>
+              )}
+              {!bid.contact_email && <span style={{ color: "var(--amber)" }}> · add an email to start</span>}
+              {bid.last_follow_up_at && <> · last {new Date(bid.last_follow_up_at).toLocaleDateString("en-CA", { month: "short", day: "numeric", timeZone: "America/Toronto" })}</>}
+            </div>
+          )}
+          {bid.stage === "submitted" && (
+            <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+              <button className="cc-btn ghost sm" type="button" onClick={() => run(() => setAutoFollowUp(bid.id, !bid.auto_follow_up))}>
+                {bid.auto_follow_up ? "Pause auto" : "Resume auto"}
+              </button>
+              <button
+                className="cc-btn sm"
+                type="button"
+                disabled={!bid.contact_email}
+                onClick={() => {
+                  if (window.confirm(`Send a follow-up email to ${bid.contact_email} now?`)) run(() => sendFollowUpNow(bid.id));
+                }}
+              >
+                ✉️ Send now
+              </button>
+            </div>
+          )}
         </div>
       )}
 

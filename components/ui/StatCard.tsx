@@ -3,14 +3,16 @@ export function StatCard({
   value,
   hint,
   color,
+  index = 0,
 }: {
   label: string;
   value: string;
   hint?: string;
   color?: "cyan" | "lime" | "amber" | "red";
+  index?: number;
 }) {
   return (
-    <div className="cc-card">
+    <div className="cc-card cc-in" style={{ "--i": index } as React.CSSProperties}>
       <div style={{ fontSize: 11, letterSpacing: 1.4, textTransform: "uppercase", color: "var(--mute)" }}>
         {label}
       </div>

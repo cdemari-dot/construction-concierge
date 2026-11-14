@@ -442,3 +442,14 @@ h2,
   0%, 100% { transform: translate(-50%, -92%); }
   50% { transform: translate(-50%, calc(-92% - 7px)); }
 }
+
+/* Staggered entrance for grids/cards/graphs: set style={{ "--i": index }} */
+.cc-in {
+  animation: cc-pop 0.55s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  animation-delay: calc(var(--i, 0) * 70ms);
+}
+@keyframes cc-growx { from { transform: scaleX(0); } }
+.cc-barx { transform-origin: left center; animation: cc-growx 0.9s cubic-bezier(0.2, 0.8, 0.2, 1) both; animation-delay: calc(var(--i, 0) * 120ms + 150ms); }
+@media (prefers-reduced-motion: reduce) {
+  .cc-in, .cc-barx { animation: none; }
+}
