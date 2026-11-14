@@ -30,6 +30,23 @@ const STATUS_COLOR: Record<JobCard["status"], string> = {
   closed: "#9a9690",
 };
 
+
+// A real map pin (teardrop) in the job's status colour. Fixed pixel size, so it never
+// balloons when the globe zooms. Its tip sits exactly on the job's coordinates.
+function makePin(j: JobCard, selected: boolean, onPick: (id: string) => void): HTMLElement {
+  const color = STATUS_COLOR[j.status];
+  const w = selected ? 34 : 24;
+  const el = document.createElement("div");
+  el.title = `${j.jobNumber} · ${j.name}`;
+  el.style.cssText = `transform:translate(-50%,-100%);cursor:pointer;transition:opacity .3s;filter:drop-shadow(0 3px 4px rgba(0,0,0,.6));${selected ? "animation:cc-pin-bounce 1.1s ease-in-out infinite;" : ""}`;
+  el.innerHTML = `<svg width="${w}" height="${Math.round(w * 1.35)}" viewBox="0 0 24 32" xmlns="http://www.w3.org/2000/svg" style="display:block"><path d="M12 0C5.4 0 0 5.3 0 11.8 0 20.6 12 32 12 32s12-11.4 12-20.2C24 5.3 18.6 0 12 0z" fill="${color}" stroke="#0b0b0d" stroke-width="1.5"/><circle cx="12" cy="11.5" r="4.6" fill="#0b0b0d"/><circle cx="12" cy="11.5" r="2.4" fill="#fff"/></svg>`;
+  el.addEventListener("click", (e) => {
+    e.stopPropagation();
+    onPick(j.id);
+  });
+  return el;
+}
+
 export function JobsGlobe({ jobs }: { jobs: JobCard[] }) {
   const wrapRef = useRef<HTMLDivElement>(null);
   const globeRef = useRef<GlobeInstance | null>(null);
@@ -62,27 +79,25 @@ export function JobsGlobe({ jobs }: { jobs: JobCard[] }) {
         .atmosphereAltitude(0.22)
         .width(size())
         .height(size())
-        .pointLat("lat")
-        .pointLng("lon")
-        .pointColor((d) => STATUS_COLOR[(d as JobCard).status])
-        .pointAltitude((d) => ((d as JobCard).id === selectedRef.current ? 0.03 : 0.015))
-        .pointRadius((d) => ((d as JobCard).id === selectedRef.current ? 0.22 : 0.32))
-        .pointLabel((d) => {
-          const j = d as JobCard;
-          return `<div style="font:600 12px Inter,sans-serif;padding:6px 8px;background:#111;border:1px solid #444;border-radius:8px;color:#eee"><b>${j.jobNumber}</b> · ${j.name}</div>`;
+        .htmlLat("lat")
+        .htmlLng("lon")
+        .htmlAltitude(0.005)
+        .htmlElement((d: object) => makePin(d as JobCard, (d as JobCard).id === selectedRef.current, (id) => setSelected((cur) => (id === cur ? null : id))))
+        .htmlElementVisibilityModifier((el: HTMLElement, visible: boolean) => {
+          el.style.opacity = visible ? "1" : "0";
+          el.style.pointerEvents = visible ? "auto" : "none";
         })
-        .onPointClick((d) => setSelected((cur) => ((d as JobCard).id === cur ? null : (d as JobCard).id)))
         .ringLat("lat")
         .ringLng("lon")
         .ringColor((d: object) => {
           const c = STATUS_COLOR[(d as JobCard).status];
           return (t: number) => `${c}${Math.round((1 - t) * 255).toString(16).padStart(2, "0")}`;
         })
-        .ringMaxRadius(2.6)
+        .ringMaxRadius(1.6)
         .ringPropagationSpeed(2.2)
         .ringRepeatPeriod(1400);
 
-      world.pointsData(located);
+      world.htmlElementsData(located);
       world.ringsData(located);
 
       const controls = world.controls();
@@ -131,8 +146,8 @@ export function JobsGlobe({ jobs }: { jobs: JobCard[] }) {
       world.pointOfView({ lat: cur.lat, lng: cur.lng, altitude: 2.1 }, reduce ? 0 : 1400);
       controls.autoRotate = !reduce;
     }
-    // Re-run the point accessors so the selected pin grows.
-    world.pointAltitude(world.pointAltitude()).pointRadius(world.pointRadius());
+    // Rebuild the pins so the selected one gets its bigger, bouncing style.
+    world.htmlElementsData([...located]);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selected, ready]);
 

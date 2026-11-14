@@ -87,7 +87,7 @@ labour cost) ÷ billed. Shifts for someone with no rate set count as $0 and
 are flagged on the job card. Overhead is not allocated to jobs.
 
 ### Jobs globe
-`/jobs` shows a cobe globe with a pin per job (from `jobs.geofence_lat/lon`).
+`/jobs` shows a globe.gl real-Earth globe (SVG map pins) with a pin per job (from `jobs.geofence_lat/lon`).
 New jobs get coordinates from their address via OpenStreetMap Nominatim
 (best-effort, 5 s timeout) or the "use my current location" button.
 

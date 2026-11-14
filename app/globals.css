@@ -437,3 +437,8 @@ h2,
   border: 1px solid rgba(229, 72, 77, 0.5);
   color: var(--red);
 }
+
+@keyframes cc-pin-bounce {
+  0%, 100% { transform: translate(-50%, -100%); }
+  50% { transform: translate(-50%, calc(-100% - 7px)); }
+}
