@@ -30,7 +30,10 @@ export function toSpeakable(text: string): string {
     .trim();
 }
 
-export function speak(text: string) {
+let premiumUnavailable = false;
+let currentAudio: HTMLAudioElement | null = null;
+
+function speakWithBrowserVoice(text: string) {
   if (typeof window === "undefined" || !("speechSynthesis" in window)) return;
   window.speechSynthesis.cancel();
   const u = new SpeechSynthesisUtterance(toSpeakable(text));
@@ -46,6 +49,36 @@ export function speak(text: string) {
   window.speechSynthesis.speak(u);
 }
 
+// Tries the natural cloud voice first (/api/voice), falls back to the browser voice.
+export async function speak(text: string) {
+  stopSpeaking();
+  if (!premiumUnavailable) {
+    try {
+      const res = await fetch("/api/voice", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text: toSpeakable(text) }),
+      });
+      if (res.ok) {
+        const url = URL.createObjectURL(await res.blob());
+        const audio = new Audio(url);
+        audio.onended = () => URL.revokeObjectURL(url);
+        currentAudio = audio;
+        await audio.play();
+        return;
+      }
+      if (res.status === 503) premiumUnavailable = true; // not set up: stop asking
+    } catch {
+      // network or autoplay problem: fall through to the browser voice
+    }
+  }
+  speakWithBrowserVoice(text);
+}
+
 export function stopSpeaking() {
+  if (currentAudio) {
+    currentAudio.pause();
+    currentAudio = null;
+  }
   if (typeof window !== "undefined" && "speechSynthesis" in window) window.speechSynthesis.cancel();
 }
