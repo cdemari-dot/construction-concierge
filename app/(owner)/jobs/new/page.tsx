@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/supabase/env";
 import { SetupBanner } from "@/components/ui/SetupBanner";
 import { createJob } from "../actions";
+import { GeoFields } from "@/components/jobs/GeoFields";
 import type { Client, Profile } from "@/lib/types/database";
 
 const inputStyle: React.CSSProperties = {
@@ -62,20 +63,11 @@ export default async function NewJobPage() {
         </label>
 
         <label style={{ fontSize: 12, color: "var(--mute)", display: "grid", gap: 4 }}>
-          Address
+          Address (used to place the job on the globe)
           <input name="address" style={inputStyle} />
         </label>
 
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-          <label style={{ fontSize: 12, color: "var(--mute)", display: "grid", gap: 4 }}>
-            Geofence latitude (optional)
-            <input name="geofence_lat" type="number" step="0.000001" style={inputStyle} />
-          </label>
-          <label style={{ fontSize: 12, color: "var(--mute)", display: "grid", gap: 4 }}>
-            Geofence longitude (optional)
-            <input name="geofence_lon" type="number" step="0.000001" style={inputStyle} />
-          </label>
-        </div>
+        <GeoFields />
 
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
           <label style={{ fontSize: 12, color: "var(--mute)", display: "grid", gap: 4 }}>

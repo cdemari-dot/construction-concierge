@@ -2,9 +2,8 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/supabase/env";
 import { SetupBanner } from "@/components/ui/SetupBanner";
-import { Tag } from "@/components/ui/Tag";
-import { fmt } from "@/lib/format";
-import type { Job } from "@/lib/types/database";
+import { JobsGlobe, type JobCard } from "@/components/jobs/JobsGlobe";
+import type { Job, JobFinancialSummary, WhoIsClockedIn } from "@/lib/types/database";
 
 export default async function JobsPage() {
   if (!isSupabaseConfigured) {
@@ -12,12 +11,41 @@ export default async function JobsPage() {
   }
 
   const supabase = await createClient();
-  const { data: jobs } = await supabase.from("jobs").select("*").order("created_at", { ascending: false });
-  const jobList = (jobs ?? []) as Job[];
+  const [{ data: jobs }, { data: summaries }, { data: clocked }] = await Promise.all([
+    supabase.from("jobs").select("*").order("created_at", { ascending: false }),
+    supabase.from("job_financial_summary").select("*"),
+    supabase.from("who_is_clocked_in").select("job_id"),
+  ]);
+
+  const summaryByJob = new Map(((summaries ?? []) as JobFinancialSummary[]).map((s) => [s.job_id, s]));
+  const onSite = new Map<string, number>();
+  for (const c of (clocked ?? []) as Pick<WhoIsClockedIn, "job_id">[]) onSite.set(c.job_id, (onSite.get(c.job_id) ?? 0) + 1);
+
+  const cards: JobCard[] = ((jobs ?? []) as Job[]).map((j) => {
+    const s = summaryByJob.get(j.id);
+    const billed = s?.total_invoiced ?? 0;
+    const bills = s?.total_bills ?? 0;
+    return {
+      id: j.id,
+      jobNumber: j.job_number,
+      name: j.name,
+      address: j.address,
+      lat: j.geofence_lat,
+      lon: j.geofence_lon,
+      status: j.status,
+      contract: j.contract_value,
+      pct: j.percent_complete,
+      billed,
+      outstanding: s?.total_outstanding ?? 0,
+      // Billed minus supplier bills coded to the job. Labour isn't costed yet, so this overstates true margin.
+      margin: billed > 0 ? (billed - bills) / billed : null,
+      onSite: onSite.get(j.id) ?? 0,
+    };
+  });
 
   return (
     <div>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
         <h1 className="display" style={{ fontSize: 22 }}>
           Jobs
         </h1>
@@ -25,23 +53,10 @@ export default async function JobsPage() {
           + New job
         </Link>
       </div>
-      <div style={{ display: "grid", gap: 12 }}>
-        {jobList.map((j) => (
-          <Link key={j.id} href={`/jobs/${j.id}`} className="cc-card" style={{ display: "block", textDecoration: "none", color: "var(--text)" }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <div>
-                <b>{j.job_number}</b> · {j.name}
-                <div style={{ color: "var(--mute)", fontSize: 12, marginTop: 2 }}>{j.address}</div>
-              </div>
-              <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
-                <Tag color={j.status === "active" ? "lime" : j.status === "holdback" ? "amber" : "mute"}>{j.status}</Tag>
-                <span className="mono">{fmt(j.contract_value)}</span>
-              </div>
-            </div>
-          </Link>
-        ))}
-        {jobList.length === 0 && <div className="cc-card" style={{ color: "var(--mute)" }}>No jobs yet.</div>}
-      </div>
+      <p style={{ color: "var(--mute)", fontSize: 12.5, marginBottom: 16 }}>
+        Margin = billed minus bills coded to the job (labour not included yet).
+      </p>
+      <JobsGlobe jobs={cards} />
     </div>
   );
 }
