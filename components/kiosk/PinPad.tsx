@@ -15,22 +15,23 @@ export function PinPad({
   message?: string;
   error?: string | null;
 }) {
+  const key: React.CSSProperties = { height: 72, fontSize: 28, fontWeight: 600, borderRadius: 18 };
   return (
     <div style={{ textAlign: "center" }}>
-      <div style={{ fontSize: 12, letterSpacing: 2, color: "var(--mute)" }}>CLOCK IN · CLOCK OUT</div>
-      <div className="display" style={{ fontSize: 28, margin: "8px 0 6px" }}>
-        Enter your PIN
+      <div style={{ fontSize: 44 }}>⏱️</div>
+      <div className="display" style={{ fontSize: 28, margin: "4px 0 4px" }}>
+        Clock in or out
       </div>
-      <div style={{ color: error ? "var(--red)" : "var(--mute)", minHeight: 22, fontSize: 14 }}>
-        {error || message || "4 digits"}
+      <div style={{ color: error ? "var(--red)" : "var(--mute)", minHeight: 24, fontSize: 15 }}>
+        {error ? `⚠️ ${error}` : message || "Type your 4-digit PIN 👇"}
       </div>
-      <div style={{ display: "flex", gap: 12, justifyContent: "center", margin: "16px 0 20px" }}>
+      <div style={{ display: "flex", gap: 14, justifyContent: "center", margin: "16px 0 20px" }}>
         {[0, 1, 2, 3].map((i) => (
           <i
             key={i}
             style={{
-              width: 16,
-              height: 16,
+              width: 20,
+              height: 20,
               borderRadius: "50%",
               display: "inline-block",
               border: "2px solid var(--line2)",
@@ -40,19 +41,19 @@ export function PinPad({
           />
         ))}
       </div>
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 10, maxWidth: 300, margin: "0 auto" }}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 10, maxWidth: 330, margin: "0 auto" }}>
         {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((n) => (
-          <button key={n} className="cc-btn ghost" style={{ height: 64, fontSize: 24 }} onClick={() => onDigit(n)} type="button">
+          <button key={n} className="cc-btn ghost" style={key} onClick={() => onDigit(n)} type="button">
             {n}
           </button>
         ))}
-        <button className="cc-btn ghost" style={{ height: 64, fontSize: 14 }} onClick={onClear} type="button">
+        <button className="cc-btn ghost" style={{ ...key, fontSize: 16 }} onClick={onClear} type="button">
           Clear
         </button>
-        <button className="cc-btn ghost" style={{ height: 64, fontSize: 24 }} onClick={() => onDigit(0)} type="button">
+        <button className="cc-btn ghost" style={key} onClick={() => onDigit(0)} type="button">
           0
         </button>
-        <button className="cc-btn ghost" style={{ height: 64, fontSize: 18 }} onClick={onBackspace} type="button">
+        <button className="cc-btn ghost" style={key} onClick={onBackspace} type="button" aria-label="Backspace">
           ⌫
         </button>
       </div>

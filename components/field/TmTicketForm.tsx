@@ -3,23 +3,24 @@
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { SignaturePad } from "./SignaturePad";
+import { Label, Notice, Stepper, Title } from "./ui";
 
 export function TmTicketForm({ companyId, jobId, createdBy }: { companyId: string; jobId: string; createdBy: string }) {
   const [superName, setSuperName] = useState("");
   const [superEmail, setSuperEmail] = useState("");
-  const [hours, setHours] = useState("");
+  const [hours, setHours] = useState(0);
   const [equipmentCost, setEquipmentCost] = useState("");
   const [materialsCost, setMaterialsCost] = useState("");
   const [signature, setSignature] = useState<Blob | null>(null);
   const [padKey, setPadKey] = useState(0);
+  const [ok, setOk] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [saved, setSaved] = useState(false);
   const [busy, setBusy] = useState(false);
 
   async function submit() {
     setBusy(true);
     setError(null);
-    setSaved(false);
+    setOk(null);
     const supabase = createClient();
     const ticketId = crypto.randomUUID();
     let signaturePath: string | null = null;
@@ -41,7 +42,7 @@ export function TmTicketForm({ companyId, jobId, createdBy }: { companyId: strin
       created_by: createdBy,
       super_name: superName,
       super_email: superEmail || null,
-      hours: Number(hours) || 0,
+      hours,
       equipment_cost: Number(equipmentCost) || 0,
       materials_cost: Number(materialsCost) || 0,
       status: signaturePath ? "signed" : "draft",
@@ -53,10 +54,10 @@ export function TmTicketForm({ companyId, jobId, createdBy }: { companyId: strin
       setError(`Ticket NOT saved: ${insertError.message}`);
       return;
     }
-    setSaved(true);
+    setOk(signaturePath ? "Ticket signed and saved. The office can send the super a copy." : "Saved as a draft (not signed yet).");
     setSuperName("");
     setSuperEmail("");
-    setHours("");
+    setHours(0);
     setEquipmentCost("");
     setMaterialsCost("");
     setSignature(null);
@@ -64,35 +65,33 @@ export function TmTicketForm({ companyId, jobId, createdBy }: { companyId: strin
   }
 
   return (
-    <div style={{ display: "grid", gap: 10 }}>
-      <div className="display" style={{ fontSize: 18 }}>
+    <div>
+      <Title emoji="🧾" help="Time & materials sign-off. Hand the phone to the GC's super to sign.">
         T&amp;M ticket
-      </div>
-      {saved && <div style={{ color: "var(--lime)", fontSize: 12.5 }}>Ticket saved.</div>}
-      {error && <div style={{ color: "var(--red)", fontSize: 12.5 }}>{error}</div>}
-      <input placeholder="GC superintendent name" value={superName} onChange={(e) => setSuperName(e.target.value)} style={inputStyle} />
-      <input placeholder="Super email (optional)" value={superEmail} onChange={(e) => setSuperEmail(e.target.value)} style={inputStyle} />
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr))", gap: 8 }}>
-        <input placeholder="Hours" type="number" value={hours} onChange={(e) => setHours(e.target.value)} style={inputStyle} />
-        <input placeholder="Equipment $" type="number" value={equipmentCost} onChange={(e) => setEquipmentCost(e.target.value)} style={inputStyle} />
-        <input placeholder="Materials $" type="number" value={materialsCost} onChange={(e) => setMaterialsCost(e.target.value)} style={inputStyle} />
-      </div>
+      </Title>
+      <Notice ok={ok} error={error} />
+
+      <Label>🧑‍💼 Super&apos;s name</Label>
+      <input className="fa-input" placeholder="GC superintendent" value={superName} onChange={(e) => setSuperName(e.target.value)} />
+
+      <Label>📧 Super&apos;s email (so we can send a copy)</Label>
+      <input className="fa-input" type="email" inputMode="email" placeholder="name@company.com" value={superEmail} onChange={(e) => setSuperEmail(e.target.value)} />
+
+      <Label>⏱️ Hours worked</Label>
+      <Stepper value={hours} onChange={setHours} step={0.5} max={999} unit="h" />
+
+      <Label>🚜 Equipment cost ($)</Label>
+      <input className="fa-input" inputMode="decimal" placeholder="0" value={equipmentCost} onChange={(e) => setEquipmentCost(e.target.value)} />
+
+      <Label>🧱 Materials cost ($)</Label>
+      <input className="fa-input" inputMode="decimal" placeholder="0" value={materialsCost} onChange={(e) => setMaterialsCost(e.target.value)} />
+
+      <Label>✍️ Super signs here</Label>
       <SignaturePad key={padKey} onChange={setSignature} />
-      <button className="cc-btn lime" disabled={busy || !superName} onClick={submit} type="button">
-        {busy ? "Saving…" : "Save ticket"}
+
+      <button className="fa-btn go" disabled={busy || !superName.trim()} onClick={submit} type="button">
+        {busy ? "Saving…" : "✅ Save ticket"}
       </button>
     </div>
   );
 }
-
-const inputStyle: React.CSSProperties = {
-  background: "var(--panel)",
-  border: "1px solid var(--line2)",
-  borderRadius: 10,
-  color: "var(--text)",
-  padding: "9px 10px",
-  fontSize: 14,
-  width: "100%",
-  minWidth: 0,
-  boxSizing: "border-box",
-};

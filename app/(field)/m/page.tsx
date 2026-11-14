@@ -6,6 +6,12 @@ import { FieldApp } from "@/components/field/FieldApp";
 import type { Job, ToolboxTalk } from "@/lib/types/database";
 import { todayToronto } from "@/lib/today";
 
+// Some profiles store an email as the name; show "Chris", not "chris@demstos.com".
+function friendlyFirstName(fullName: string): string {
+  const first = fullName.split("@")[0].split(/[\s._-]+/)[0] || "there";
+  return first.charAt(0).toUpperCase() + first.slice(1);
+}
+
 export default async function FieldMobilePage() {
   if (!isSupabaseConfigured) return <SetupBanner />;
 
@@ -31,9 +37,6 @@ export default async function FieldMobilePage() {
 
   return (
     <div>
-      <div style={{ textAlign: "center", marginBottom: 14 }}>
-        <span className="cc-chip">{user.profile.full_name} · {user.profile.role}</span>
-      </div>
       <FieldApp
         jobs={jobList.map((j) => ({
           id: j.id,
@@ -45,6 +48,7 @@ export default async function FieldMobilePage() {
           geofence_radius_m: j.geofence_radius_m,
         }))}
         currentProfileId={user.profile.id}
+        firstName={friendlyFirstName(user.profile.full_name)}
         toolboxTalksByJob={toolboxTalksByJob}
       />
     </div>

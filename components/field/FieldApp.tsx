@@ -17,8 +17,14 @@ interface FieldJob {
   geofence_radius_m: number;
 }
 
-const TABS = ["Punch clock", "Daily log", "Extras", "T&M ticket", "Incident"] as const;
-type Tab = (typeof TABS)[number];
+const TABS = [
+  { key: "clock", emoji: "⏱️", label: "Clock" },
+  { key: "log", emoji: "📝", label: "Daily log" },
+  { key: "extras", emoji: "➕", label: "Extras" },
+  { key: "tm", emoji: "🧾", label: "T&M" },
+  { key: "incident", emoji: "🚨", label: "Incident" },
+] as const;
+type Tab = (typeof TABS)[number]["key"];
 
 interface FieldToolboxTalk {
   id: string;
@@ -29,75 +35,55 @@ interface FieldToolboxTalk {
 export function FieldApp({
   jobs,
   currentProfileId,
+  firstName,
   toolboxTalksByJob,
 }: {
   jobs: FieldJob[];
   currentProfileId: string;
+  firstName: string;
   toolboxTalksByJob: Record<string, FieldToolboxTalk | null>;
 }) {
-  const [tab, setTab] = useState<Tab>("Punch clock");
+  const [tab, setTab] = useState<Tab>("clock");
   const [jobId, setJobId] = useState(jobs[0]?.id ?? "");
   const job = jobs.find((j) => j.id === jobId) ?? jobs[0];
 
   if (!job) {
-    return <div className="cc-card" style={{ color: "var(--mute)" }}>No jobs assigned yet.</div>;
+    return (
+      <div className="fa-wrap" style={{ textAlign: "center", paddingTop: 60 }}>
+        <div style={{ fontSize: 56 }}>🏗️</div>
+        <div className="display fa-title">No jobs yet</div>
+        <div className="fa-help">Ask the office to add you to a job. It will show up here.</div>
+      </div>
+    );
   }
 
   return (
-    <div style={{ maxWidth: 480, margin: "0 auto" }}>
-      <select value={jobId || job.id} onChange={(e) => setJobId(e.target.value)} style={{ ...selectStyle, marginBottom: 12 }}>
+    <div className="fa-wrap">
+      <div className="display fa-hello">👋 Hi {firstName}!</div>
+      <div className="fa-sub">Pick your job, then tap what you need below.</div>
+
+      <select className="fa-job" value={jobId || job.id} onChange={(e) => setJobId(e.target.value)} aria-label="Job">
         {jobs.map((j) => (
           <option key={j.id} value={j.id}>
-            {j.job_number} · {j.name}
+            🏗️ {j.job_number} · {j.name}
           </option>
         ))}
       </select>
 
-      <div style={{ display: "flex", gap: 6, overflowX: "auto", marginBottom: 14 }}>
+      {tab === "clock" && <KioskApp job={job} toolboxTalk={toolboxTalksByJob[job.id] ?? null} />}
+      {tab === "log" && <DailyLogForm key={job.id} companyId={job.company_id} jobId={job.id} foremanId={currentProfileId} />}
+      {tab === "extras" && <ExtraForm key={job.id} companyId={job.company_id} jobId={job.id} reportedBy={currentProfileId} />}
+      {tab === "tm" && <TmTicketForm key={job.id} companyId={job.company_id} jobId={job.id} createdBy={currentProfileId} />}
+      {tab === "incident" && <IncidentForm key={job.id} companyId={job.company_id} jobId={job.id} workerId={currentProfileId} />}
+
+      <nav className="fa-tabbar" aria-label="Field app sections">
         {TABS.map((t) => (
-          <button
-            key={t}
-            type="button"
-            className={`cc-btn sm ${tab === t ? "" : "ghost"}`}
-            style={{ whiteSpace: "nowrap" }}
-            onClick={() => setTab(t)}
-          >
-            {t}
+          <button key={t.key} type="button" className={`fa-tab ${tab === t.key ? "on" : ""}`} onClick={() => setTab(t.key)} aria-current={tab === t.key ? "page" : undefined}>
+            <span className="e">{t.emoji}</span>
+            {t.label}
           </button>
         ))}
-      </div>
-
-      {tab === "Punch clock" && <KioskApp job={job} toolboxTalk={toolboxTalksByJob[job.id] ?? null} />}
-      {tab === "Daily log" && (
-        <div className="cc-card">
-          <DailyLogForm companyId={job.company_id} jobId={job.id} foremanId={currentProfileId} />
-        </div>
-      )}
-      {tab === "Extras" && (
-        <div className="cc-card">
-          <ExtraForm companyId={job.company_id} jobId={job.id} reportedBy={currentProfileId} />
-        </div>
-      )}
-      {tab === "T&M ticket" && (
-        <div className="cc-card">
-          <TmTicketForm companyId={job.company_id} jobId={job.id} createdBy={currentProfileId} />
-        </div>
-      )}
-      {tab === "Incident" && (
-        <div className="cc-card">
-          <IncidentForm companyId={job.company_id} jobId={job.id} workerId={currentProfileId} />
-        </div>
-      )}
+      </nav>
     </div>
   );
 }
-
-const selectStyle: React.CSSProperties = {
-  background: "var(--panel)",
-  border: "1px solid var(--line2)",
-  borderRadius: 10,
-  color: "var(--text)",
-  padding: "9px 10px",
-  fontSize: 14,
-  width: "100%",
-};

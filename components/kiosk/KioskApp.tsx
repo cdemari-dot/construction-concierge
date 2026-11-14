@@ -251,7 +251,7 @@ export function KioskApp({ job, toolboxTalk }: { job: KioskJob; toolboxTalk: Kio
   return (
     <div
       className="cc-card"
-      style={{ maxWidth: 480, margin: "40px auto", padding: 28, minHeight: 520, display: "flex", flexDirection: "column", justifyContent: "center" }}
+      style={{ maxWidth: 480, margin: "8px auto", padding: 20, minHeight: 460, display: "flex", flexDirection: "column", justifyContent: "center" }}
     >
       {step === "pin" && (
         <PinPad pin={pin} onDigit={handleDigit} onClear={() => setPin("")} onBackspace={() => setPin((p) => p.slice(0, -1))} error={pinError} />
@@ -273,18 +273,18 @@ export function KioskApp({ job, toolboxTalk }: { job: KioskJob; toolboxTalk: Kio
       {step === "ppe-missing" && (
         <div style={{ textAlign: "center" }}>
           <div style={{ fontSize: 56 }}>⛔</div>
-          <div className="display" style={{ fontSize: 22, margin: "10px 0" }}>
-            Don&apos;t start work yet
+          <div className="display fa-title" style={{ margin: "10px 0" }}>
+            Hold up, don&apos;t start yet
           </div>
-          <div style={{ color: "var(--amber)", marginBottom: 8, fontSize: 14 }}>
+          <div style={{ color: "var(--amber)", marginBottom: 8, fontSize: 16, fontWeight: 600 }}>
             Missing: {PPE_ITEMS.filter((_, i) => !ppeChecked[i]).join(", ") || "items not confirmed"}
           </div>
-          <div style={{ color: "var(--mute)", marginBottom: 16 }}>Your foreman has been notified.</div>
-          <button className="cc-btn" style={{ width: "100%", padding: 16, marginBottom: 8 }} onClick={handleForemanSupplied} type="button">
-            Foreman supplied it
+          <div style={{ color: "var(--mute)", marginBottom: 6, fontSize: 15 }}>Ask your foreman to get you set up.</div>
+          <button className="fa-btn go" onClick={handleForemanSupplied} type="button">
+            🤝 Foreman gave me the gear
           </button>
-          <button className="cc-btn ghost" style={{ width: "100%", padding: 14 }} onClick={resetAll} type="button">
-            Cancel
+          <button className="fa-btn quiet" onClick={resetAll} type="button">
+            ← Cancel
           </button>
         </div>
       )}
@@ -333,11 +333,11 @@ export function KioskApp({ job, toolboxTalk }: { job: KioskJob; toolboxTalk: Kio
 
       {(step === "done-in" || step === "done-out") && (
         <div style={{ textAlign: "center" }}>
-          <div style={{ fontSize: 60 }}>{step === "done-in" ? "✅" : "👋"}</div>
-          <div className="display" style={{ fontSize: 24, margin: "10px 0" }}>
+          <div style={{ fontSize: 72 }}>{step === "done-in" ? "✅" : "👋"}</div>
+          <div className="display fa-title" style={{ margin: "10px 0" }}>
             {doneMessage}
           </div>
-          <div style={{ color: "var(--mute)", fontSize: 13.5, lineHeight: 1.7 }}>
+          <div style={{ color: "var(--mute)", fontSize: 15, lineHeight: 1.7 }}>
             {doneDetail}
           </div>
         </div>
@@ -346,13 +346,13 @@ export function KioskApp({ job, toolboxTalk }: { job: KioskJob; toolboxTalk: Kio
       {step === "error" && (
         <div style={{ textAlign: "center" }}>
           <div style={{ fontSize: 56 }}>⚠️</div>
-          <div className="display" style={{ fontSize: 22, margin: "10px 0" }}>
+          <div className="display fa-title" style={{ margin: "10px 0" }}>
             That punch did NOT save
           </div>
-          <div style={{ color: "var(--red)", fontSize: 13.5, lineHeight: 1.6, marginBottom: 16 }}>{failure}</div>
-          <div style={{ color: "var(--mute)", fontSize: 12.5, marginBottom: 16 }}>Tell your foreman, then try again.</div>
-          <button className="cc-btn" style={{ width: "100%", padding: 16 }} onClick={resetAll} type="button">
-            Start over
+          <div style={{ color: "var(--red)", fontSize: 15, lineHeight: 1.6, marginBottom: 12 }}>{failure}</div>
+          <div style={{ color: "var(--mute)", fontSize: 15 }}>Tell your foreman, then try again.</div>
+          <button className="fa-btn" onClick={resetAll} type="button">
+            🔄 Start over
           </button>
         </div>
       )}

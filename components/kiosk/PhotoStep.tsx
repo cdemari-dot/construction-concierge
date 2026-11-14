@@ -15,13 +15,11 @@ export function PhotoStep({
 
   return (
     <div style={{ textAlign: "center" }}>
-      <div style={{ fontSize: 12, letterSpacing: 2, color: "var(--mute)" }}>{title}</div>
-      <div className="display" style={{ fontSize: 24, margin: "8px 0 4px" }}>
-        Take a quick photo
+      <div style={{ fontSize: 15, color: "var(--mute)", fontWeight: 600 }}>{title}</div>
+      <div className="display fa-title" style={{ marginTop: 6 }}>
+        🤳 Quick selfie
       </div>
-      <div style={{ color: "var(--mute)", marginBottom: 16, fontSize: 13.5 }}>
-        Stamped with GPS location and time, saved with your punch
-      </div>
+      <div className="fa-help">Proves you&apos;re on site. It&apos;s stamped with the time and your location.</div>
 
       <input
         ref={inputRef}
@@ -32,14 +30,14 @@ export function PhotoStep({
         onChange={(e) => onCaptured(e.target.files?.[0] ?? null)}
       />
 
-      <button className="cc-btn" style={{ display: "block", width: "100%", padding: 28, fontSize: 20, marginBottom: 10 }} onClick={() => inputRef.current?.click()} type="button">
-        📸 Take photo
+      <button className="fa-btn go" style={{ minHeight: 84, fontSize: 22 }} onClick={() => inputRef.current?.click()} type="button">
+        📸 Take selfie
       </button>
-      <button className="cc-btn ghost" style={{ display: "block", width: "100%", padding: 14, marginBottom: 10 }} onClick={() => onCaptured(null)} type="button">
-        No camera on this device? Use demo photo
+      <button className="fa-btn quiet" style={{ minHeight: 48, fontSize: 14 }} onClick={() => onCaptured(null)} type="button">
+        No camera? Use a test photo
       </button>
-      <button className="cc-btn ghost" style={{ display: "block", width: "100%", padding: 14, border: 0, color: "var(--mute)" }} onClick={onCancel} type="button">
-        Cancel
+      <button className="fa-btn quiet" style={{ minHeight: 48, fontSize: 14, border: 0, color: "var(--mute)", marginTop: 4 }} onClick={onCancel} type="button">
+        ← Back
       </button>
     </div>
   );

@@ -252,3 +252,188 @@ h2,
   .cc-spin, .cc-bar i::after, .cc-anim { animation: none !important; }
   .cc-bar i, .cc-anim-t { transition: none !important; }
 }
+
+/* ---------- Field app (phone): big, friendly, thumb-sized ---------- */
+.fa-wrap {
+  max-width: 480px;
+  margin: 0 auto;
+  padding-bottom: 110px;
+}
+.fa-hello {
+  font-size: 26px;
+  line-height: 1.2;
+  margin: 4px 0 2px;
+}
+.fa-sub {
+  color: var(--mute);
+  font-size: 14px;
+  margin-bottom: 14px;
+}
+.fa-job {
+  width: 100%;
+  background: var(--panel);
+  border: 1px solid var(--line2);
+  border-radius: 16px;
+  color: var(--text);
+  padding: 16px 14px;
+  font-size: 17px;
+  font-weight: 600;
+  margin-bottom: 14px;
+}
+.fa-tabbar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 30;
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 2px;
+  padding: 6px 6px calc(6px + env(safe-area-inset-bottom));
+  background: var(--card-b);
+  border-top: 1px solid var(--line2);
+}
+.fa-tab {
+  display: grid;
+  justify-items: center;
+  gap: 2px;
+  padding: 8px 2px;
+  border-radius: 14px;
+  border: 0;
+  background: transparent;
+  color: var(--mute);
+  font-size: 11px;
+  font-weight: 600;
+}
+.fa-tab .e {
+  font-size: 26px;
+  line-height: 1;
+}
+.fa-tab.on {
+  background: rgba(200, 164, 100, 0.16);
+  color: var(--cyan);
+}
+.fa-title {
+  font-size: 24px;
+  line-height: 1.2;
+  margin-bottom: 4px;
+}
+.fa-help {
+  color: var(--mute);
+  font-size: 14px;
+  margin-bottom: 14px;
+  line-height: 1.5;
+}
+.fa-label {
+  display: block;
+  font-size: 15px;
+  font-weight: 600;
+  margin: 16px 0 8px;
+}
+.fa-input {
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  background: var(--panel);
+  border: 1px solid var(--line2);
+  border-radius: 14px;
+  color: var(--text);
+  padding: 15px 14px;
+  font-size: 17px; /* 16px+ stops iOS zooming on focus */
+  font-family: inherit;
+}
+.fa-btn {
+  width: 100%;
+  min-height: 60px;
+  border-radius: 16px;
+  border: 1px solid rgba(200, 164, 100, 0.5);
+  background: rgba(200, 164, 100, 0.14);
+  color: var(--cyan);
+  font-size: 18px;
+  font-weight: 700;
+  margin-top: 18px;
+}
+.fa-btn.go {
+  border-color: rgba(63, 191, 127, 0.6);
+  background: rgba(63, 191, 127, 0.16);
+  color: var(--lime);
+}
+.fa-btn.stop {
+  border-color: rgba(229, 72, 77, 0.6);
+  background: rgba(229, 72, 77, 0.14);
+  color: var(--red);
+}
+.fa-btn.quiet {
+  border-color: var(--line2);
+  background: transparent;
+  color: var(--text);
+  font-weight: 600;
+}
+.fa-btn:disabled {
+  opacity: 0.35;
+}
+.fa-chips {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(96px, 1fr));
+  gap: 8px;
+}
+.fa-chip {
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+  padding: 14px 6px;
+  border-radius: 16px;
+  border: 1px solid var(--line2);
+  background: var(--panel);
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 600;
+  text-align: center;
+}
+.fa-chip .e {
+  font-size: 28px;
+  line-height: 1;
+}
+.fa-chip.on {
+  border-color: var(--cyan);
+  background: rgba(200, 164, 100, 0.16);
+  color: var(--cyan);
+}
+.fa-stepper {
+  display: grid;
+  grid-template-columns: 64px 1fr 64px;
+  gap: 8px;
+  align-items: center;
+}
+.fa-stepper button {
+  height: 64px;
+  border-radius: 16px;
+  border: 1px solid var(--line2);
+  background: var(--panel);
+  color: var(--text);
+  font-size: 30px;
+  font-weight: 600;
+}
+.fa-stepper .v {
+  text-align: center;
+  font-size: 30px;
+  font-weight: 700;
+}
+.fa-ok,
+.fa-err {
+  border-radius: 14px;
+  padding: 14px;
+  font-size: 15px;
+  font-weight: 600;
+  margin-bottom: 14px;
+}
+.fa-ok {
+  background: rgba(63, 191, 127, 0.14);
+  border: 1px solid rgba(63, 191, 127, 0.5);
+  color: var(--lime);
+}
+.fa-err {
+  background: rgba(229, 72, 77, 0.12);
+  border: 1px solid rgba(229, 72, 77, 0.5);
+  color: var(--red);
+}

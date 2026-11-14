@@ -3,24 +3,31 @@
 import { useState } from "react";
 import { REPORT_CATEGORIES } from "@/lib/kiosk/constants";
 
+const CATEGORY_EMOJI: Record<string, string> = {
+  "Nothing to report": "👍",
+  "Near miss": "😮‍💨",
+  Hazard: "⚠️",
+  Damage: "💥",
+  "Equipment issue": "🔧",
+  "Short on material": "📦",
+};
+
 export function InjuryQuestionStep({ onAnswer }: { onAnswer: (hurt: boolean) => void }) {
   return (
     <div style={{ textAlign: "center" }}>
-      <div style={{ fontSize: 12, letterSpacing: 2, color: "var(--mute)" }}>BEFORE YOU CLOCK OUT</div>
-      <div className="display" style={{ fontSize: 26, margin: "20px 0 26px" }}>
-        Were you hurt or injured at work today?
+      <div style={{ fontSize: 52 }}>🩹</div>
+      <div className="display fa-title" style={{ margin: "6px 0 18px" }}>
+        Were you hurt at work today?
       </div>
       <div style={{ display: "flex", gap: 12 }}>
-        <button className="cc-btn lime" style={{ flex: 1, padding: 26, fontSize: 22 }} onClick={() => onAnswer(false)} type="button">
-          No
+        <button className="fa-btn go" style={{ marginTop: 0, minHeight: 96, fontSize: 22 }} onClick={() => onAnswer(false)} type="button">
+          👍 No
         </button>
-        <button className="cc-btn red" style={{ flex: 1, padding: 26, fontSize: 22 }} onClick={() => onAnswer(true)} type="button">
-          Yes
+        <button className="fa-btn stop" style={{ marginTop: 0, minHeight: 96, fontSize: 22 }} onClick={() => onAnswer(true)} type="button">
+          🤕 Yes
         </button>
       </div>
-      <div style={{ fontSize: 11.5, color: "var(--mute)", marginTop: 14 }}>
-        Documentation only — this is not a WSIB filing.
-      </div>
+      <div style={{ fontSize: 13, color: "var(--mute)", marginTop: 14 }}>This is just for our records. It is not a WSIB filing.</div>
     </div>
   );
 }
@@ -36,39 +43,30 @@ export function InjuryFormStep({
 
   return (
     <div>
-      <div className="display" style={{ fontSize: 22, marginBottom: 6 }}>
-        Let&apos;s get it logged
-      </div>
-      <div style={{ color: "var(--mute)", fontSize: 13, marginBottom: 12 }}>
-        The office and your foreman are notified as soon as you submit.
-      </div>
+      <div className="display fa-title">🤕 Let&apos;s get it written down</div>
+      <div className="fa-help">The office and your foreman are told as soon as you save.</div>
       <textarea
-        rows={3}
+        className="fa-input"
+        rows={4}
         placeholder="What happened? Which body part?"
         value={description}
         onChange={(e) => setDescription(e.target.value)}
-        style={{ width: "100%", background: "var(--panel)", border: "1px solid var(--line2)", borderRadius: 12, color: "var(--text)", padding: 10, fontSize: 14, marginBottom: 10 }}
       />
-      <div style={{ display: "flex", gap: 10, marginBottom: 14 }}>
-        <button
-          type="button"
-          className="cc-btn ghost"
-          style={{ flex: 1, borderColor: firstAidGiven ? "var(--lime)" : undefined, color: firstAidGiven ? "var(--lime)" : undefined }}
-          onClick={() => setFirstAidGiven((v) => !v)}
-        >
-          First aid given on site
+      <div className="fa-chips" style={{ marginTop: 12 }}>
+        <button type="button" className={`fa-chip ${firstAidGiven ? "on" : ""}`} onClick={() => setFirstAidGiven((v) => !v)}>
+          <span className="e">🩺</span>First aid given
         </button>
-        <button
-          type="button"
-          className="cc-btn ghost"
-          style={{ flex: 1, borderColor: needsMedical ? "var(--red)" : undefined, color: needsMedical ? "var(--red)" : undefined }}
-          onClick={() => setNeedsMedical((v) => !v)}
-        >
-          Needs medical attention
+        <button type="button" className={`fa-chip ${needsMedical ? "on" : ""}`} onClick={() => setNeedsMedical((v) => !v)}>
+          <span className="e">🚑</span>Needs a doctor
         </button>
       </div>
-      <button className="cc-btn red" style={{ width: "100%", padding: 16 }} onClick={() => onSubmit({ description, firstAidGiven, needsMedical })} type="button">
-        Save to record
+      <button
+        className="fa-btn stop"
+        disabled={!description.trim()}
+        onClick={() => onSubmit({ description, firstAidGiven, needsMedical })}
+        type="button"
+      >
+        💾 Save to record
       </button>
     </div>
   );
@@ -80,31 +78,20 @@ export function ReportStep({ onSubmit }: { onSubmit: (data: { category: string; 
 
   return (
     <div>
-      <div className="display" style={{ fontSize: 22, marginBottom: 12 }}>
-        Anything to report?
-      </div>
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 12 }}>
+      <div className="display fa-title">📋 Anything to tell the office?</div>
+      <div className="fa-chips" style={{ margin: "12px 0" }}>
         {REPORT_CATEGORIES.map((c) => (
-          <button
-            key={c}
-            type="button"
-            className="cc-btn ghost"
-            style={{ fontSize: 13, borderColor: category === c ? "var(--lime)" : undefined, color: category === c ? "var(--lime)" : undefined }}
-            onClick={() => setCategory(c)}
-          >
+          <button key={c} type="button" className={`fa-chip ${category === c ? "on" : ""}`} onClick={() => setCategory(c)}>
+            <span className="e">{CATEGORY_EMOJI[c] ?? "🔹"}</span>
             {c}
           </button>
         ))}
       </div>
-      <textarea
-        rows={2}
-        placeholder="Details (optional)"
-        value={details}
-        onChange={(e) => setDetails(e.target.value)}
-        style={{ width: "100%", background: "var(--panel)", border: "1px solid var(--line2)", borderRadius: 12, color: "var(--text)", padding: 10, fontSize: 14, marginBottom: 12 }}
-      />
-      <button className="cc-btn red" style={{ width: "100%", padding: 16 }} onClick={() => onSubmit({ category, details })} type="button">
-        ⏹ Clock out
+      {category !== REPORT_CATEGORIES[0] && (
+        <textarea className="fa-input" rows={3} placeholder="Tell us a bit more (optional)" value={details} onChange={(e) => setDetails(e.target.value)} />
+      )}
+      <button className="fa-btn stop" onClick={() => onSubmit({ category, details })} type="button">
+        🏁 Clock out
       </button>
     </div>
   );

@@ -8,4 +8,6 @@ export const PPE_ITEMS = [
   "Respirator, fit-tested (P100)",
 ];
 
+export const PPE_EMOJI = ["⛑️", "🥾", "🦺", "🥽", "🧤", "🎧", "😷"];
+
 export const REPORT_CATEGORIES = ["Nothing to report", "Near miss", "Hazard", "Damage", "Equipment issue", "Short on material"];

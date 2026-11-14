@@ -1,6 +1,6 @@
 "use client";
 
-import { PPE_ITEMS } from "@/lib/kiosk/constants";
+import { PPE_ITEMS, PPE_EMOJI } from "@/lib/kiosk/constants";
 
 export function PpeStep({
   checked,
@@ -17,11 +17,9 @@ export function PpeStep({
 
   return (
     <div>
-      <div style={{ fontSize: 12, letterSpacing: 2, color: "var(--mute)" }}>STEP 1 OF 2 · BEFORE YOU START</div>
-      <div className="display" style={{ fontSize: 24, margin: "8px 0 16px" }}>
-        Do you have all your required PPE?
-      </div>
-      <div style={{ display: "grid", gap: 8, marginBottom: 14 }}>
+      <div className="display fa-title">🦺 Got your gear on?</div>
+      <div className="fa-help">Tap each one to check it off.</div>
+      <div style={{ display: "grid", gap: 8, marginBottom: 4 }}>
         {PPE_ITEMS.map((p, i) => (
           <button
             key={p}
@@ -33,21 +31,25 @@ export function PpeStep({
               alignItems: "center",
               gap: 12,
               textAlign: "left",
-              fontSize: 15,
-              borderColor: checked[i] ? "rgba(63,191,127,.55)" : undefined,
-              background: checked[i] ? "rgba(63,191,127,.1)" : undefined,
+              fontSize: 17,
+              fontWeight: 600,
+              minHeight: 60,
+              borderColor: checked[i] ? "rgba(63,191,127,.6)" : undefined,
+              background: checked[i] ? "rgba(63,191,127,.14)" : undefined,
+              color: "var(--text)",
             }}
           >
-            <span style={{ fontSize: 20 }}>{checked[i] ? "✅" : "⬜"}</span>
-            {p}
+            <span style={{ fontSize: 28 }}>{PPE_EMOJI[i] ?? "🔹"}</span>
+            <span style={{ flex: 1 }}>{p}</span>
+            <span style={{ fontSize: 26 }}>{checked[i] ? "✅" : "⬜"}</span>
           </button>
         ))}
       </div>
-      <button className="cc-btn lime" style={{ width: "100%", padding: 16, opacity: all ? 1 : 0.35 }} disabled={!all} onClick={onAllGood} type="button">
-        Yes, all PPE on
+      <button className="fa-btn go" disabled={!all} onClick={onAllGood} type="button">
+        👍 Yes, all geared up
       </button>
-      <button className="cc-btn ghost" style={{ width: "100%", padding: 14, marginTop: 8 }} onClick={onMissing} type="button">
-        No, I&apos;m missing something
+      <button className="fa-btn quiet" onClick={onMissing} type="button">
+        🙋 I&apos;m missing something
       </button>
     </div>
   );
