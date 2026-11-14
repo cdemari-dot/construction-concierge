@@ -3,6 +3,7 @@ import Link from "next/link";
 import { requireRole } from "@/lib/auth/session";
 import { isSupabaseConfigured } from "@/lib/supabase/env";
 import { SignOutButton } from "@/components/dashboard/SignOutButton";
+import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import { AgentDrawer } from "@/components/agent/AgentDrawer";
 
 const NAV = [
@@ -78,6 +79,7 @@ export default async function OwnerLayout({ children }: { children: React.ReactN
               "Not connected to Supabase"
             )}
           </div>
+          <ThemeToggle style={{ width: "100%", marginBottom: 8 }} />
           {user && <SignOutButton />}
         </div>
       </aside>

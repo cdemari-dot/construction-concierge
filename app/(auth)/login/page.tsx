@@ -5,6 +5,7 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { isSupabaseConfigured } from "@/lib/supabase/env";
+import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import { SetupBanner } from "@/components/ui/SetupBanner";
 
 type Mode = "sign-in" | "new-company";
@@ -129,6 +130,10 @@ export default function LoginPage() {
               {busy ? "Working…" : mode === "sign-in" ? "Sign in" : "Create company"}
             </button>
           </form>
+        </div>
+
+        <div style={{ marginTop: 14 }}>
+          <ThemeToggle />
         </div>
 
         <p style={{ fontSize: 11.5, color: "var(--mute)", marginTop: 16, lineHeight: 1.6 }}>
