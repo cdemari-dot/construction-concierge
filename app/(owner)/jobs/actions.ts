@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentUser } from "@/lib/auth/session";
+import { geocode } from "@/lib/geocode";
 
 export async function createJob(formData: FormData) {
   const user = await getCurrentUser();
@@ -44,19 +45,4 @@ export async function createJob(formData: FormData) {
   revalidatePath("/jobs");
   revalidatePath("/dashboard");
   redirect(`/jobs/${job.id}`);
-}
-
-// Best-effort address lookup via OpenStreetMap Nominatim; a failure just
-// means the job has no pin until coordinates are added.
-async function geocode(address: string): Promise<[number, number] | null> {
-  try {
-    const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&limit=1&q=${encodeURIComponent(address)}`, {
-      headers: { "User-Agent": "ConstructionConcierge/1.0 (constructionconcierge.ai)" },
-      signal: AbortSignal.timeout(5000),
-    });
-    const [hit] = (await res.json()) as { lat: string; lon: string }[];
-    return hit ? [Number(hit.lat), Number(hit.lon)] : null;
-  } catch {
-    return null;
-  }
 }

@@ -107,8 +107,17 @@ T&M tickets (signature image via signed URL; signed -> sent to GC -> billed). T&
 signatures are drawn on `components/field/SignaturePad.tsx` and stored in the
 private `signatures` bucket; if the upload fails the ticket is not saved.
 
+### CRM (bid pipeline)
+`/crm` (Owner/PM): kanban of bids (Lead, Estimating, Bid sent, Won, Lost) in the `bids` table
+(migration 0009; no deletes, a dead bid goes to Lost with a reason). Drag cards or use the
+dropdown; each card has an editable value, a follow-up date (overdue ones flag amber and show
+on the dashboard) and a bid-due date. A Won bid has "Create job" (asks for a job number, carries
+over name, client, address, geocodes it, and sets contract value to the bid value) and then links
+to the job. Stats: open pipeline, won, win rate, follow-ups due. Dashboard shows the pipeline
+stat and a "bid follow-ups due" banner. Estimation-log spreadsheet import is NOT built.
+
 ### Still explicitly out of scope
-CRM/bid tracking & kanban, inventory/equipment tracking, the integrations
+inventory/equipment tracking, the integrations
 marketplace, detailed job-cost category breakdowns (labour/AP/material/
 equipment variance), and worker certification tracking.
 

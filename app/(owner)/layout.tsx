@@ -9,6 +9,7 @@ import { AgentDrawer } from "@/components/agent/AgentDrawer";
 const NAV = [
   { href: "/dashboard", label: "Command" },
   { href: "/jobs", label: "Jobs" },
+  { href: "/crm", label: "CRM" },
   { href: "/clients", label: "Clients" },
   { href: "/schedule", label: "Schedule" },
   { href: "/field", label: "Field app" },

@@ -322,3 +322,24 @@ export interface WhoIsClockedIn {
   clock_in_at: string;
   geofence_ok: boolean | null;
 }
+
+export type BidStage = "lead" | "estimating" | "submitted" | "won" | "lost";
+
+export interface Bid {
+  id: string;
+  company_id: string;
+  client_id: string | null;
+  name: string;
+  address: string | null;
+  contact: string | null;
+  value: number;
+  stage: BidStage;
+  bid_due: string | null;
+  follow_up_on: string | null;
+  notes: string | null;
+  lost_reason: string | null;
+  job_id: string | null;
+  created_by: string | null;
+  created_at: string;
+  stage_changed_at: string;
+}

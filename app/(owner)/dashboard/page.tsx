@@ -9,7 +9,7 @@ import { ReportButton } from "@/components/dashboard/ReportButton";
 import { setTmStatus } from "@/app/(owner)/field-reports/actions";
 import { buildForecast, firstNegativeWeek } from "@/lib/cashflow/forecast";
 import { fmt, fmtTime } from "@/lib/format";
-import type { Bill, CashFlowAssumptions, CompanyCashPosition, Invoice, Job, Profile, TmTicket, WhoIsClockedIn } from "@/lib/types/database";
+import type { Bid, Bill, CashFlowAssumptions, CompanyCashPosition, Invoice, Job, Profile, TmTicket, WhoIsClockedIn } from "@/lib/types/database";
 
 export default async function DashboardPage() {
   if (!isSupabaseConfigured) {
@@ -25,7 +25,7 @@ export default async function DashboardPage() {
 
   const supabase = await createClient();
 
-  const [{ data: clockedIn }, { data: cashRows }, { data: jobs }, { data: invoiceRows }, { data: billRows }, { data: assumptionRow }, { data: crewRows }, { data: tmRows }] = await Promise.all([
+  const [{ data: clockedIn }, { data: cashRows }, { data: jobs }, { data: invoiceRows }, { data: billRows }, { data: assumptionRow }, { data: crewRows }, { data: tmRows }, { data: bidRows }] = await Promise.all([
     supabase.from("who_is_clocked_in").select("*").order("clock_in_at", { ascending: false }),
     supabase.from("company_cash_position").select("*").maybeSingle(),
     supabase.from("jobs").select("*").order("created_at", { ascending: false }),
@@ -35,12 +35,18 @@ export default async function DashboardPage() {
     supabase.from("profiles").select("id").in("role", ["foreman", "worker"]).eq("status", "active"),
     // Signed by the GC super but not billed yet.
     supabase.from("tm_tickets").select("*").in("status", ["signed", "sent_to_gc"]).order("signed_at", { ascending: true }),
+    // Open bids (the table may not exist yet on an older database, so a failure is just "no bids").
+    supabase.from("bids").select("*").in("stage", ["lead", "estimating", "submitted"]),
   ]);
 
   const cash = cashRows as CompanyCashPosition | null;
   const crew = (clockedIn ?? []) as WhoIsClockedIn[];
   const jobList = (jobs ?? []) as Job[];
   const tmToBill = (tmRows ?? []) as TmTicket[];
+  const openBids = (bidRows ?? []) as Bid[];
+  const pipelineValue = openBids.reduce((sum, b) => sum + Number(b.value), 0);
+  const todayStr = new Date().toLocaleDateString("en-CA", { timeZone: "America/Toronto" });
+  const followUpsDue = openBids.filter((b) => b.follow_up_on && b.follow_up_on <= todayStr);
   const jobLabel = new Map(jobList.map((j) => [j.id, `${j.job_number} ${j.name}`]));
 
   const invoices = (invoiceRows ?? []) as Invoice[];
@@ -67,6 +73,29 @@ export default async function DashboardPage() {
           <span className="cc-dot" /> {crew.length} on site now
         </span>
       </div>
+
+      {followUpsDue.length > 0 && (
+        <section className="cc-card" style={{ marginBottom: 20, borderColor: "rgba(245,166,35,.6)", background: "rgba(245,166,35,.07)" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap", marginBottom: 8 }}>
+            <b style={{ fontSize: 15 }}>
+              ⏰ {followUpsDue.length} bid follow-up{followUpsDue.length === 1 ? "" : "s"} due
+            </b>
+            <Link href="/crm" className="cc-btn sm">
+              Open CRM
+            </Link>
+          </div>
+          <div style={{ display: "grid", gap: 6, fontSize: 13 }}>
+            {followUpsDue.map((b) => (
+              <div key={b.id} style={{ display: "flex", justifyContent: "space-between", gap: 10, borderTop: "1px solid var(--line)", paddingTop: 6 }}>
+                <span>
+                  <b>{b.name}</b> <span style={{ color: "var(--mute)" }}>· {b.stage === "submitted" ? "bid sent" : b.stage}</span>
+                </span>
+                <span className="mono" style={{ color: "var(--mute)" }}>{fmt(Number(b.value))}</span>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
 
       {tmToBill.length > 0 && (
         <section
@@ -110,6 +139,7 @@ export default async function DashboardPage() {
         <StatCard label="Open AR" value={fmt(cash?.open_ar ?? 0)} color="lime" hint="invoiced, not yet paid" />
         <StatCard label="Open AP" value={fmt(cash?.open_ap ?? 0)} color="amber" hint="bills unpaid" />
         <StatCard label="Active jobs" value={String(jobList.filter((j) => j.status === "active").length)} />
+        <StatCard label="Bid pipeline" value={fmt(pipelineValue)} color="cyan" hint={`${openBids.length} open bid${openBids.length === 1 ? "" : "s"}`} />
       </div>
 
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(170px, 1fr))", gap: 16, marginBottom: 20 }}>
