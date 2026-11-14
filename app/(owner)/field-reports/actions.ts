@@ -57,6 +57,7 @@ export async function setTmStatus(id: string, status: TmTicketStatus) {
   const { error } = await supabase.from("tm_tickets").update({ status }).eq("id", id);
   if (error) throw new Error(error.message);
   revalidatePath("/field-reports");
+  revalidatePath("/dashboard");
 }
 
 const esc = (v: string) =>
@@ -124,4 +125,5 @@ export async function emailTmTicket(id: string) {
 
   if (t.status === "signed") await supabase.from("tm_tickets").update({ status: "sent_to_gc" }).eq("id", id);
   revalidatePath("/field-reports");
+  revalidatePath("/dashboard");
 }

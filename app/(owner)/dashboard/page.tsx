@@ -5,9 +5,11 @@ import { SetupBanner } from "@/components/ui/SetupBanner";
 import { StatCard } from "@/components/ui/StatCard";
 import { Tag } from "@/components/ui/Tag";
 import { Dial } from "@/components/charts/Dial";
+import { ReportButton } from "@/components/dashboard/ReportButton";
+import { setTmStatus } from "@/app/(owner)/field-reports/actions";
 import { buildForecast, firstNegativeWeek } from "@/lib/cashflow/forecast";
 import { fmt, fmtTime } from "@/lib/format";
-import type { Bill, CashFlowAssumptions, CompanyCashPosition, Invoice, Job, Profile, WhoIsClockedIn } from "@/lib/types/database";
+import type { Bill, CashFlowAssumptions, CompanyCashPosition, Invoice, Job, Profile, TmTicket, WhoIsClockedIn } from "@/lib/types/database";
 
 export default async function DashboardPage() {
   if (!isSupabaseConfigured) {
@@ -23,7 +25,7 @@ export default async function DashboardPage() {
 
   const supabase = await createClient();
 
-  const [{ data: clockedIn }, { data: cashRows }, { data: jobs }, { data: invoiceRows }, { data: billRows }, { data: assumptionRow }, { data: crewRows }] = await Promise.all([
+  const [{ data: clockedIn }, { data: cashRows }, { data: jobs }, { data: invoiceRows }, { data: billRows }, { data: assumptionRow }, { data: crewRows }, { data: tmRows }] = await Promise.all([
     supabase.from("who_is_clocked_in").select("*").order("clock_in_at", { ascending: false }),
     supabase.from("company_cash_position").select("*").maybeSingle(),
     supabase.from("jobs").select("*").order("created_at", { ascending: false }),
@@ -31,11 +33,15 @@ export default async function DashboardPage() {
     supabase.from("bills").select("*").eq("status", "unpaid"),
     supabase.from("cash_flow_assumptions").select("*").maybeSingle(),
     supabase.from("profiles").select("id").in("role", ["foreman", "worker"]).eq("status", "active"),
+    // Signed by the GC super but not billed yet.
+    supabase.from("tm_tickets").select("*").in("status", ["signed", "sent_to_gc"]).order("signed_at", { ascending: true }),
   ]);
 
   const cash = cashRows as CompanyCashPosition | null;
   const crew = (clockedIn ?? []) as WhoIsClockedIn[];
   const jobList = (jobs ?? []) as Job[];
+  const tmToBill = (tmRows ?? []) as TmTicket[];
+  const jobLabel = new Map(jobList.map((j) => [j.id, `${j.job_number} ${j.name}`]));
 
   const invoices = (invoiceRows ?? []) as Invoice[];
   const invoiced = invoices.reduce((s, i) => s + i.total_amount, 0);
@@ -61,6 +67,39 @@ export default async function DashboardPage() {
           <span className="cc-dot" /> {crew.length} on site now
         </span>
       </div>
+
+      {tmToBill.length > 0 && (
+        <section
+          className="cc-card"
+          style={{ marginBottom: 20, borderColor: "rgba(200,164,100,.6)", background: "rgba(200,164,100,.08)" }}
+        >
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap", marginBottom: 10 }}>
+            <b style={{ fontSize: 15 }}>
+              🧾 {tmToBill.length} signed T&amp;M ticket{tmToBill.length === 1 ? "" : "s"} need{tmToBill.length === 1 ? "s" : ""} to be billed
+            </b>
+            <Link href="/field-reports?tab=tm" className="cc-btn sm">
+              Open T&amp;M tickets
+            </Link>
+          </div>
+          <div style={{ display: "grid", gap: 8 }}>
+            {tmToBill.map((t) => (
+              <div
+                key={t.id}
+                style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10, flexWrap: "wrap", borderTop: "1px solid var(--line)", paddingTop: 8, fontSize: 13 }}
+              >
+                <div>
+                  <b>{jobLabel.get(t.job_id) ?? "Job"}</b>
+                  <div style={{ color: "var(--mute)", fontSize: 12 }}>
+                    {t.super_name} · signed {t.signed_at ? new Date(t.signed_at).toLocaleDateString("en-CA", { month: "short", day: "numeric", timeZone: "America/Toronto" }) : t.ticket_date} · {t.hours} h
+                    {t.status === "sent_to_gc" ? " · copy sent" : " · copy not sent yet"}
+                  </div>
+                </div>
+                <ReportButton label="Mark billed" run={setTmStatus.bind(null, t.id, "billed")} />
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
 
       <div className="grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(170px, 1fr))", gap: 16, marginBottom: 20 }}>
         <StatCard
