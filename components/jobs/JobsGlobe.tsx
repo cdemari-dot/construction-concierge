@@ -42,6 +42,7 @@ export function JobsGlobe({ jobs }: { jobs: JobCard[] }) {
     selectedRef.current = selected;
   }, [selected]);
 
+  const selectedJob = jobs.find((j) => j.id === selected) ?? null;
   const located = jobs.filter((j) => j.lat != null && j.lon != null);
 
   useEffect(() => {
@@ -57,6 +58,10 @@ export function JobsGlobe({ jobs }: { jobs: JobCard[] }) {
     let dragging = false;
     let lastX = 0;
     let raf = 0;
+    // Intro: the globe spins in from far away and settles on the first job.
+    let spinIn = reduce ? 0 : 2.6;
+    let scale = reduce ? 1 : 0.55;
+    const ZOOM = 2.6;
 
     const globe = createGlobe(canvas, {
       devicePixelRatio: dpr,
@@ -71,27 +76,35 @@ export function JobsGlobe({ jobs }: { jobs: JobCard[] }) {
       baseColor: [0.16, 0.15, 0.14],
       markerColor: [0.25, 0.75, 0.5],
       glowColor: [0.35, 0.3, 0.2],
+      scale,
       markers: located.map((j) => ({ id: j.id, location: [j.lat as number, j.lon as number], size: 0.07, color: STATUS_RGB[j.status] })),
     });
 
-    const tick = () => {
+    const tick = (now: number) => {
       const sel = located.find((j) => j.id === selectedRef.current);
       if (sel) {
         const [tp, tt] = toAngles(sel.lat as number, sel.lon as number);
         let d = tp - phi;
         d = Math.atan2(Math.sin(d), Math.cos(d));
-        phi += d * 0.08;
-        theta += (tt - theta) * 0.08;
+        phi += d * (reduce ? 1 : 0.07);
+        theta += (tt - theta) * (reduce ? 1 : 0.07);
       } else if (!dragging && !reduce) {
         phi += 0.004;
       }
+      // Zoom in on the selected job, ease back out when deselected.
+      const targetScale = sel ? ZOOM : 1;
+      scale += (targetScale - scale) * (reduce ? 1 : 0.06);
+      spinIn *= 0.955;
+      const pulse = sel && !reduce ? 0.025 * Math.sin(now / 180) : 0;
+      const keep = Math.max(1, scale); // markers grow with the globe, so shrink them to keep the on-screen size steady
       globe.update({
-        phi,
+        phi: phi + spinIn,
         theta,
+        scale,
         markers: located.map((j) => ({
           id: j.id,
           location: [j.lat as number, j.lon as number],
-          size: j.id === selectedRef.current ? 0.14 : 0.07,
+          size: (j.id === selectedRef.current ? 0.1 + pulse : 0.07) / keep,
           color: STATUS_RGB[j.status],
         })),
       });
@@ -127,7 +140,37 @@ export function JobsGlobe({ jobs }: { jobs: JobCard[] }) {
   return (
     <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: 16, alignItems: "start" }}>
       <div className="cc-card" style={{ display: "grid", placeItems: "center", padding: 12 }}>
-        <div ref={wrapRef} style={{ width: "100%", maxWidth: 520, aspectRatio: "1", display: "grid", placeItems: "center" }}>
+        <div ref={wrapRef} style={{ width: "100%", maxWidth: 520, aspectRatio: "1", display: "grid", placeItems: "center", position: "relative", overflow: "hidden", borderRadius: 16 }}>
+          <div
+            aria-live="polite"
+            style={{
+              position: "absolute",
+              left: 10,
+              top: 10,
+              zIndex: 2,
+              maxWidth: "70%",
+              padding: "8px 12px",
+              borderRadius: 12,
+              background: "var(--glass)",
+              border: "1px solid var(--line2)",
+              fontSize: 12.5,
+              lineHeight: 1.4,
+              opacity: selectedJob ? 1 : 0,
+              transform: selectedJob ? "translateY(0)" : "translateY(-8px)",
+              transition: "opacity .45s ease, transform .45s ease",
+              pointerEvents: selectedJob ? "auto" : "none",
+            }}
+          >
+            {selectedJob && (
+              <>
+                <b>📍 {selectedJob.jobNumber} · {selectedJob.name}</b>
+                <div style={{ color: "var(--mute)", fontSize: 11.5 }}>{selectedJob.address ?? "No address"}</div>
+                <button type="button" className="cc-btn ghost sm" style={{ marginTop: 6 }} onClick={() => setSelected(null)}>
+                  ↩ Zoom out
+                </button>
+              </>
+            )}
+          </div>
           <canvas
             ref={canvasRef}
             style={{ width: "100%", maxWidth: 520, aspectRatio: "1", cursor: "grab", touchAction: "none", contain: "layout paint size" }}
@@ -137,7 +180,7 @@ export function JobsGlobe({ jobs }: { jobs: JobCard[] }) {
           <Legend color="var(--lime)" label="Active" />
           <Legend color="var(--amber)" label="Holdback" />
           <Legend color="var(--mute)" label="Closed" />
-          <span>· drag to spin</span>
+          <span>· drag to spin · tap a job to zoom in</span>
         </div>
         {located.length === 0 && (
           <div style={{ color: "var(--mute)", fontSize: 12.5, marginTop: 8, textAlign: "center" }}>
@@ -155,7 +198,7 @@ export function JobsGlobe({ jobs }: { jobs: JobCard[] }) {
               key={j.id}
               className="cc-card"
               onClick={() => hasGps && setSelected(on ? null : j.id)}
-              style={{ cursor: hasGps ? "pointer" : "default", borderColor: on ? "var(--cyan)" : undefined }}
+              style={{ cursor: hasGps ? "pointer" : "default", borderColor: on ? "var(--cyan)" : undefined, transform: on ? "scale(1.015)" : "scale(1)", boxShadow: on ? "0 0 0 1px var(--cyan), 0 8px 30px rgba(200,164,100,.18)" : undefined, transition: "transform .3s ease, box-shadow .3s ease, border-color .3s ease" }}
             >
               <div style={{ display: "flex", justifyContent: "space-between", gap: 8, alignItems: "start" }}>
                 <div>
