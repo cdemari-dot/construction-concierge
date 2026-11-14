@@ -46,7 +46,7 @@ export default async function CashflowPage() {
       )}
 
       <section className="cc-card" style={{ marginBottom: 16 }}>
-        <CashFlowChart buckets={buckets} />
+        <CashFlowChart buckets={buckets} payrollLine={assumptions.payroll_frequency === "weekly" ? assumptions.payroll_per_period : assumptions.payroll_per_period / 2} />
       </section>
 
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>

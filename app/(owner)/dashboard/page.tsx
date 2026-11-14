@@ -4,8 +4,10 @@ import { isSupabaseConfigured } from "@/lib/supabase/env";
 import { SetupBanner } from "@/components/ui/SetupBanner";
 import { StatCard } from "@/components/ui/StatCard";
 import { Tag } from "@/components/ui/Tag";
+import { Dial } from "@/components/charts/Dial";
+import { buildForecast, firstNegativeWeek } from "@/lib/cashflow/forecast";
 import { fmt, fmtTime } from "@/lib/format";
-import type { CompanyCashPosition, Job, WhoIsClockedIn } from "@/lib/types/database";
+import type { Bill, CashFlowAssumptions, CompanyCashPosition, Invoice, Job, Profile, WhoIsClockedIn } from "@/lib/types/database";
 
 export default async function DashboardPage() {
   if (!isSupabaseConfigured) {
@@ -21,15 +23,33 @@ export default async function DashboardPage() {
 
   const supabase = await createClient();
 
-  const [{ data: clockedIn }, { data: cashRows }, { data: jobs }] = await Promise.all([
+  const [{ data: clockedIn }, { data: cashRows }, { data: jobs }, { data: invoiceRows }, { data: billRows }, { data: assumptionRow }, { data: crewRows }] = await Promise.all([
     supabase.from("who_is_clocked_in").select("*").order("clock_in_at", { ascending: false }),
     supabase.from("company_cash_position").select("*").maybeSingle(),
     supabase.from("jobs").select("*").order("created_at", { ascending: false }),
+    supabase.from("invoices").select("*"),
+    supabase.from("bills").select("*").eq("status", "unpaid"),
+    supabase.from("cash_flow_assumptions").select("*").maybeSingle(),
+    supabase.from("profiles").select("id").in("role", ["foreman", "worker"]).eq("status", "active"),
   ]);
 
   const cash = cashRows as CompanyCashPosition | null;
   const crew = (clockedIn ?? []) as WhoIsClockedIn[];
   const jobList = (jobs ?? []) as Job[];
+
+  const invoices = (invoiceRows ?? []) as Invoice[];
+  const invoiced = invoices.reduce((s, i) => s + i.total_amount, 0);
+  const collected = invoices.filter((i) => i.paid_at).reduce((s, i) => s + i.total_amount, 0);
+  const activeJobs = jobList.filter((j) => j.status === "active");
+  const avgProgress = activeJobs.length ? activeJobs.reduce((s, j) => s + j.percent_complete, 0) / activeJobs.length : 0;
+  const crewTotal = ((crewRows ?? []) as Pick<Profile, "id">[]).length;
+  const assumptions = assumptionRow as CashFlowAssumptions | null;
+  const negWeek = assumptions
+    ? firstNegativeWeek(
+        buildForecast(cash?.bank_balance ?? 0, invoices.filter((i) => !i.paid_at), (billRows ?? []) as Bill[], assumptions),
+      )
+    : null;
+  const runwayWeeks = negWeek ?? 13;
 
   return (
     <div>
@@ -51,6 +71,13 @@ export default async function DashboardPage() {
         <StatCard label="Open AR" value={fmt(cash?.open_ar ?? 0)} color="lime" hint="invoiced, not yet paid" />
         <StatCard label="Open AP" value={fmt(cash?.open_ap ?? 0)} color="amber" hint="bills unpaid" />
         <StatCard label="Active jobs" value={String(jobList.filter((j) => j.status === "active").length)} />
+      </div>
+
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(170px, 1fr))", gap: 16, marginBottom: 20 }}>
+        <Dial value={runwayWeeks} max={13} label="Cash runway" suffix=" wk" color={runwayWeeks < 6 ? "red" : runwayWeeks < 13 ? "amber" : "lime"} hint={negWeek == null ? "positive all 13 weeks" : `negative in week ${negWeek + 1}`} />
+        <Dial value={invoiced > 0 ? (collected / invoiced) * 100 : 0} max={100} label="Collected" suffix="%" color="cyan" hint={invoiced > 0 ? `${fmt(collected)} of ${fmt(invoiced)}` : "no invoices yet"} />
+        <Dial value={avgProgress} max={100} label="Job progress" suffix="%" color="lime" hint={`${activeJobs.length} active job${activeJobs.length === 1 ? "" : "s"}`} />
+        <Dial value={crew.length} max={Math.max(crewTotal, crew.length, 1)} label="Crew on site" color="amber" hint={`of ${crewTotal} on the roster`} />
       </div>
 
       <div style={{ display: "grid", gridTemplateColumns: "1.2fr 1fr", gap: 16 }}>
@@ -90,8 +117,11 @@ export default async function DashboardPage() {
                   <td className="mono" style={{ padding: "10px 8px", textAlign: "right" }}>
                     {fmt(j.contract_value)}
                   </td>
-                  <td className="mono" style={{ padding: "10px 8px", textAlign: "right" }}>
-                    {j.percent_complete}%
+                  <td style={{ padding: "10px 8px", minWidth: 90 }}>
+                    <div className="cc-bar">
+                      <i style={{ width: `${j.percent_complete}%` }} />
+                    </div>
+                    <div className="mono" style={{ textAlign: "right", fontSize: 11, marginTop: 3 }}>{j.percent_complete}%</div>
                   </td>
                 </tr>
               ))}
