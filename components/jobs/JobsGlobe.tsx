@@ -18,6 +18,9 @@ export interface JobCard {
   billed: number;
   outstanding: number;
   margin: number | null;
+  labourCost: number;
+  labourHours: number;
+  unratedShifts: number;
   onSite: number;
 }
 
@@ -188,6 +191,15 @@ export function JobsGlobe({ jobs }: { jobs: JobCard[] }) {
                   color={j.margin == null ? undefined : j.margin < 0.15 ? "var(--red)" : j.margin < 0.25 ? "var(--amber)" : "var(--lime)"}
                 />
               </div>
+
+              {(j.labourHours > 0 || j.unratedShifts > 0) && (
+                <div style={{ marginTop: 8, fontSize: 11.5, color: "var(--mute)" }}>
+                  Labour: {j.labourHours.toFixed(1)} hrs · {fmt(j.labourCost)}
+                  {j.unratedShifts > 0 && (
+                    <span style={{ color: "var(--amber)" }}> · {j.unratedShifts} shift{j.unratedShifts === 1 ? "" : "s"} with no rate set</span>
+                  )}
+                </div>
+              )}
 
               <div style={{ marginTop: 10 }}>
                 <Link href={`/jobs/${j.id}`} className="cc-btn ghost sm" onClick={(e) => e.stopPropagation()}>

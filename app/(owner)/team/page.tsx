@@ -3,17 +3,19 @@ import { getCurrentUser } from "@/lib/auth/session";
 import { isSupabaseConfigured } from "@/lib/supabase/env";
 import { SetupBanner } from "@/components/ui/SetupBanner";
 import { AddCrewForm, CrewRow, InviteTeamForm } from "@/components/dashboard/TeamForms";
-import type { Profile } from "@/lib/types/database";
+import type { PayRate, Profile } from "@/lib/types/database";
 
 export default async function TeamPage() {
   if (!isSupabaseConfigured) return <SetupBanner />;
 
   const supabase = await createClient();
-  const [{ data: profiles }, me] = await Promise.all([
+  const [{ data: profiles }, { data: rates }, me] = await Promise.all([
     supabase.from("profiles").select("*").order("created_at", { ascending: true }),
+    supabase.from("pay_rates").select("*"),
     getCurrentUser(),
   ]);
   const list = (profiles ?? []) as Profile[];
+  const rateBy = new Map(((rates ?? []) as PayRate[]).map((r) => [r.profile_id, Number(r.hourly_rate)]));
 
   return (
     <div>
@@ -21,7 +23,7 @@ export default async function TeamPage() {
         Team
       </h1>
       <p style={{ color: "var(--mute)", fontSize: 13, marginBottom: 16 }}>
-        Foreman and Worker get a PIN for the kiosk, not a login. Owner and PM get a real login by invite.
+        Foreman and Worker get a PIN for the kiosk, not a login. Set each person&apos;s loaded hourly cost (wage plus burden) so jobs show real labour margin — only Owner/PM can see rates.
       </p>
 
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 16, marginBottom: 16 }}>
@@ -35,7 +37,7 @@ export default async function TeamPage() {
         </h3>
         <div>
           {list.map((p) => (
-            <CrewRow key={p.id} profile={p} isSelf={p.id === me?.profile.id} />
+            <CrewRow key={p.id} profile={p} isSelf={p.id === me?.profile.id} rate={rateBy.get(p.id) ?? null} />
           ))}
           {list.length === 0 && <div style={{ color: "var(--mute)", fontSize: 13, paddingTop: 10 }}>No one yet.</div>}
         </div>

@@ -71,3 +71,19 @@ export async function deactivateCrewMember(profileId: string) {
   if (error) throw new Error(error.message);
   revalidatePath("/team");
 }
+
+// Loaded cost per hour (wage plus payroll burden). Owner/PM only — enforced
+// by RLS on pay_rates, not just by this app.
+export async function setPayRate(profileId: string, rate: number) {
+  const user = await getCurrentUser();
+  if (!user) throw new Error("Not signed in");
+  if (!Number.isFinite(rate) || rate < 0) throw new Error("Enter a valid hourly rate");
+  const supabase = await createClient();
+  const { error } = await supabase.from("pay_rates").upsert(
+    { profile_id: profileId, company_id: user.profile.company_id, hourly_rate: rate, updated_at: new Date().toISOString() },
+    { onConflict: "profile_id" },
+  );
+  if (error) throw new Error(error.message);
+  revalidatePath("/team");
+  revalidatePath("/jobs");
+}

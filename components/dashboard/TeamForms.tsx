@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { addCrewMember, changeWorkerPin, deactivateCrewMember, inviteTeamMember } from "@/app/(owner)/team/actions";
+import { addCrewMember, changeWorkerPin, deactivateCrewMember, inviteTeamMember, setPayRate } from "@/app/(owner)/team/actions";
 import type { Profile } from "@/lib/types/database";
 
 const inputStyle: React.CSSProperties = {
@@ -103,12 +103,14 @@ export function InviteTeamForm() {
   );
 }
 
-export function CrewRow({ profile, isSelf }: { profile: Profile; isSelf: boolean }) {
+export function CrewRow({ profile, isSelf, rate }: { profile: Profile; isSelf: boolean; rate: number | null }) {
   const [editingPin, setEditingPin] = useState(false);
   const [pin, setPin] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
   const hasLogin = profile.role === "owner" || profile.role === "pm";
+  const [rateText, setRateText] = useState(rate == null ? "" : String(rate));
+  const [rateSaved, setRateSaved] = useState(false);
 
   return (
     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderTop: "1px solid var(--line)", padding: "10px 0", fontSize: 13 }}>
@@ -124,6 +126,39 @@ export function CrewRow({ profile, isSelf }: { profile: Profile; isSelf: boolean
       </div>
       <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
         {error && <span style={{ color: "var(--red)", fontSize: 11.5 }}>{error}</span>}
+        {!hasLogin && (
+          <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }} title="Loaded cost per hour: wage plus payroll burden. Only Owner/PM can see this.">
+            <span style={{ color: "var(--mute)", fontSize: 11.5 }}>$</span>
+            <input
+              value={rateText}
+              onChange={(e) => {
+                setRateText(e.target.value);
+                setRateSaved(false);
+              }}
+              placeholder="/hr"
+              inputMode="decimal"
+              style={{ ...inputStyle, width: 70, padding: "5px 8px" }}
+            />
+            <button
+              className="cc-btn ghost sm"
+              disabled={pending || rateText.trim() === ""}
+              onClick={() =>
+                startTransition(async () => {
+                  setError(null);
+                  try {
+                    await setPayRate(profile.id, Number(rateText));
+                    setRateSaved(true);
+                  } catch (e) {
+                    setError(e instanceof Error ? e.message : "Failed");
+                  }
+                })
+              }
+              type="button"
+            >
+              {rateSaved ? "Saved" : "Set rate"}
+            </button>
+          </span>
+        )}
         {!hasLogin &&
           (editingPin ? (
             <>

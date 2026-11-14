@@ -296,6 +296,21 @@ export interface ScheduleEntry {
   created_at: string;
 }
 
+export interface PayRate {
+  profile_id: string;
+  company_id: string;
+  hourly_rate: number;
+  updated_at: string;
+}
+
+export interface JobLabourCost {
+  company_id: string;
+  job_id: string;
+  hours: number;
+  labour_cost: number;
+  unrated_shifts: number;
+}
+
 export interface WhoIsClockedIn {
   time_entry_id: string;
   company_id: string;

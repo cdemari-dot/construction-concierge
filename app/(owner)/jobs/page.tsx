@@ -3,7 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/supabase/env";
 import { SetupBanner } from "@/components/ui/SetupBanner";
 import { JobsGlobe, type JobCard } from "@/components/jobs/JobsGlobe";
-import type { Job, JobFinancialSummary, WhoIsClockedIn } from "@/lib/types/database";
+import type { Job, JobFinancialSummary, JobLabourCost, WhoIsClockedIn } from "@/lib/types/database";
 
 export default async function JobsPage() {
   if (!isSupabaseConfigured) {
@@ -11,11 +11,13 @@ export default async function JobsPage() {
   }
 
   const supabase = await createClient();
-  const [{ data: jobs }, { data: summaries }, { data: clocked }] = await Promise.all([
+  const [{ data: jobs }, { data: summaries }, { data: clocked }, { data: labour }] = await Promise.all([
     supabase.from("jobs").select("*").order("created_at", { ascending: false }),
     supabase.from("job_financial_summary").select("*"),
     supabase.from("who_is_clocked_in").select("job_id"),
+    supabase.from("job_labour_cost").select("*"),
   ]);
+  const labourByJob = new Map(((labour ?? []) as JobLabourCost[]).map((l) => [l.job_id, l]));
 
   const summaryByJob = new Map(((summaries ?? []) as JobFinancialSummary[]).map((s) => [s.job_id, s]));
   const onSite = new Map<string, number>();
@@ -25,6 +27,8 @@ export default async function JobsPage() {
     const s = summaryByJob.get(j.id);
     const billed = s?.total_invoiced ?? 0;
     const bills = s?.total_bills ?? 0;
+    const l = labourByJob.get(j.id);
+    const labourCost = Number(l?.labour_cost ?? 0);
     return {
       id: j.id,
       jobNumber: j.job_number,
@@ -37,8 +41,10 @@ export default async function JobsPage() {
       pct: j.percent_complete,
       billed,
       outstanding: s?.total_outstanding ?? 0,
-      // Billed minus supplier bills coded to the job. Labour isn't costed yet, so this overstates true margin.
-      margin: billed > 0 ? (billed - bills) / billed : null,
+      labourCost,
+      labourHours: Number(l?.hours ?? 0),
+      unratedShifts: Number(l?.unrated_shifts ?? 0),
+      margin: billed > 0 ? (billed - bills - labourCost) / billed : null,
       onSite: onSite.get(j.id) ?? 0,
     };
   });
@@ -54,7 +60,7 @@ export default async function JobsPage() {
         </Link>
       </div>
       <p style={{ color: "var(--mute)", fontSize: 12.5, marginBottom: 16 }}>
-        Margin = billed minus bills coded to the job (labour not included yet).
+        Margin = (billed − bills coded to the job − labour cost) ÷ billed. Labour = completed shift hours × each person&apos;s hourly cost (set on the Team page).
       </p>
       <JobsGlobe jobs={cards} />
     </div>

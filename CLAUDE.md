@@ -76,6 +76,21 @@ marketplace are still deferred — only the agent and scheduler moved up):
   user could already see. Needs `ANTHROPIC_API_KEY` in the environment;
   the route returns a clear 503 instead of crashing if it's unset.
 
+### Labour costing and job margin
+Each Foreman/Worker has a private hourly cost (wage plus payroll burden) in
+`pay_rates` — a separate table, not a column on `profiles`, because every
+signed-in session in a company (including the Foreman kiosk) can read
+`profiles`; `pay_rates` RLS is Owner/PM only. The `job_labour_cost` view
+(security_invoker, so it inherits that RLS) sums completed shift hours ×
+rate per job. Job margin on `/jobs` = (billed − bills coded to the job −
+labour cost) ÷ billed. Shifts for someone with no rate set count as $0 and
+are flagged on the job card. Overhead is not allocated to jobs.
+
+### Jobs globe
+`/jobs` shows a cobe globe with a pin per job (from `jobs.geofence_lat/lon`).
+New jobs get coordinates from their address via OpenStreetMap Nominatim
+(best-effort, 5 s timeout) or the "use my current location" button.
+
 ### Still explicitly out of scope
 CRM/bid tracking & kanban, inventory/equipment tracking, the integrations
 marketplace, detailed job-cost category breakdowns (labour/AP/material/
