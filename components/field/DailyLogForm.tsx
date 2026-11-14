@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { todayToronto } from "@/lib/today";
 
 export function DailyLogForm({ companyId, jobId, foremanId }: { companyId: string; jobId: string; foremanId: string }) {
   const [crewCount, setCrewCount] = useState("");
@@ -19,7 +20,7 @@ export function DailyLogForm({ companyId, jobId, foremanId }: { companyId: strin
         company_id: companyId,
         job_id: jobId,
         foreman_id: foremanId,
-        log_date: new Date().toISOString().slice(0, 10),
+        log_date: todayToronto(),
         crew_count: Number(crewCount) || null,
         weather: weather || null,
         work_performed: workPerformed,

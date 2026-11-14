@@ -12,6 +12,8 @@ const NAV = [
   { href: "/clients", label: "Clients" },
   { href: "/schedule", label: "Schedule" },
   { href: "/field", label: "Field app" },
+  { href: "/toolbox", label: "Toolbox Talks" },
+  { href: "/field-reports", label: "Field Reports" },
   { href: "/team", label: "Team" },
   { href: "/finance", label: "Finance & Cash" },
   { href: "/cashflow", label: "13-Week Forecast" },

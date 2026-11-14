@@ -4,6 +4,7 @@ import { isSupabaseConfigured } from "@/lib/supabase/env";
 import { SetupBanner } from "@/components/ui/SetupBanner";
 import { KioskApp } from "@/components/kiosk/KioskApp";
 import type { Job, ToolboxTalk } from "@/lib/types/database";
+import { todayToronto } from "@/lib/today";
 
 export default async function KioskPage({ params }: { params: Promise<{ jobId: string }> }) {
   if (!isSupabaseConfigured) return <SetupBanner />;
@@ -18,7 +19,7 @@ export default async function KioskPage({ params }: { params: Promise<{ jobId: s
     .from("toolbox_talks")
     .select("*")
     .eq("job_id", jobId)
-    .eq("talk_date", new Date().toISOString().slice(0, 10))
+    .eq("talk_date", todayToronto())
     .maybeSingle();
 
   const j = job as Job;

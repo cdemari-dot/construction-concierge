@@ -4,6 +4,7 @@ import { SetupBanner } from "@/components/ui/SetupBanner";
 import { getCurrentUser } from "@/lib/auth/session";
 import { FieldApp } from "@/components/field/FieldApp";
 import type { Job, ToolboxTalk } from "@/lib/types/database";
+import { todayToronto } from "@/lib/today";
 
 export default async function FieldMobilePage() {
   if (!isSupabaseConfigured) return <SetupBanner />;
@@ -15,7 +16,7 @@ export default async function FieldMobilePage() {
   const { data: jobs } = await supabase.from("jobs").select("*").eq("status", "active").order("job_number");
   const jobList = (jobs ?? []) as Job[];
 
-  const today = new Date().toISOString().slice(0, 10);
+  const today = todayToronto();
   const { data: talks } = await supabase
     .from("toolbox_talks")
     .select("*")

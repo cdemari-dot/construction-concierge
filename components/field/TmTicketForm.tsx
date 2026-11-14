@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { SignaturePad } from "./SignaturePad";
 
 export function TmTicketForm({ companyId, jobId, createdBy }: { companyId: string; jobId: string; createdBy: string }) {
   const [superName, setSuperName] = useState("");
@@ -9,14 +10,32 @@ export function TmTicketForm({ companyId, jobId, createdBy }: { companyId: strin
   const [hours, setHours] = useState("");
   const [equipmentCost, setEquipmentCost] = useState("");
   const [materialsCost, setMaterialsCost] = useState("");
-  const [signed, setSigned] = useState(false);
+  const [signature, setSignature] = useState<Blob | null>(null);
+  const [padKey, setPadKey] = useState(0);
+  const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
   const [busy, setBusy] = useState(false);
 
   async function submit() {
     setBusy(true);
+    setError(null);
+    setSaved(false);
     const supabase = createClient();
-    await supabase.from("tm_tickets").insert({
+    const ticketId = crypto.randomUUID();
+    let signaturePath: string | null = null;
+
+    if (signature) {
+      signaturePath = `${companyId}/${jobId}/${ticketId}.png`;
+      const up = await supabase.storage.from("signatures").upload(signaturePath, signature, { contentType: "image/png" });
+      if (up.error) {
+        setError(`Signature did not upload: ${up.error.message}. Ticket NOT saved.`);
+        setBusy(false);
+        return;
+      }
+    }
+
+    const { error: insertError } = await supabase.from("tm_tickets").insert({
+      id: ticketId,
       company_id: companyId,
       job_id: jobId,
       created_by: createdBy,
@@ -25,17 +44,23 @@ export function TmTicketForm({ companyId, jobId, createdBy }: { companyId: strin
       hours: Number(hours) || 0,
       equipment_cost: Number(equipmentCost) || 0,
       materials_cost: Number(materialsCost) || 0,
-      status: signed ? "signed" : "draft",
-      signed_at: signed ? new Date().toISOString() : null,
+      status: signaturePath ? "signed" : "draft",
+      super_signature_path: signaturePath,
+      signed_at: signaturePath ? new Date().toISOString() : null,
     });
     setBusy(false);
+    if (insertError) {
+      setError(`Ticket NOT saved: ${insertError.message}`);
+      return;
+    }
     setSaved(true);
     setSuperName("");
     setSuperEmail("");
     setHours("");
     setEquipmentCost("");
     setMaterialsCost("");
-    setSigned(false);
+    setSignature(null);
+    setPadKey((k) => k + 1);
   }
 
   return (
@@ -44,6 +69,7 @@ export function TmTicketForm({ companyId, jobId, createdBy }: { companyId: strin
         T&amp;M ticket
       </div>
       {saved && <div style={{ color: "var(--lime)", fontSize: 12.5 }}>Ticket saved.</div>}
+      {error && <div style={{ color: "var(--red)", fontSize: 12.5 }}>{error}</div>}
       <input placeholder="GC superintendent name" value={superName} onChange={(e) => setSuperName(e.target.value)} style={inputStyle} />
       <input placeholder="Super email (optional)" value={superEmail} onChange={(e) => setSuperEmail(e.target.value)} style={inputStyle} />
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
@@ -51,14 +77,7 @@ export function TmTicketForm({ companyId, jobId, createdBy }: { companyId: strin
         <input placeholder="Equipment $" type="number" value={equipmentCost} onChange={(e) => setEquipmentCost(e.target.value)} style={inputStyle} />
         <input placeholder="Materials $" type="number" value={materialsCost} onChange={(e) => setMaterialsCost(e.target.value)} style={inputStyle} />
       </div>
-      <button
-        type="button"
-        className="cc-btn ghost"
-        style={{ borderColor: signed ? "var(--lime)" : undefined, color: signed ? "var(--lime)" : undefined }}
-        onClick={() => setSigned((v) => !v)}
-      >
-        {signed ? "✅ Super signed on device" : "Mark as signed by super"}
-      </button>
+      <SignaturePad key={padKey} onChange={setSignature} />
       <button className="cc-btn lime" disabled={busy || !superName} onClick={submit} type="button">
         {busy ? "Saving…" : "Save ticket"}
       </button>

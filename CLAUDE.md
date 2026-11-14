@@ -98,6 +98,15 @@ email at `/team`. `/field` (Owner sidebar) lists a QR code + link for the Forema
 phone app and for each active job's kiosk (`/kiosk/[jobId]`). The kiosk reports
 failures honestly (error screen) and only lists what actually saved.
 
+### Field reports, toolbox talks, T&M signatures
+`/toolbox` (Owner/PM): publish a toolbox talk per job and date (4 Ontario templates);
+the kiosk shows the talk dated today in Toronto time (`lib/today.ts`, never UTC).
+`/field-reports` (tabs): incidents (mark closed), daily logs, extras (-> "Create
+change order", which makes a pending change order the PM prices on /change-orders),
+T&M tickets (signature image via signed URL; signed -> sent to GC -> billed). T&M
+signatures are drawn on `components/field/SignaturePad.tsx` and stored in the
+private `signatures` bucket; if the upload fails the ticket is not saved.
+
 ### Still explicitly out of scope
 CRM/bid tracking & kanban, inventory/equipment tracking, the integrations
 marketplace, detailed job-cost category breakdowns (labour/AP/material/
