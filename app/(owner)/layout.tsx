@@ -17,7 +17,7 @@ const NAV = [
   { href: "/field-reports", label: "Field Reports" },
   { href: "/team", label: "Team" },
   { href: "/finance", label: "Finance & Cash" },
-  { href: "/cashflow", label: "13-Week Forecast" },
+  { href: "/scale", label: "Grow Safely" },
   { href: "/change-orders", label: "Change Orders" },
   { href: "/payroll-export", label: "Payroll Export" },
 ];

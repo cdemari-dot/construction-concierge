@@ -29,7 +29,9 @@ export async function updateAssumptions(formData: FormData) {
     .eq("company_id", user.profile.company_id);
 
   if (error) throw new Error(error.message);
-  revalidatePath("/cashflow");
+  revalidatePath("/finance");
+  revalidatePath("/scale");
+  revalidatePath("/dashboard");
 }
 
 export async function addCashSnapshot(formData: FormData) {
@@ -48,6 +50,7 @@ export async function addCashSnapshot(formData: FormData) {
   );
 
   if (error) throw new Error(error.message);
-  revalidatePath("/cashflow");
+  revalidatePath("/finance");
+  revalidatePath("/scale");
   revalidatePath("/dashboard");
 }

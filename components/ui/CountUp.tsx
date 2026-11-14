@@ -22,7 +22,7 @@ export function CountUp({ value, decimals = 0, suffix = "", ms = 900 }: { value:
   }, [value, ms]);
   return (
     <>
-      {shown.toFixed(decimals)}
+      {decimals === 0 ? Math.round(shown).toLocaleString("en-CA") : shown.toFixed(decimals)}
       {suffix}
     </>
   );

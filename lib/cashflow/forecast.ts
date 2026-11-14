@@ -18,10 +18,12 @@ function addDays(date: Date, days: number): Date {
   return new Date(date.getTime() + days * DAY_MS);
 }
 
-function inRange(dateStr: string | null, start: Date, end: Date): boolean {
+// `first` weeks also catch anything already overdue: an unpaid invoice past its due date is
+// still money you expect to collect, so it lands in the first week rather than vanishing.
+function inRange(dateStr: string | null, start: Date, end: Date, first = false): boolean {
   if (!dateStr) return false;
   const d = new Date(dateStr);
-  return d >= start && d < end;
+  return (first || d >= start) && d < end;
 }
 
 /**
@@ -48,11 +50,11 @@ export function buildForecast(
     const weekEnd = addDays(weekStart, 7);
 
     const inflows = openInvoices
-      .filter((inv) => inRange(inv.due_at, weekStart, weekEnd))
+      .filter((inv) => inRange(inv.due_at, weekStart, weekEnd, i === 0))
       .reduce((sum, inv) => sum + inv.total_amount, 0);
 
     const billsDue = unpaidBills
-      .filter((b) => inRange(b.due_date, weekStart, weekEnd))
+      .filter((b) => inRange(b.due_date, weekStart, weekEnd, i === 0))
       .reduce((sum, b) => sum + b.amount, 0);
 
     const payroll =

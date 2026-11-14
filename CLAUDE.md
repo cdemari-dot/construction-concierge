@@ -118,6 +118,19 @@ stat and a "bid follow-ups due" banner. Estimation-log spreadsheet import is NOT
 
 Conversion funnel on /crm: created -> bid sent -> won, with lead->sent, sent->won, lead->won and win-rate ratios (a bid counts as "sent" via `bids.submitted_at`, set on reaching Bid sent or Won). Automated follow-ups (migration 0010): a bid in Bid sent with a contact email gets up to 3 emails at +3/+7/+14 days (`lib/crm/followup.ts`), sent by the daily Vercel cron `/api/cron/follow-ups` (`vercel.json`, needs CRON_SECRET + SUPABASE_SERVICE_ROLE_KEY + Resend), from the app sender with the bid creator as Reply-To/CC; each send is logged in `bid_follow_ups`; pause per bid; "Send now" button. UI rule: every grid, card list and graph gets an entrance animation (`.cc-in` stagger, `.cc-barx`, `CountUp`).
 
+### Finance & Cash (merged), coach, injection, Grow Safely
+`/finance` now holds everything money-related in tabs: 13-week forecast, Finance coach, Invoices & bills,
+Playbook & settings (`/cashflow` redirects here). `lib/cashflow/injection.ts` answers "if/when/how much
+cash do I need": safety cushion = one payroll run + one month overhead; reports the first week under it,
+the amount needed, a have-it-in-the-bank-by date, a suggested credit line, and a stress case (customers
+pay 2 weeks late). Overdue unpaid invoices/bills count in week 1 of the forecast. `lib/coach/finance.ts`
+is a rule-based CFO coach (health score, Friday savings routine across HST/tax/equipment/profit/cushion,
+overdue AR calls, bills due, client concentration, holdback, 3-month cushion goal). `/scale` ("Grow
+Safely", `lib/scale/plan.ts`) has 7 readiness gates, safe-annual-growth and max-job-to-float from spare
+cash (only half the cash above the cushion is spendable on growth), a growth slider, and a conservative
+ladder. If bank balance / overhead / payroll are missing, these pages ask for them instead of showing
+results. `?demo=1` on /finance and /scale shows labelled sample data (`lib/demo/finance.ts`).
+
 ### Still explicitly out of scope
 inventory/equipment tracking, the integrations
 marketplace, detailed job-cost category breakdowns (labour/AP/material/
