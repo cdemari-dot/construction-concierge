@@ -11,7 +11,7 @@ import { PpeStep } from "./PpeStep";
 import { ToolboxTalkStep } from "./ToolboxTalkStep";
 import { InjuryFormStep, InjuryQuestionStep, ReportStep } from "./ClockOutSteps";
 
-type Step = "pin" | "photo" | "ppe" | "ppe-missing" | "toolbox" | "done-in" | "injury-q" | "injury-form" | "report" | "done-out";
+type Step = "pin" | "photo" | "ppe" | "ppe-missing" | "toolbox" | "done-in" | "injury-q" | "injury-form" | "report" | "done-out" | "error";
 
 interface KioskJob {
   id: string;
@@ -50,6 +50,8 @@ export function KioskApp({ job, toolboxTalk }: { job: KioskJob; toolboxTalk: Kio
   const [injury, setInjury] = useState(false);
   const [busy, setBusy] = useState(false);
   const [doneMessage, setDoneMessage] = useState("");
+  const [doneDetail, setDoneDetail] = useState("");
+  const [failure, setFailure] = useState<string | null>(null);
   const resetTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => () => {
@@ -66,6 +68,13 @@ export function KioskApp({ job, toolboxTalk }: { job: KioskJob; toolboxTalk: Kio
     setPpeChecked({});
     setInjury(false);
     setDoneMessage("");
+    setDoneDetail("");
+    setFailure(null);
+  }
+
+  function fail(e: unknown) {
+    setFailure(e instanceof Error ? e.message : typeof e === "object" && e && "message" in e ? String((e as { message: unknown }).message) : "Something went wrong");
+    setStep("error");
   }
 
   function scheduleReset(ms = 4000) {
@@ -137,7 +146,8 @@ export function KioskApp({ job, toolboxTalk }: { job: KioskJob; toolboxTalk: Kio
     try {
       const blob = await stampPhoto(photoFile, { label: "IN", lat: geo.lat, lon: geo.lon, geofenceOk: geo.withinGeofence });
       const path = `${job.company_id}/${job.id}/${worker.id}-${Date.now()}-in.jpg`;
-      await supabase.storage.from("punch-photos").upload(path, blob, { contentType: "image/jpeg" });
+      const up = await supabase.storage.from("punch-photos").upload(path, blob, { contentType: "image/jpeg" });
+      if (up.error) throw new Error(`Photo upload failed: ${up.error.message}`);
 
       const effectivePpe = overridePpeChecked ?? ppeChecked;
       const missing = PPE_ITEMS.filter((_, i) => !effectivePpe[i]);
@@ -162,16 +172,30 @@ export function KioskApp({ job, toolboxTalk }: { job: KioskJob; toolboxTalk: Kio
       if (error) throw error;
 
       if (toolboxTalk && entry) {
-        await supabase.from("toolbox_talk_acknowledgements").insert({
+        const { error: ackError } = await supabase.from("toolbox_talk_acknowledgements").insert({
           toolbox_talk_id: toolboxTalk.id,
           worker_id: worker.id,
           time_entry_id: entry.id,
         });
+        if (ackError) throw new Error(`Toolbox talk sign-off failed: ${ackError.message}`);
       }
+
+      setDoneDetail(
+        [
+          geo.lat != null ? (geo.withinGeofence === false ? "GPS saved (outside the job geofence)" : "GPS saved") : "No GPS fix",
+          "photo saved",
+          missing.length === 0 ? "PPE confirmed" : `PPE missing: ${missing.join(", ")}`,
+          toolboxTalk ? "toolbox talk signed" : null,
+        ]
+          .filter(Boolean)
+          .join(" · "),
+      );
 
       setDoneMessage(`Clocked in ${new Date().toLocaleTimeString("en-CA", { hour: "2-digit", minute: "2-digit" })}`);
       setStep("done-in");
       scheduleReset();
+    } catch (e) {
+      fail(e);
     } finally {
       setBusy(false);
     }
@@ -179,7 +203,7 @@ export function KioskApp({ job, toolboxTalk }: { job: KioskJob; toolboxTalk: Kio
 
   async function submitIncidentReport(data: { incident_type: string; description: string; first_aid_given?: boolean; needs_medical?: boolean }) {
     if (!worker) return;
-    await supabase.from("incident_reports").insert({
+    const { error } = await supabase.from("incident_reports").insert({
       company_id: job.company_id,
       job_id: job.id,
       worker_id: worker.id,
@@ -189,6 +213,7 @@ export function KioskApp({ job, toolboxTalk }: { job: KioskJob; toolboxTalk: Kio
       first_aid_given: data.first_aid_given ?? false,
       needs_medical: data.needs_medical ?? false,
     });
+    if (error) throw new Error(`Incident report failed: ${error.message}`);
   }
 
   async function submitClockOut() {
@@ -197,9 +222,10 @@ export function KioskApp({ job, toolboxTalk }: { job: KioskJob; toolboxTalk: Kio
     try {
       const blob = await stampPhoto(photoFile, { label: "OUT", lat: geo.lat, lon: geo.lon, geofenceOk: geo.withinGeofence });
       const path = `${job.company_id}/${job.id}/${worker.id}-${Date.now()}-out.jpg`;
-      await supabase.storage.from("punch-photos").upload(path, blob, { contentType: "image/jpeg" });
+      const up = await supabase.storage.from("punch-photos").upload(path, blob, { contentType: "image/jpeg" });
+      if (up.error) throw new Error(`Photo upload failed: ${up.error.message}`);
 
-      await supabase
+      const { error: outError } = await supabase
         .from("time_entries")
         .update({
           clock_out_at: new Date().toISOString(),
@@ -209,10 +235,14 @@ export function KioskApp({ job, toolboxTalk }: { job: KioskJob; toolboxTalk: Kio
           injury_reported: injury,
         })
         .eq("id", openEntryId);
+      if (outError) throw new Error(`Clock-out failed: ${outError.message}`);
 
+      setDoneDetail(`${geo.lat != null ? "GPS saved" : "No GPS fix"} · photo saved · ${injury ? "injury reported, office notified" : "no injury reported"}`);
       setDoneMessage(`Clocked out ${new Date().toLocaleTimeString("en-CA", { hour: "2-digit", minute: "2-digit" })}`);
       setStep("done-out");
       scheduleReset();
+    } catch (e) {
+      fail(e);
     } finally {
       setBusy(false);
     }
@@ -275,8 +305,12 @@ export function KioskApp({ job, toolboxTalk }: { job: KioskJob; toolboxTalk: Kio
       {step === "injury-form" && (
         <InjuryFormStep
           onSubmit={async (data) => {
-            await submitIncidentReport({ incident_type: "Injury", description: data.description, first_aid_given: data.firstAidGiven, needs_medical: data.needsMedical });
-            setStep("report");
+            try {
+              await submitIncidentReport({ incident_type: "Injury", description: data.description, first_aid_given: data.firstAidGiven, needs_medical: data.needsMedical });
+              setStep("report");
+            } catch (e) {
+              fail(e);
+            }
           }}
         />
       )}
@@ -284,8 +318,13 @@ export function KioskApp({ job, toolboxTalk }: { job: KioskJob; toolboxTalk: Kio
       {step === "report" && (
         <ReportStep
           onSubmit={async (data) => {
-            if (data.category !== "Nothing to report") {
-              await submitIncidentReport({ incident_type: data.category, description: data.details });
+            try {
+              if (data.category !== "Nothing to report") {
+                await submitIncidentReport({ incident_type: data.category, description: data.details });
+              }
+            } catch (e) {
+              fail(e);
+              return;
             }
             await submitClockOut();
           }}
@@ -299,9 +338,22 @@ export function KioskApp({ job, toolboxTalk }: { job: KioskJob; toolboxTalk: Kio
             {doneMessage}
           </div>
           <div style={{ color: "var(--mute)", fontSize: 13.5, lineHeight: 1.7 }}>
-            📍 GPS + photo saved
-            {step === "done-in" ? " · PPE confirmed · toolbox talk signed" : injury ? " · Injury reported, office notified" : " · No injury reported"}
+            {doneDetail}
           </div>
+        </div>
+      )}
+
+      {step === "error" && (
+        <div style={{ textAlign: "center" }}>
+          <div style={{ fontSize: 56 }}>⚠️</div>
+          <div className="display" style={{ fontSize: 22, margin: "10px 0" }}>
+            That punch did NOT save
+          </div>
+          <div style={{ color: "var(--red)", fontSize: 13.5, lineHeight: 1.6, marginBottom: 16 }}>{failure}</div>
+          <div style={{ color: "var(--mute)", fontSize: 12.5, marginBottom: 16 }}>Tell your foreman, then try again.</div>
+          <button className="cc-btn" style={{ width: "100%", padding: 16 }} onClick={resetAll} type="button">
+            Start over
+          </button>
         </div>
       )}
 

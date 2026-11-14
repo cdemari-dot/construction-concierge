@@ -32,7 +32,7 @@ export default function AcceptInvitePage() {
       setNotice("Check your email to confirm your account, then sign in at /login.");
       return;
     }
-    router.push("/dashboard");
+    router.push("/");
     router.refresh();
   }
 

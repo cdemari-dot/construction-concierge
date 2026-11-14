@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { homeFor } from "@/lib/auth/home";
 import type { Profile, UserRole } from "@/lib/types/database";
 
 export interface CurrentUser {
@@ -31,6 +32,6 @@ export async function getCurrentUser(): Promise<CurrentUser | null> {
 export async function requireRole(allowed: UserRole[]): Promise<CurrentUser> {
   const user = await getCurrentUser();
   if (!user) redirect("/login");
-  if (!allowed.includes(user.profile.role)) redirect("/dashboard");
+  if (!allowed.includes(user.profile.role)) redirect(homeFor(user.profile.role));
   return user;
 }

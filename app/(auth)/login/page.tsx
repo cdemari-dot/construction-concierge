@@ -32,7 +32,7 @@ export default function LoginPage() {
       setError(error.message);
       return;
     }
-    router.push("/dashboard");
+    router.push("/");
     router.refresh();
   }
 
@@ -67,7 +67,7 @@ export default function LoginPage() {
       setError(rpcError.message);
       return;
     }
-    router.push("/dashboard");
+    router.push("/");
     router.refresh();
   }
 

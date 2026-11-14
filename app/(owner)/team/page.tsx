@@ -23,7 +23,7 @@ export default async function TeamPage() {
         Team
       </h1>
       <p style={{ color: "var(--mute)", fontSize: 13, marginBottom: 16 }}>
-        Foreman and Worker get a PIN for the kiosk, not a login. Set each person&apos;s loaded hourly cost (wage plus burden) so jobs show real labour margin — only Owner/PM can see rates.
+        Workers (and Foremen) get a PIN for the kiosk. A Foreman can also be invited with a login so they can use the field app on their own phone. Set each person&apos;s loaded hourly cost (wage plus burden) so jobs show real labour margin — only Owner/PM can see rates.
       </p>
 
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 16, marginBottom: 16 }}>

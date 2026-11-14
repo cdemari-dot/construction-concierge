@@ -88,7 +88,7 @@ export function InviteTeamForm() {
       id="invite-form"
     >
       <h3 style={{ fontSize: 11.5, letterSpacing: 1.4, textTransform: "uppercase", color: "var(--mute)" }}>
-        Invite Owner / PM (real login)
+        Invite Foreman / PM / Owner (real login)
       </h3>
       {error && <div style={{ color: "var(--red)", fontSize: 12.5 }}>{error}</div>}
       {notice && <div style={{ color: "var(--lime)", fontSize: 12.5 }}>{notice}</div>}
@@ -96,6 +96,7 @@ export function InviteTeamForm() {
         <input name="full_name" placeholder="Full name" required style={inputStyle} />
         <select name="role" style={inputStyle} defaultValue="pm">
           <option value="pm">PM</option>
+          <option value="foreman">Foreman (own login for the field app)</option>
           <option value="owner">Owner</option>
         </select>
       </div>
@@ -125,7 +126,7 @@ export function CrewRow({ profile, isSelf, rate }: { profile: Profile; isSelf: b
           {profile.status === "inactive" ? " · inactive" : ""}
         </span>
         <div style={{ color: "var(--mute)", fontSize: 11.5 }}>
-          {hasLogin ? profile.email ?? "no email on file" : profile.phone ?? "no phone on file"}
+          {profile.email ?? profile.phone ?? "no email or phone on file"}
         </div>
       </div>
       <div style={{ display: "flex", gap: 8, alignItems: "center" }}>

@@ -31,7 +31,7 @@ export default function OnboardingPage() {
       setError(error.message);
       return;
     }
-    router.push("/dashboard");
+    router.push("/");
     router.refresh();
   }
 

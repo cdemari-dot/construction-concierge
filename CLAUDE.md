@@ -91,6 +91,13 @@ are flagged on the job card. Overhead is not allocated to jobs.
 New jobs get coordinates from their address via OpenStreetMap Nominatim
 (best-effort, 5 s timeout) or the "use my current location" button.
 
+### Field app launcher and role routing
+`lib/auth/home.ts` `homeFor(role)`: Foreman/Worker logins land on `/m`, Owner/PM on
+`/dashboard` (used by `/`, `proxy.ts`, `requireRole`). Owners can invite Foremen by
+email at `/team`. `/field` (Owner sidebar) lists a QR code + link for the Foreman
+phone app and for each active job's kiosk (`/kiosk/[jobId]`). The kiosk reports
+failures honestly (error screen) and only lists what actually saved.
+
 ### Still explicitly out of scope
 CRM/bid tracking & kanban, inventory/equipment tracking, the integrations
 marketplace, detailed job-cost category breakdowns (labour/AP/material/

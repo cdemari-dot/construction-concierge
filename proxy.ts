@@ -1,5 +1,7 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
+import { homeFor } from "@/lib/auth/home";
+import type { UserRole } from "@/lib/types/database";
 import { isSupabaseConfigured, supabaseAnonKey, supabaseUrl } from "@/lib/supabase/env";
 
 const PUBLIC_PATHS = ["/login", "/accept-invite"];
@@ -51,11 +53,11 @@ export async function proxy(request: NextRequest) {
   // whatever page sent them to /login.
   if (pathname === "/onboarding") return response;
 
-  const { data: profile } = await supabase.from("profiles").select("id").eq("auth_user_id", user.id).maybeSingle();
+  const { data: profile } = await supabase.from("profiles").select("role").eq("auth_user_id", user.id).maybeSingle();
 
   if (!profile) return redirectTo(request, "/onboarding");
 
-  if (isPublic) return redirectTo(request, "/dashboard");
+  if (isPublic) return redirectTo(request, homeFor((profile as { role: UserRole }).role));
 
   return response;
 }

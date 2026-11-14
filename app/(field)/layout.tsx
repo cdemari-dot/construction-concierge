@@ -6,7 +6,7 @@ export default async function FieldLayout({ children }: { children: React.ReactN
     // The device itself must be signed in as an Owner/PM/Foreman — workers
     // identify themselves with their PIN inside this already-authenticated
     // session. See CLAUDE.md "Roles & the kiosk/PIN problem".
-    await requireRole(["owner", "pm", "foreman"]);
+    await requireRole(["owner", "pm", "foreman", "worker"]);
   }
 
   return <div style={{ minHeight: "100vh", padding: 16 }}>{children}</div>;
