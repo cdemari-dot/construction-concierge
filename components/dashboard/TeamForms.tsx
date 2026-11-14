@@ -51,6 +51,10 @@ export function AddCrewForm() {
         <input name="phone" placeholder="Phone (optional)" style={inputStyle} />
         <input name="pin" placeholder="4-digit PIN" required pattern="[0-9]{4}" maxLength={4} style={inputStyle} />
       </div>
+      <label style={{ fontSize: 11.5, color: "var(--mute)", display: "grid", gap: 4 }}>
+        Hourly cost to you, $/hr (wage plus payroll burden — only Owner/PM can see this)
+        <input name="hourly_rate" type="number" min="0" step="0.01" placeholder="e.g. 48.50" style={inputStyle} />
+      </label>
       <button className="cc-btn lime" type="submit" disabled={pending} style={{ justifySelf: "start" }}>
         {pending ? "Adding…" : "Add to crew"}
       </button>
@@ -126,8 +130,9 @@ export function CrewRow({ profile, isSelf, rate }: { profile: Profile; isSelf: b
       </div>
       <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
         {error && <span style={{ color: "var(--red)", fontSize: 11.5 }}>{error}</span>}
-        {!hasLogin && (
+        {(
           <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }} title="Loaded cost per hour: wage plus payroll burden. Only Owner/PM can see this.">
+            {rate == null && !rateSaved && <span className="cc-tag amber">no rate set</span>}
             <span style={{ color: "var(--mute)", fontSize: 11.5 }}>$</span>
             <input
               value={rateText}

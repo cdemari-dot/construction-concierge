@@ -17,6 +17,7 @@ export async function addCrewMember(formData: FormData) {
   const role = String(formData.get("role")) as UserRole;
   const phone = String(formData.get("phone") || "") || null;
   const pin = String(formData.get("pin"));
+  const rateText = String(formData.get("hourly_rate") || "").trim();
 
   const { data: profile, error } = await supabase
     .from("profiles")
@@ -31,6 +32,15 @@ export async function addCrewMember(formData: FormData) {
     p_pin: pin,
   });
   if (pinError) throw new Error(pinError.message);
+
+  if (rateText !== "") {
+    const rate = Number(rateText);
+    if (!Number.isFinite(rate) || rate < 0) throw new Error("Enter a valid hourly cost");
+    const { error: rateError } = await supabase
+      .from("pay_rates")
+      .upsert({ profile_id: profile.id, company_id: user.profile.company_id, hourly_rate: rate }, { onConflict: "profile_id" });
+    if (rateError) throw new Error(rateError.message);
+  }
 
   revalidatePath("/team");
 }
