@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { fetchTodayCrew } from "@/lib/todayCrew";
 import { SignaturePad } from "./SignaturePad";
 import { Label, Notice, Stepper, Title } from "./ui";
 
@@ -16,6 +17,19 @@ export function TmTicketForm({ companyId, jobId, createdBy }: { companyId: strin
   const [ok, setOk] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+
+  // Pre-fill hours from today's actual shifts at this job (still editable).
+  useEffect(() => {
+    let cancelled = false;
+    fetchTodayCrew(jobId)
+      .then((c) => {
+        if (!cancelled && c.hours > 0) setHours(c.hours);
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [jobId]);
 
   async function submit() {
     setBusy(true);
@@ -77,7 +91,7 @@ export function TmTicketForm({ companyId, jobId, createdBy }: { companyId: strin
       <Label>📧 Super&apos;s email (so we can send a copy)</Label>
       <input className="fa-input" type="email" inputMode="email" placeholder="name@company.com" value={superEmail} onChange={(e) => setSuperEmail(e.target.value)} />
 
-      <Label>⏱️ Hours worked</Label>
+      <Label>⏱️ Hours worked (filled from today&apos;s clock-ins, change if needed)</Label>
       <Stepper value={hours} onChange={setHours} step={0.5} max={999} unit="h" />
 
       <Label>🚜 Equipment cost ($)</Label>

@@ -71,7 +71,7 @@ export function FieldApp({
       </select>
 
       {tab === "clock" && <KioskApp job={job} toolboxTalk={toolboxTalksByJob[job.id] ?? null} />}
-      {tab === "log" && <DailyLogForm key={job.id} companyId={job.company_id} jobId={job.id} foremanId={currentProfileId} />}
+      {tab === "log" && <DailyLogForm key={job.id} companyId={job.company_id} jobId={job.id} foremanId={currentProfileId} lat={job.geofence_lat} lon={job.geofence_lon} />}
       {tab === "extras" && <ExtraForm key={job.id} companyId={job.company_id} jobId={job.id} reportedBy={currentProfileId} />}
       {tab === "tm" && <TmTicketForm key={job.id} companyId={job.company_id} jobId={job.id} createdBy={currentProfileId} />}
       {tab === "incident" && <IncidentForm key={job.id} companyId={job.company_id} jobId={job.id} workerId={currentProfileId} />}
