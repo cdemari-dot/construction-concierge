@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { speak, stopSpeaking } from "@/lib/voice";
 
 interface ChatMessage {
   role: "user" | "assistant";
@@ -21,6 +22,68 @@ export function AgentDrawer() {
   const [input, setInput] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [voiceOn, setVoiceOn] = useState(true);
+  const [listening, setListening] = useState(false);
+  const recRef = useRef<{ stop: () => void } | null>(null);
+  const voiceOnRef = useRef(true);
+
+  useEffect(() => {
+    // Restore the saved preference after mount (async callback keeps SSR output stable).
+    const raf = requestAnimationFrame(() => {
+      try {
+        if (localStorage.getItem("cc-voice") === "off") {
+          setVoiceOn(false);
+          voiceOnRef.current = false;
+        }
+      } catch {}
+    });
+    // Chrome loads voices lazily; touching the list early makes the first reply use the right voice.
+    if ("speechSynthesis" in window) window.speechSynthesis.getVoices();
+    return () => {
+      cancelAnimationFrame(raf);
+      stopSpeaking();
+    };
+  }, []);
+
+  function toggleVoice() {
+    const next = !voiceOn;
+    setVoiceOn(next);
+    voiceOnRef.current = next;
+    if (!next) stopSpeaking();
+    try {
+      localStorage.setItem("cc-voice", next ? "on" : "off");
+    } catch {}
+  }
+
+  function listen() {
+    type Rec = { lang: string; interimResults: boolean; onresult: (e: { results: ArrayLike<ArrayLike<{ transcript: string }>> }) => void; onend: () => void; onerror: () => void; start: () => void; stop: () => void };
+    const w = window as unknown as { SpeechRecognition?: new () => Rec; webkitSpeechRecognition?: new () => Rec };
+    const Ctor = w.SpeechRecognition ?? w.webkitSpeechRecognition;
+    if (!Ctor) {
+      setError("Voice input isn't supported in this browser. Try Chrome or Safari.");
+      return;
+    }
+    if (listening) {
+      recRef.current?.stop();
+      return;
+    }
+    stopSpeaking();
+    const rec = new Ctor();
+    rec.lang = "en-CA";
+    rec.interimResults = false;
+    rec.onresult = (e) => {
+      const text = e.results[0]?.[0]?.transcript ?? "";
+      if (text) send(text);
+    };
+    rec.onend = () => setListening(false);
+    rec.onerror = () => {
+      setListening(false);
+      setError("Couldn't hear that. Check the microphone permission and try again.");
+    };
+    recRef.current = rec;
+    setListening(true);
+    rec.start();
+  }
 
   async function send(text: string) {
     if (!text.trim() || busy) return;
@@ -38,6 +101,7 @@ export function AgentDrawer() {
       const body = await res.json();
       if (!res.ok) throw new Error(body.error ?? "Agent failed");
       setMessages([...next, { role: "assistant", content: body.reply }]);
+      if (voiceOnRef.current) speak(body.reply);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Something went wrong");
     } finally {
@@ -101,7 +165,17 @@ export function AgentDrawer() {
           <div style={{ padding: "16px 18px", borderBottom: "1px solid var(--line)", display: "flex", alignItems: "center", gap: 10 }}>
             <b className="display">CFO Agent</b>
             <span style={{ flex: 1 }} />
-            <button className="cc-btn ghost sm" onClick={() => setOpen(false)} type="button">
+            <button className="cc-btn ghost sm" onClick={toggleVoice} type="button" aria-pressed={voiceOn} title="Speak replies aloud">
+              {voiceOn ? "🔊 Voice on" : "🔇 Voice off"}
+            </button>
+            <button
+              className="cc-btn ghost sm"
+              onClick={() => {
+                stopSpeaking();
+                setOpen(false);
+              }}
+              type="button"
+            >
               Close
             </button>
           </div>
@@ -168,6 +242,15 @@ export function AgentDrawer() {
                 height: 46,
               }}
             />
+            <button
+              className="cc-btn ghost"
+              type="button"
+              onClick={listen}
+              aria-label={listening ? "Stop listening" : "Speak your question"}
+              style={{ fontSize: 18, borderColor: listening ? "var(--red)" : undefined }}
+            >
+              {listening ? "⏹" : "🎙️"}
+            </button>
             <button className="cc-btn lime" type="submit" disabled={busy}>
               Send
             </button>
