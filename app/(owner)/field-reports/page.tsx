@@ -4,7 +4,7 @@ import { isSupabaseConfigured } from "@/lib/supabase/env";
 import { SetupBanner } from "@/components/ui/SetupBanner";
 import { Tag } from "@/components/ui/Tag";
 import { ReportButton } from "@/components/dashboard/ReportButton";
-import { closeIncident, extraToChangeOrder, setTmStatus } from "./actions";
+import { closeIncident, emailTmTicket, extraToChangeOrder, setTmStatus } from "./actions";
 import { fmt } from "@/lib/format";
 import type { DailyLog, Extra, IncidentReport, Job, Profile, TmTicket } from "@/lib/types/database";
 
@@ -125,7 +125,13 @@ export default async function FieldReportsPage({ searchParams }: { searchParams:
           <img src={signed[i]!} alt="Superintendent signature" style={{ background: "#fff", borderRadius: 8, height: 64, justifySelf: "start", padding: 4 }} />
         )}
         <div style={{ display: "flex", gap: 8 }}>
-          {r.status === "signed" && <ReportButton label="Mark sent to GC" run={setTmStatus.bind(null, r.id, "sent_to_gc")} />}
+          {r.super_email && r.super_signature_path && (r.status === "signed" || r.status === "sent_to_gc") && (
+            <ReportButton
+              label={r.status === "signed" ? `Email copy to ${r.super_email}` : "Email again"}
+              run={emailTmTicket.bind(null, r.id)}
+            />
+          )}
+          {r.status === "signed" && <ReportButton ghost label="Mark sent (no email)" run={setTmStatus.bind(null, r.id, "sent_to_gc")} />}
           {r.status === "sent_to_gc" && <ReportButton label="Mark billed" run={setTmStatus.bind(null, r.id, "billed")} />}
         </div>
       </div>
