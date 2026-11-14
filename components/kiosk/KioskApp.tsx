@@ -127,17 +127,30 @@ export function KioskApp({ job, toolboxTalk }: { job: KioskJob; toolboxTalk: Kio
     setStep(mode === "in" ? "ppe" : "injury-q");
   }
 
+  // Everyone except the foreman (who delivers the talk) must sign it before clocking in.
+  const mustSignTalk = worker?.role !== "foreman";
+
+  function afterPpe(all?: Record<number, boolean>) {
+    if (!mustSignTalk) {
+      submitClockIn(all);
+      return;
+    }
+    if (!toolboxTalk) {
+      fail(new Error("Today's safety talk isn't set up for this job, so clock-in is blocked. Tell the office."));
+      return;
+    }
+    setStep("toolbox");
+  }
+
   function handlePpeAllGood() {
-    if (toolboxTalk) setStep("toolbox");
-    else submitClockIn();
+    afterPpe();
   }
 
   function handleForemanSupplied() {
     const all: Record<number, boolean> = {};
     PPE_ITEMS.forEach((_, i) => (all[i] = true));
     setPpeChecked(all);
-    if (toolboxTalk) setStep("toolbox");
-    else submitClockIn(all);
+    afterPpe(all);
   }
 
   async function submitClockIn(overridePpeChecked?: Record<number, boolean>) {
@@ -164,14 +177,14 @@ export function KioskApp({ job, toolboxTalk }: { job: KioskJob; toolboxTalk: Kio
           geofence_ok: geo.withinGeofence,
           ppe_confirmed: missing.length === 0,
           ppe_missing_items: missing,
-          toolbox_talk_id: toolboxTalk?.id ?? null,
+          toolbox_talk_id: mustSignTalk ? toolboxTalk?.id ?? null : null,
         })
         .select()
         .single();
 
       if (error) throw error;
 
-      if (toolboxTalk && entry) {
+      if (mustSignTalk && toolboxTalk && entry) {
         const { error: ackError } = await supabase.from("toolbox_talk_acknowledgements").insert({
           toolbox_talk_id: toolboxTalk.id,
           worker_id: worker.id,
@@ -185,7 +198,7 @@ export function KioskApp({ job, toolboxTalk }: { job: KioskJob; toolboxTalk: Kio
           geo.lat != null ? (geo.withinGeofence === false ? "GPS saved (outside the job geofence)" : "GPS saved") : "No GPS fix",
           "photo saved",
           missing.length === 0 ? "PPE confirmed" : `PPE missing: ${missing.join(", ")}`,
-          toolboxTalk ? "toolbox talk signed" : null,
+          mustSignTalk && toolboxTalk ? "safety talk signed" : null,
         ]
           .filter(Boolean)
           .join(" · "),
@@ -290,7 +303,7 @@ export function KioskApp({ job, toolboxTalk }: { job: KioskJob; toolboxTalk: Kio
       )}
 
       {step === "toolbox" && toolboxTalk && (
-        <ToolboxTalkStep title={toolboxTalk.title} body={toolboxTalk.body} onAcknowledge={() => submitClockIn()} />
+        <ToolboxTalkStep title={toolboxTalk.title} body={toolboxTalk.body} onAcknowledge={() => submitClockIn(ppeChecked)} />
       )}
 
       {step === "injury-q" && (

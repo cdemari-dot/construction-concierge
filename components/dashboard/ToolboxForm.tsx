@@ -3,13 +3,7 @@
 import { useRef, useState, useTransition } from "react";
 import { createToolboxTalk } from "@/app/(owner)/toolbox/actions";
 import { todayToronto } from "@/lib/today";
-
-const TEMPLATES = [
-  { title: "Working at heights", body: "Inspect harnesses and lanyards before use. Tie off at all times above 3 m (10 ft). Check guardrails, ladders and scaffold tags. Never work under a suspended load. Report damaged equipment immediately." },
-  { title: "PPE: hard hat, boots, glasses, gloves", body: "Hard hat, CSA-approved safety boots, safety glasses and gloves are required on site at all times. Add hearing protection near loud equipment and a respirator where dust or fumes are present. Replace damaged PPE before starting." },
-  { title: "Dust, silica and asbestos awareness", body: "Do not disturb suspect materials until they are tested. Wet methods and HEPA vacuums for dust control. Respirators as per the job's designated substances plan. Stop and tell the foreman if you find unexpected material." },
-  { title: "Housekeeping and slips, trips, falls", body: "Keep walkways, stairs and exits clear. Stack materials safely and remove debris daily. Cords and hoses are routed overhead or flagged. Clean up spills immediately." },
-];
+import { TALK_TEMPLATES } from "@/lib/toolbox";
 
 export function ToolboxForm({ jobs }: { jobs: { id: string; label: string }[] }) {
   const formRef = useRef<HTMLFormElement>(null);
@@ -42,7 +36,7 @@ export function ToolboxForm({ jobs }: { jobs: { id: string; label: string }[] })
     >
       <b className="display" style={{ fontSize: 16 }}>New toolbox talk</b>
       <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-        {TEMPLATES.map((t) => (
+        {TALK_TEMPLATES.map((t) => (
           <button key={t.title} type="button" className="cc-btn ghost sm" onClick={() => { setTitle(t.title); setBody(t.body); }}>
             {t.title}
           </button>

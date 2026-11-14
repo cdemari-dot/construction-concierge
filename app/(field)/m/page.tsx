@@ -3,8 +3,8 @@ import { isSupabaseConfigured } from "@/lib/supabase/env";
 import { SetupBanner } from "@/components/ui/SetupBanner";
 import { getCurrentUser } from "@/lib/auth/session";
 import { FieldApp } from "@/components/field/FieldApp";
-import type { Job, ToolboxTalk } from "@/lib/types/database";
-import { todayToronto } from "@/lib/today";
+import type { Job } from "@/lib/types/database";
+import { ensureTodayTalks } from "@/lib/toolbox";
 
 // Some profiles store an email as the name; show "Chris", not "chris@demstos.com".
 function friendlyFirstName(fullName: string): string {
@@ -22,18 +22,7 @@ export default async function FieldMobilePage() {
   const { data: jobs } = await supabase.from("jobs").select("*").eq("status", "active").order("job_number");
   const jobList = (jobs ?? []) as Job[];
 
-  const today = todayToronto();
-  const { data: talks } = await supabase
-    .from("toolbox_talks")
-    .select("*")
-    .in("job_id", jobList.map((j) => j.id))
-    .eq("talk_date", today);
-
-  const toolboxTalksByJob: Record<string, { id: string; title: string; body: string } | null> = {};
-  for (const j of jobList) toolboxTalksByJob[j.id] = null;
-  for (const t of (talks ?? []) as ToolboxTalk[]) {
-    toolboxTalksByJob[t.job_id] = { id: t.id, title: t.title, body: t.body };
-  }
+  const toolboxTalksByJob = await ensureTodayTalks(supabase, jobList, user.profile.id);
 
   return (
     <div>
