@@ -3,7 +3,7 @@
 // with `npx supabase gen types typescript --linked` output — but keep the
 // shape the same so the rest of the app doesn't need to change.
 
-export type UserRole = "owner" | "pm" | "foreman" | "worker";
+export type UserRole = "owner" | "pm" | "foreman" | "worker" | "kiosk";
 export type ProfileStatus = "active" | "inactive";
 export type JobStatus = "active" | "holdback" | "closed";
 export type PayrollStatus = "pending" | "approved" | "exported";

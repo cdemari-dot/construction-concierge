@@ -134,16 +134,16 @@ results. `?demo=1` on /finance and /scale shows labelled sample data (`lib/demo/
 ### Two separate apps: Field (foreman) and Crew Punch (kiosk)
 Both are installable web apps (own manifest in `public/*.webmanifest`, own name and scope, "Add to Home
 Screen") that talk straight to Supabase; neither depends on the other. **Field** (`/m`, `app/(field)/m/layout.tsx`;
-Owner/PM/Foreman only): `lib/fieldWeek.ts` builds Mon-Sat from the scheduler. A Foreman sees only sites he leads
+Owner/PM/Foreman only): `lib/fieldWeek.ts` builds today + the next 6 days from the scheduler. A Foreman sees only sites he leads
 (`jobs.foreman_id`) or is scheduled on (`schedule_entries`); Owner/PM see all. Today tab: week strip, site cards,
 crew on site vs scheduled (late flag from `schedule_entries.start_time`), talk-signed count, auto weather,
 unsigned-T&M reminder. Daily talks are only auto-created for sites with crew today. Tabs: Today, My clock, Log,
 Extras, T&M, Incident (line icons, no emoji). The foreman never sees pay (`pay_rates` is Owner/PM only). T&M:
 photos (up to 8, `tm-ticket-photos`, `tm_tickets.photo_paths`), quantities only, no prices; the emailed copy
 attaches the signature and photos. **Crew Punch** (`/kiosk`, `/kiosk/[jobId]`): each iPad signs in with its own
-kiosk login (Team -> invite, role "Worker"; `homeFor(worker)` = `/kiosk`), picks its site once (remembered in
+kiosk login (Team -> invite, role "Kiosk login" = enum value `kiosk`, migration 0012, which lets that session punch for any PIN and create the day's talk; `homeFor(kiosk|worker)` = `/kiosk`), picks its site once (remembered in
 localStorage, `?change=1` to reset). A punch at a site the person isn't scheduled on is allowed and saved with
-`time_entries.off_schedule = true` (shown to the foreman as "Off schedule"). Migration 0011 adds
+`time_entries.off_schedule = true` (shown to the foreman as "Off schedule"). Migrations 0011 and 0012 (+0012b policies) add
 `schedule_entries.start_time` and `time_entries.off_schedule` (apply it before deploying).
 
 ### Still explicitly out of scope

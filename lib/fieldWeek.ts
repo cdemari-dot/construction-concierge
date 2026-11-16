@@ -45,11 +45,9 @@ function addDays(iso: string, n: number): string {
   return d.toISOString().slice(0, 10);
 }
 
-// Mon..Sat of the current Toronto week (Sunday shows the coming week).
+// Today plus the next 6 days, so today is always the first tab (crews do work Sundays).
 function weekDates(today: string): string[] {
-  const dow = new Date(`${today}T12:00:00Z`).getUTCDay(); // 0 Sun
-  const monday = addDays(today, dow === 0 ? 1 : 1 - dow);
-  return Array.from({ length: 6 }, (_, i) => addDays(monday, i));
+  return Array.from({ length: 7 }, (_, i) => addDays(today, i));
 }
 
 // What a Foreman sees: only sites they lead or are scheduled on. Owner/PM previewing
@@ -143,7 +141,7 @@ export async function loadFieldWeek(supabase: SupabaseClient, me: Profile): Prom
       });
     }
     const dt = new Date(`${date}T12:00:00Z`);
-    return { date, dow: dt.toLocaleDateString("en-CA", { weekday: "short", timeZone: "UTC" }), day: dt.getUTCDate(), sites };
+    return { date, dow: date === today ? "Today" : dt.toLocaleDateString("en-CA", { weekday: "short", timeZone: "UTC" }), day: dt.getUTCDate(), sites };
   });
 
   const siteIds = visibleJobs.map((j) => j.id);

@@ -67,7 +67,7 @@ export function TodayView({ firstName, week, onOpenSite, onGo }: { firstName: st
         <Icon name="cloud" size={16} /> {wx ? `${wx.tempC}°C, ${wx.summary.toLowerCase()} · wind ${wx.windKmh} km/h` : "Weather loads from your first site"}
       </div>
 
-      <div className="cc-in" style={{ display: "grid", gridTemplateColumns: "repeat(6, 1fr)", gap: 6, marginBottom: 18 }}>
+      <div className="cc-in" style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: 4, marginBottom: 18 }}>
         {week.days.map((d, i) => (
           <button
             key={d.date}
@@ -86,7 +86,7 @@ export function TodayView({ firstName, week, onOpenSite, onGo }: { firstName: st
               textAlign: "center",
             }}
           >
-            <div style={{ fontSize: 11, color: "var(--mute)" }}>{d.dow}</div>
+            <div style={{ fontSize: 10, color: "var(--mute)" }}>{d.dow}</div>
             <div style={{ fontSize: 16, fontWeight: 600 }}>{d.day}</div>
             <div style={{ fontSize: 11, color: "var(--mute)" }}>{d.sites.length ? `${d.sites.length} ${d.sites.length > 1 ? "sites" : "site"}` : "Off"}</div>
           </button>

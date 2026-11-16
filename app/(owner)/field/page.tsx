@@ -18,7 +18,7 @@ export default async function FieldPage() {
       </h1>
       <p style={{ color: "var(--mute)", fontSize: 13, marginBottom: 16, maxWidth: 720, lineHeight: 1.6 }}>
         Two separate apps, both talking straight to Concierge. <b style={{ color: "var(--text)" }}>Crew Punch</b> is the jobsite iPad: crew clock in and out with their PIN, photo, PPE check and safety talk.
-        Give each iPad its own login (add a team member with role Worker and an email on Team, e.g. &ldquo;Eglinton kiosk&rdquo;), sign in once, pick the site, then Share &rarr; Add to Home Screen.{" "}
+        Give each iPad its own login (invite a team member with role Kiosk login and an email on Team, e.g. &ldquo;Eglinton kiosk&rdquo;), sign in once, pick the site, then Share &rarr; Add to Home Screen.{" "}
         <b style={{ color: "var(--text)" }}>Field</b> is the foreman&apos;s own phone app: today&apos;s scheduled sites, crew status, daily log, extras, T&amp;M tickets (with photos) and incidents. Foreman signs in with their own login, then Add to Home Screen.
       </p>
 

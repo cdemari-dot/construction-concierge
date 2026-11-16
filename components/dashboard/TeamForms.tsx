@@ -98,7 +98,7 @@ export function InviteTeamForm() {
           <option value="pm">PM</option>
           <option value="foreman">Foreman (own login for the field app)</option>
           <option value="owner">Owner</option>
-          <option value="worker">Kiosk login (jobsite iPad, Crew Punch)</option>
+          <option value="kiosk">Kiosk login (jobsite iPad, Crew Punch)</option>
         </select>
       </div>
       <input name="email" type="email" placeholder="Email" required style={inputStyle} />
