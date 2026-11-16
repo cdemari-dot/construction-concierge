@@ -50,6 +50,7 @@ export function AddScheduleForm({ jobs, crew }: { jobs: Job[]; crew: Profile[] }
         ))}
       </select>
       <input name="work_date" type="date" required style={inputStyle} />
+      <input name="start_time" type="time" aria-label="Start time" title="Start time" style={inputStyle} />
       <input name="notes" placeholder="Notes (optional)" style={{ ...inputStyle, flex: 1, minWidth: 120 }} />
       <button className="cc-btn lime" type="submit" disabled={pending}>
         {pending ? "Adding…" : "Assign"}

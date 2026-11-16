@@ -165,6 +165,11 @@ export function KioskApp({ job, toolboxTalk }: { job: KioskJob; toolboxTalk: Kio
       const effectivePpe = overridePpeChecked ?? ppeChecked;
       const missing = PPE_ITEMS.filter((_, i) => !effectivePpe[i]);
 
+      // Allowed anywhere, but a punch at a site they aren't scheduled on today is flagged for the office.
+      const today = new Date().toLocaleDateString("en-CA", { timeZone: "America/Toronto" });
+      const { data: sched } = await supabase.from("schedule_entries").select("id").eq("worker_id", worker.id).eq("job_id", job.id).eq("work_date", today).limit(1);
+      const offSchedule = !sched || sched.length === 0;
+
       const { data: entry, error } = await supabase
         .from("time_entries")
         .insert({
@@ -175,6 +180,7 @@ export function KioskApp({ job, toolboxTalk }: { job: KioskJob; toolboxTalk: Kio
           clock_in_lon: geo.lon,
           clock_in_photo_path: path,
           geofence_ok: geo.withinGeofence,
+          off_schedule: offSchedule,
           ppe_confirmed: missing.length === 0,
           ppe_missing_items: missing,
           toolbox_talk_id: mustSignTalk ? toolboxTalk?.id ?? null : null,

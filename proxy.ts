@@ -68,6 +68,6 @@ export const config = {
      * Run on everything except static assets, so the Supabase session
      * cookie stays refreshed on every navigation.
      */
-    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|webmanifest)$).*)",
   ],
 };

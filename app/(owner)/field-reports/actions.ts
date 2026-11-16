@@ -89,9 +89,14 @@ export async function emailTmTicket(id: string) {
   if (dlError || !file) throw new Error(`Could not load signature: ${dlError?.message ?? "missing"}`);
   const sigBase64 = Buffer.from(await file.arrayBuffer()).toString("base64");
 
+  const photoFiles: { filename: string; content: string }[] = [];
+  for (const [i, path] of ((t.photo_paths ?? []) as string[]).entries()) {
+    const { data: ph } = await supabase.storage.from("tm-ticket-photos").download(path);
+    if (ph) photoFiles.push({ filename: `photo-${i + 1}.jpg`, content: Buffer.from(await ph.arrayBuffer()).toString("base64") });
+  }
+
   const companyName = company?.name ?? "Your contractor";
   const jobLine = job ? `${job.job_number} · ${job.name}` : "Job";
-  const total = Number(t.equipment_cost) + Number(t.materials_cost);
   const signedAt = t.signed_at
     ? ` on ${esc(new Date(t.signed_at).toLocaleString("en-CA", { timeZone: "America/Toronto" }))}`
     : "";
@@ -101,12 +106,10 @@ export async function emailTmTicket(id: string) {
 <p style="color:#555;margin:0 0 16px">${esc(jobLine)}${job?.address ? ` · ${esc(job.address)}` : ""}<br>Date: ${esc(t.ticket_date)}</p>
 <table style="border-collapse:collapse;width:100%">
 <tr><td style="${cell}">Labour hours</td><td style="text-align:right;${cell}">${t.hours} h</td></tr>
-<tr><td style="${cell}">Equipment</td><td style="text-align:right;${cell}">$${Number(t.equipment_cost).toFixed(2)}</td></tr>
-<tr><td style="${cell}">Materials</td><td style="text-align:right;${cell}">$${Number(t.materials_cost).toFixed(2)}</td></tr>
-<tr><td style="padding:6px 0"><b>Equipment + materials</b></td><td style="text-align:right"><b>$${total.toFixed(2)}</b></td></tr>
+<tr><td style="padding:6px 0">Photos attached</td><td style="text-align:right">${photoFiles.length}</td></tr>
 </table>
 <p style="margin:16px 0 4px">Signed by <b>${esc(t.super_name)}</b>${signedAt}.</p>
-<p style="color:#555;font-size:13px">Signature image attached. Reply to this email with any questions.</p></div>`;
+<p style="color:#555;font-size:13px">Signature and photos attached. Reply to this email with any questions.</p></div>`;
 
   const res = await fetch("https://api.resend.com/emails", {
     method: "POST",
@@ -118,7 +121,7 @@ export async function emailTmTicket(id: string) {
       reply_to: replyTo,
       subject: `T&M ticket ${t.ticket_date} — ${jobLine} — ${companyName}`,
       html,
-      attachments: [{ filename: "signature.png", content: sigBase64 }],
+      attachments: [{ filename: "signature.png", content: sigBase64 }, ...photoFiles],
     }),
   });
   if (!res.ok) throw new Error(`Email failed (${res.status}): ${(await res.text()).slice(0, 200)}`);

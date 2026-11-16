@@ -1,0 +1,14 @@
+{
+  "name": "Crew Punch",
+  "short_name": "Crew Punch",
+  "description": "Jobsite punch clock for crew: PIN, photo, PPE, safety talk, clock in and out.",
+  "start_url": "/kiosk",
+  "scope": "/kiosk",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#0B0B0D",
+  "theme_color": "#0B0B0D",
+  "icons": [
+    { "src": "/icon.png", "sizes": "512x512", "type": "image/png", "purpose": "any" }
+  ]
+}

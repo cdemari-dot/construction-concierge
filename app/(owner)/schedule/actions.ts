@@ -15,6 +15,7 @@ export async function addScheduleEntry(formData: FormData) {
       job_id: String(formData.get("job_id")),
       worker_id: String(formData.get("worker_id")),
       work_date: String(formData.get("work_date")),
+      start_time: String(formData.get("start_time") || "") || null,
       notes: String(formData.get("notes") || "") || null,
       created_by: user.profile.id,
     },

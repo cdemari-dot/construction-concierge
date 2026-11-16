@@ -66,7 +66,7 @@ export default async function SchedulePage() {
                       className="cc-tag lime"
                       style={{ display: "flex", alignItems: "center", gap: 4, marginBottom: 3, maxWidth: "100%", overflow: "hidden", textOverflow: "ellipsis" }}
                     >
-                      {crewName.get(e.worker_id) ?? "?"}
+                      {crewName.get(e.worker_id) ?? "?"}{e.start_time ? ` ${e.start_time.slice(0, 5)}` : ""}
                       <RemoveScheduleButton id={e.id} />
                     </div>
                   ))}

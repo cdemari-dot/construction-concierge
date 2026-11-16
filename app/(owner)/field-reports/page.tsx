@@ -117,7 +117,7 @@ export default async function FieldReportsPage({ searchParams }: { searchParams:
           <Tag color={r.status === "draft" ? "amber" : r.status === "billed" ? "mute" : "lime"}>{r.status.replaceAll("_", " ")}</Tag>
         </div>
         <div style={{ fontSize: 12.5, color: "var(--mute)" }}>
-          {r.hours} h · equipment {fmt(r.equipment_cost)} · materials {fmt(r.materials_cost)}
+          {r.hours} h · {(r.photo_paths ?? []).length} photo{(r.photo_paths ?? []).length === 1 ? "" : "s"}
         </div>
         {signed[i] && (
           // Signed URL from private storage, not a static asset, so next/image isn't useful here.

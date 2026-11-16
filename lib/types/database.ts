@@ -94,6 +94,7 @@ export interface TimeEntry {
   clock_out_lon: number | null;
   clock_out_photo_path: string | null;
   injury_reported: boolean;
+  off_schedule: boolean;
   payroll_status: PayrollStatus;
   approved_by: string | null;
   approved_at: string | null;
@@ -291,6 +292,7 @@ export interface ScheduleEntry {
   job_id: string;
   worker_id: string;
   work_date: string;
+  start_time: string | null;
   notes: string | null;
   created_by: string | null;
   created_at: string;

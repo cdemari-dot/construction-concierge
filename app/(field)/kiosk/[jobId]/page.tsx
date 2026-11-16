@@ -5,6 +5,7 @@ import { SetupBanner } from "@/components/ui/SetupBanner";
 import { KioskApp } from "@/components/kiosk/KioskApp";
 import type { Job } from "@/lib/types/database";
 import { ensureTodayTalks } from "@/lib/toolbox";
+import { RememberKioskSite, ForgetKioskSite } from "@/components/kiosk/KioskSiteMemory";
 import { getCurrentUser } from "@/lib/auth/session";
 
 export default async function KioskPage({ params }: { params: Promise<{ jobId: string }> }) {
@@ -41,8 +42,9 @@ export default async function KioskPage({ params }: { params: Promise<{ jobId: s
         }}
         toolboxTalk={toolboxTalk}
       />
+      <RememberKioskSite jobId={jobId} />
       <p style={{ textAlign: "center", color: "var(--mute)", fontSize: 11, marginTop: 10 }}>
-        🔒 No names on screen beyond a first name after PIN entry. Each punch is tied to a PIN, a photo, GPS and time.
+        No names on screen beyond a first name after PIN entry. Each punch is tied to a PIN, a photo, GPS and time. <ForgetKioskSite />
       </p>
     </div>
   );

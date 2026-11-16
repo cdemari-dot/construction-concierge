@@ -1,7 +1,9 @@
 import type { UserRole } from "@/lib/types/database";
 
 // Where each role lands after signing in. Field roles never see the office
-// app; sending them to /dashboard would just bounce them back.
+// app. Foreman -> Field app; Worker (the jobsite punch-clock login) -> Crew Punch kiosk.
 export function homeFor(role: UserRole): string {
-  return role === "foreman" || role === "worker" ? "/m" : "/dashboard";
+  if (role === "foreman") return "/m";
+  if (role === "worker") return "/kiosk";
+  return "/dashboard";
 }

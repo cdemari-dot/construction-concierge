@@ -3,8 +3,8 @@ import { isSupabaseConfigured } from "@/lib/supabase/env";
 import { SetupBanner } from "@/components/ui/SetupBanner";
 import { getCurrentUser } from "@/lib/auth/session";
 import { FieldApp } from "@/components/field/FieldApp";
-import type { Job } from "@/lib/types/database";
 import { ensureTodayTalks } from "@/lib/toolbox";
+import { loadFieldWeek } from "@/lib/fieldWeek";
 
 // Some profiles store an email as the name; show "Chris", not "chris@demstos.com".
 function friendlyFirstName(fullName: string): string {
@@ -19,10 +19,15 @@ export default async function FieldMobilePage() {
   if (!user) return <SetupBanner />;
 
   const supabase = await createClient();
-  const { data: jobs } = await supabase.from("jobs").select("*").eq("status", "active").order("job_number");
-  const jobList = (jobs ?? []) as Job[];
+  const week = await loadFieldWeek(supabase, user.profile);
+  const jobList = week.visibleJobs;
 
-  const toolboxTalksByJob = await ensureTodayTalks(supabase, jobList, user.profile.id);
+  // Talks for the clock tab: today's site talks (created only for sites with crew today).
+  const toolboxTalksByJob = await ensureTodayTalks(
+    supabase,
+    jobList.filter((j) => week.days.some((d) => d.date === week.today && d.sites.some((s) => s.jobId === j.id))),
+    user.profile.id,
+  );
 
   return (
     <div>
@@ -39,6 +44,7 @@ export default async function FieldMobilePage() {
         currentProfileId={user.profile.id}
         firstName={friendlyFirstName(user.profile.full_name)}
         toolboxTalksByJob={toolboxTalksByJob}
+        week={week}
       />
     </div>
   );

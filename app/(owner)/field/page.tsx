@@ -17,14 +17,19 @@ export default async function FieldPage() {
         Field app
       </h1>
       <p style={{ color: "var(--mute)", fontSize: 13, marginBottom: 16, maxWidth: 720, lineHeight: 1.6 }}>
-        <b style={{ color: "var(--text)" }}>Kiosk</b> — leave one signed-in tablet at each jobsite; crew clock in and out with their PIN.
-        Sign the tablet in once with a Foreman, PM or Owner login, open its job&apos;s link, and lock it there (iPad: Guided Access).{" "}
-        <b style={{ color: "var(--text)" }}>Foreman phone app</b> — a Foreman signs in on their own phone for the punch clock, daily log, extras, T&amp;M tickets and incident reports.
+        Two separate apps, both talking straight to Concierge. <b style={{ color: "var(--text)" }}>Crew Punch</b> is the jobsite iPad: crew clock in and out with their PIN, photo, PPE check and safety talk.
+        Give each iPad its own login (add a team member with role Worker and an email on Team, e.g. &ldquo;Eglinton kiosk&rdquo;), sign in once, pick the site, then Share &rarr; Add to Home Screen.{" "}
+        <b style={{ color: "var(--text)" }}>Field</b> is the foreman&apos;s own phone app: today&apos;s scheduled sites, crew status, daily log, extras, T&amp;M tickets (with photos) and incidents. Foreman signs in with their own login, then Add to Home Screen.
       </p>
 
       <h3 style={{ fontSize: 11.5, letterSpacing: 1.6, textTransform: "uppercase", color: "var(--mute)", marginBottom: 10 }}>Foreman phone app</h3>
       <div style={{ marginBottom: 24, maxWidth: 520 }}>
-        <QrLink path="/m" label="Foreman app" hint="Foreman signs in with their own login, then picks a job." />
+        <QrLink path="/m" label="Field app (foreman)" hint="Foreman signs in with their own login. Shows only the sites they are scheduled on." />
+      </div>
+
+      <h3 style={{ fontSize: 11.5, letterSpacing: 1.6, textTransform: "uppercase", color: "var(--mute)", marginBottom: 10 }}>Crew Punch (jobsite iPad)</h3>
+      <div style={{ marginBottom: 24, maxWidth: 520 }}>
+        <QrLink path="/kiosk" label="Crew Punch" hint="Sign the iPad in with its kiosk login, pick the site once. Opens straight to the PIN pad after that." />
       </div>
 
       <h3 style={{ fontSize: 11.5, letterSpacing: 1.6, textTransform: "uppercase", color: "var(--mute)", marginBottom: 10 }}>Jobsite kiosks</h3>

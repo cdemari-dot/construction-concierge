@@ -1,0 +1,14 @@
+{
+  "name": "Construction Concierge Field",
+  "short_name": "CC Field",
+  "description": "Foreman app: today's sites from the schedule, crew status, daily log, extras, T&M tickets and incident reports.",
+  "start_url": "/m",
+  "scope": "/m",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0B0B0D",
+  "theme_color": "#0B0B0D",
+  "icons": [
+    { "src": "/icon.png", "sizes": "512x512", "type": "image/png", "purpose": "any" }
+  ]
+}
