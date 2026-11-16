@@ -5,11 +5,11 @@ import { createClient } from "@/lib/supabase/client";
 import { Chips, Label, Notice, Title } from "./ui";
 
 const TYPES = [
-  { value: "Injury", emoji: "🤕", label: "Someone hurt" },
-  { value: "Near miss", emoji: "😮‍💨", label: "Near miss" },
-  { value: "Hazard", emoji: "⚠️", label: "Hazard" },
-  { value: "Damage", emoji: "💥", label: "Damage" },
-  { value: "Equipment issue", emoji: "🔧", label: "Equipment" },
+  { value: "Injury", label: "Someone hurt" },
+  { value: "Near miss", label: "Near miss" },
+  { value: "Hazard", label: "Hazard" },
+  { value: "Damage", label: "Damage" },
+  { value: "Equipment issue", label: "Equipment" },
 ] as const;
 
 export function IncidentForm({ companyId, jobId, workerId }: { companyId: string; jobId: string; workerId: string }) {
@@ -55,7 +55,7 @@ export function IncidentForm({ companyId, jobId, workerId }: { companyId: string
 
   return (
     <div>
-      <Title emoji="🚨" help="Tell the office about anything that happened or almost happened. Reporting it is always the right call.">
+      <Title emoji="" help="Tell the office about anything that happened or almost happened. Reporting it is always the right call.">
         Report an incident
       </Title>
       <Notice ok={ok} error={error} />
@@ -67,22 +67,22 @@ export function IncidentForm({ companyId, jobId, workerId }: { companyId: string
         <>
           {injury && (
             <>
-              <Label>🩹 Which body part?</Label>
+              <Label>Which body part?</Label>
               <input className="fa-input" placeholder="e.g. Left hand" value={bodyPart} onChange={(e) => setBodyPart(e.target.value)} />
               <div className="fa-chips" style={{ marginTop: 12 }}>
                 <button type="button" className={`fa-chip ${firstAid ? "on" : ""}`} onClick={() => setFirstAid((v) => !v)}>
-                  <span className="e">🩺</span>First aid given
+                  First aid given
                 </button>
                 <button type="button" className={`fa-chip ${medical ? "on" : ""}`} onClick={() => setMedical((v) => !v)}>
-                  <span className="e">🚑</span>Needs a doctor
+                  Needs a doctor
                 </button>
               </div>
             </>
           )}
-          <Label>💬 What happened?</Label>
+          <Label>What happened?</Label>
           <textarea className="fa-input" rows={4} placeholder="Tell us in your own words" value={description} onChange={(e) => setDescription(e.target.value)} />
           <button className="fa-btn stop" disabled={busy || !description.trim()} onClick={submit} type="button">
-            {busy ? "Sending…" : "📤 Send to office"}
+            {busy ? "Sending…" : "Send to office"}
           </button>
         </>
       )}

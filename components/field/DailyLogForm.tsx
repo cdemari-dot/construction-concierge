@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/client";
 import { todayToronto } from "@/lib/today";
 import { fetchJobWeather, type JobWeather } from "@/lib/weather";
 import { fetchTodayCrew } from "@/lib/todayCrew";
+import { Icon } from "./Icon";
 import { Label, Notice, Title } from "./ui";
 
 export function DailyLogForm({
@@ -88,13 +89,15 @@ export function DailyLogForm({
 
   return (
     <div>
-      <Title emoji="📝" help="One quick note per day for this job. Saving again today just updates it.">
+      <Title emoji="" help="One quick note per day for this job. Saving again today just updates it.">
         Today&apos;s log
       </Title>
       <Notice ok={ok} error={error} />
 
       <div className="cc-card" style={{ margin: "16px 0 0", display: "flex", alignItems: "center", gap: 12 }}>
-        <span style={{ fontSize: 36 }}>👷</span>
+        <span style={{ color: "var(--cyan)", display: "grid" }}>
+          <Icon name="users" size={32} />
+        </span>
         <div style={{ fontSize: 15, lineHeight: 1.4 }}>
           <b>{crewCount == null ? "Counting the crew…" : `${crewCount} on site today`}</b>
           <div style={{ color: "var(--mute)", fontSize: 13 }}>Counted from today&apos;s clock-ins · added automatically</div>
@@ -102,7 +105,9 @@ export function DailyLogForm({
       </div>
 
       <div className="cc-card" style={{ margin: "16px 0 0", display: "flex", alignItems: "center", gap: 12 }}>
-        <span style={{ fontSize: 36 }}>{weather?.emoji ?? "🌤️"}</span>
+        <span style={{ color: "var(--cyan)", display: "grid" }}>
+          <Icon name="cloud" size={32} />
+        </span>
         <div style={{ fontSize: 15, lineHeight: 1.4 }}>
           {weatherState === "loading" && "Checking the weather at this job…"}
           {weatherState === "ok" && weather && (
@@ -120,14 +125,14 @@ export function DailyLogForm({
         </div>
       </div>
 
-      <Label>🔨 What did we get done?</Label>
+      <Label>What did we get done?</Label>
       <textarea className="fa-input" rows={4} placeholder="e.g. Finished demo on level 2, hauled 3 bins" value={workPerformed} onChange={(e) => setWorkPerformed(e.target.value)} />
 
-      <Label>⏳ Any delays? (optional)</Label>
+      <Label>Any delays? (optional)</Label>
       <textarea className="fa-input" rows={2} placeholder="e.g. Waiting on the GC for access" value={delays} onChange={(e) => setDelays(e.target.value)} />
 
       <button className="fa-btn go" disabled={busy || !workPerformed.trim()} onClick={submit} type="button">
-        {busy ? "Saving…" : "✅ Save today's log"}
+        {busy ? "Saving…" : "Save today's log"}
       </button>
     </div>
   );

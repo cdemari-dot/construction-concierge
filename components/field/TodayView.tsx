@@ -63,8 +63,12 @@ export function TodayView({ firstName, week, onOpenSite, onGo }: { firstName: st
       <div className="display" style={{ fontSize: 24, lineHeight: 1.2 }}>
         {greeting()}, {firstName}
       </div>
-      <div style={{ color: "var(--mute)", fontSize: 13, display: "flex", alignItems: "center", gap: 6, margin: "6px 0 16px" }}>
-        <Icon name="cloud" size={16} /> {wx ? `${wx.tempC}°C, ${wx.summary.toLowerCase()} · wind ${wx.windKmh} km/h` : "Weather loads from your first site"}
+      <div style={{ color: "var(--mute)", fontSize: 13, display: "flex", alignItems: "center", gap: 6, margin: "6px 0 16px", minHeight: 20 }}>
+        {wx && (
+          <>
+            <Icon name="cloud" size={16} /> {wx.tempC}°C, {wx.summary.toLowerCase()} · wind {wx.windKmh} km/h
+          </>
+        )}
       </div>
 
       <div className="cc-in" style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: 4, marginBottom: 18 }}>

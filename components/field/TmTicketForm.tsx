@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { fetchTodayCrew } from "@/lib/todayCrew";
+import { todayToronto } from "@/lib/today";
 import { SignaturePad } from "./SignaturePad";
 import { Icon } from "./Icon";
 import { Label, Notice, Stepper, Title } from "./ui";
@@ -67,6 +68,7 @@ export function TmTicketForm({ companyId, jobId, createdBy }: { companyId: strin
       company_id: companyId,
       job_id: jobId,
       created_by: createdBy,
+      ticket_date: todayToronto(),
       super_name: superName,
       super_email: superEmail || null,
       hours,

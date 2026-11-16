@@ -6,7 +6,7 @@ export function Title({ emoji, children, help }: { emoji: string; children: Reac
   return (
     <div style={{ marginBottom: 6 }}>
       <div className="display fa-title">
-        {emoji} {children}
+        {emoji ? `${emoji} ` : null}{children}
       </div>
       {help && <div className="fa-help">{help}</div>}
     </div>
@@ -14,8 +14,8 @@ export function Title({ emoji, children, help }: { emoji: string; children: Reac
 }
 
 export function Notice({ ok, error }: { ok?: string | null; error?: string | null }) {
-  if (error) return <div className="fa-err">⚠️ {error}</div>;
-  if (ok) return <div className="fa-ok">✅ {ok}</div>;
+  if (error) return <div className="fa-err">{error}</div>;
+  if (ok) return <div className="fa-ok">{ok}</div>;
   return null;
 }
 
@@ -28,7 +28,7 @@ export function Chips<T extends string>({
   value,
   onChange,
 }: {
-  options: { value: T; emoji: string; label: string }[];
+  options: { value: T; emoji?: string; label: string }[];
   value: T | null;
   onChange: (v: T) => void;
 }) {
@@ -36,7 +36,7 @@ export function Chips<T extends string>({
     <div className="fa-chips">
       {options.map((o) => (
         <button key={o.value} type="button" className={`fa-chip ${value === o.value ? "on" : ""}`} onClick={() => onChange(o.value)}>
-          <span className="e">{o.emoji}</span>
+          {o.emoji ? <span className="e">{o.emoji}</span> : null}
           {o.label}
         </button>
       ))}

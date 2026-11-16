@@ -1,5 +1,7 @@
 "use client";
 
+import { Icon } from "@/components/field/Icon";
+
 export function PinPad({
   pin,
   onDigit,
@@ -18,12 +20,14 @@ export function PinPad({
   const key: React.CSSProperties = { height: 72, fontSize: 28, fontWeight: 600, borderRadius: 18 };
   return (
     <div style={{ textAlign: "center" }}>
-      <div style={{ fontSize: 44 }}>⏱️</div>
+      <div style={{ display: "grid", placeItems: "center", color: "var(--cyan)" }}>
+        <Icon name="clock" size={44} />
+      </div>
       <div className="display" style={{ fontSize: 28, margin: "4px 0 4px" }}>
         Clock in or out
       </div>
       <div style={{ color: error ? "var(--red)" : "var(--mute)", minHeight: 24, fontSize: 15 }}>
-        {error ? `⚠️ ${error}` : message || "Type your 4-digit PIN 👇"}
+        {error ?? (message || "Type your 4-digit PIN")}
       </div>
       <div style={{ display: "flex", gap: 14, justifyContent: "center", margin: "16px 0 20px" }}>
         {[0, 1, 2, 3].map((i) => (

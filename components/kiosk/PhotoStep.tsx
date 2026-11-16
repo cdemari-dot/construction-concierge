@@ -17,7 +17,7 @@ export function PhotoStep({
     <div style={{ textAlign: "center" }}>
       <div style={{ fontSize: 15, color: "var(--mute)", fontWeight: 600 }}>{title}</div>
       <div className="display fa-title" style={{ marginTop: 6 }}>
-        🤳 Quick selfie
+        Quick selfie
       </div>
       <div className="fa-help">Proves you&apos;re on site. It&apos;s stamped with the time and your location.</div>
 
@@ -31,7 +31,7 @@ export function PhotoStep({
       />
 
       <button className="fa-btn go" style={{ minHeight: 84, fontSize: 22 }} onClick={() => inputRef.current?.click()} type="button">
-        📸 Take selfie
+        Take selfie
       </button>
       <button className="fa-btn quiet" style={{ minHeight: 48, fontSize: 14 }} onClick={() => onCaptured(null)} type="button">
         No camera? Use a test photo

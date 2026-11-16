@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/client";
 import { getCurrentPosition, type GeoResult } from "@/lib/geo";
 import { stampPhoto } from "@/lib/kiosk/stampPhoto";
 import { PPE_ITEMS } from "@/lib/kiosk/constants";
+import { Icon } from "@/components/field/Icon";
 import { PinPad } from "./PinPad";
 import { PhotoStep } from "./PhotoStep";
 import { PpeStep } from "./PpeStep";
@@ -291,7 +292,9 @@ export function KioskApp({ job, toolboxTalk }: { job: KioskJob; toolboxTalk: Kio
 
       {step === "ppe-missing" && (
         <div style={{ textAlign: "center" }}>
-          <div style={{ fontSize: 56 }}>⛔</div>
+          <div style={{ display: "grid", placeItems: "center", color: "var(--amber)" }}>
+            <Icon name="stop" size={56} />
+          </div>
           <div className="display fa-title" style={{ margin: "10px 0" }}>
             Hold up, don&apos;t start yet
           </div>
@@ -300,7 +303,7 @@ export function KioskApp({ job, toolboxTalk }: { job: KioskJob; toolboxTalk: Kio
           </div>
           <div style={{ color: "var(--mute)", marginBottom: 6, fontSize: 15 }}>Ask your foreman to get you set up.</div>
           <button className="fa-btn go" onClick={handleForemanSupplied} type="button">
-            🤝 Foreman gave me the gear
+            Foreman gave me the gear
           </button>
           <button className="fa-btn quiet" onClick={resetAll} type="button">
             ← Cancel
@@ -352,7 +355,9 @@ export function KioskApp({ job, toolboxTalk }: { job: KioskJob; toolboxTalk: Kio
 
       {(step === "done-in" || step === "done-out") && (
         <div style={{ textAlign: "center" }}>
-          <div style={{ fontSize: 72 }}>{step === "done-in" ? "✅" : "👋"}</div>
+          <div style={{ display: "grid", placeItems: "center", color: "var(--lime)" }}>
+            <Icon name="circleCheck" size={72} />
+          </div>
           <div className="display fa-title" style={{ margin: "10px 0" }}>
             {doneMessage}
           </div>
@@ -364,14 +369,16 @@ export function KioskApp({ job, toolboxTalk }: { job: KioskJob; toolboxTalk: Kio
 
       {step === "error" && (
         <div style={{ textAlign: "center" }}>
-          <div style={{ fontSize: 56 }}>⚠️</div>
+          <div style={{ display: "grid", placeItems: "center", color: "var(--red)" }}>
+            <Icon name="alert" size={56} />
+          </div>
           <div className="display fa-title" style={{ margin: "10px 0" }}>
             That punch did NOT save
           </div>
           <div style={{ color: "var(--red)", fontSize: 15, lineHeight: 1.6, marginBottom: 12 }}>{failure}</div>
           <div style={{ color: "var(--mute)", fontSize: 15 }}>Tell your foreman, then try again.</div>
           <button className="fa-btn" onClick={resetAll} type="button">
-            🔄 Start over
+            Start over
           </button>
         </div>
       )}

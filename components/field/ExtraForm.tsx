@@ -41,25 +41,25 @@ export function ExtraForm({ companyId, jobId, reportedBy }: { companyId: string;
 
   return (
     <div>
-      <Title emoji="➕" help="Extra work that wasn't in the original scope. Get it on record before you do it.">
+      <Title emoji="" help="Extra work that wasn't in the original scope. Get it on record before you do it.">
         Report an extra
       </Title>
       <Notice ok={ok} error={error} />
 
-      <Label>🔎 What&apos;s the extra work?</Label>
+      <Label>What&apos;s the extra work?</Label>
       <textarea className="fa-input" rows={3} placeholder="e.g. Found a 2nd layer of tile, super said go ahead" value={description} onChange={(e) => setDescription(e.target.value)} />
 
-      <Label>⏱️ Extra hours</Label>
+      <Label>Extra hours</Label>
       <Stepper value={hours} onChange={setHours} step={0.5} max={999} unit="h" />
 
-      <Label>🧱 Materials cost ($)</Label>
+      <Label>Materials cost ($)</Label>
       <input className="fa-input" inputMode="decimal" placeholder="0" value={materialsCost} onChange={(e) => setMaterialsCost(e.target.value)} />
 
-      <Label>🗣️ Who said OK?</Label>
+      <Label>Who said OK?</Label>
       <input className="fa-input" placeholder="e.g. Mike, GC super" value={authorizedBy} onChange={(e) => setAuthorizedBy(e.target.value)} />
 
       <button className="fa-btn go" disabled={busy || !description.trim()} onClick={submit} type="button">
-        {busy ? "Sending…" : "📤 Send to office"}
+        {busy ? "Sending…" : "Send to office"}
       </button>
     </div>
   );

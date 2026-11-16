@@ -1,6 +1,7 @@
 "use client";
 
-import { PPE_ITEMS, PPE_EMOJI } from "@/lib/kiosk/constants";
+import { PPE_ITEMS } from "@/lib/kiosk/constants";
+import { Icon } from "@/components/field/Icon";
 
 export function PpeStep({
   checked,
@@ -17,7 +18,7 @@ export function PpeStep({
 
   return (
     <div>
-      <div className="display fa-title">🦺 Got your gear on?</div>
+      <div className="display fa-title">Got your gear on?</div>
       <div className="fa-help">Tap each one to check it off.</div>
       <div style={{ display: "grid", gap: 8, marginBottom: 4 }}>
         {PPE_ITEMS.map((p, i) => (
@@ -39,17 +40,21 @@ export function PpeStep({
               color: "var(--text)",
             }}
           >
-            <span style={{ fontSize: 28 }}>{PPE_EMOJI[i] ?? "🔹"}</span>
             <span style={{ flex: 1 }}>{p}</span>
-            <span style={{ fontSize: 26 }}>{checked[i] ? "✅" : "⬜"}</span>
+            <span
+              style={{ width: 28, height: 28, borderRadius: 7, border: `1.5px solid ${checked[i] ? "var(--lime)" : "var(--line2)"}`, display: "grid", placeItems: "center", color: "var(--lime)" }}
+              aria-hidden="true"
+            >
+              {checked[i] ? <Icon name="check" size={18} /> : null}
+            </span>
           </button>
         ))}
       </div>
       <button className="fa-btn go" disabled={!all} onClick={onAllGood} type="button">
-        👍 Yes, all geared up
+        Yes, all geared up
       </button>
       <button className="fa-btn quiet" onClick={onMissing} type="button">
-        🙋 I&apos;m missing something
+        I&apos;m missing something
       </button>
     </div>
   );
