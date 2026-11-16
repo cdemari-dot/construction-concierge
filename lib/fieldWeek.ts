@@ -71,11 +71,11 @@ export async function loadFieldWeek(supabase: SupabaseClient, me: Profile): Prom
   for (const e of entries) if (e.worker_id === me.id) myJobIds.add(e.job_id);
   const visibleJobs = seesAll ? allJobs : allJobs.filter((j) => myJobIds.has(j.id));
 
-  // Today's punches + sign-offs for the sites that have crew today.
-  const todaysJobIds = [...new Set(entries.filter((e) => e.work_date === today).map((e) => e.job_id))].filter((id) => visibleJobs.some((j) => j.id === id));
+  // Today's punches + sign-offs for every site I can see (so a punch at an unscheduled site still shows).
+  const visibleIds = visibleJobs.map((j) => j.id);
   const since = new Date(Date.now() - 30 * 3600 * 1000).toISOString();
-  const punches = todaysJobIds.length
-    ? (((await supabase.from("time_entries").select("id, job_id, worker_id, clock_in_at, clock_out_at, off_schedule").in("job_id", todaysJobIds).gte("clock_in_at", since)).data ?? []) as {
+  const punches = visibleIds.length
+    ? (((await supabase.from("time_entries").select("id, job_id, worker_id, clock_in_at, clock_out_at, off_schedule").in("job_id", visibleIds).gte("clock_in_at", since)).data ?? []) as {
         id: string;
         job_id: string;
         worker_id: string;
@@ -84,6 +84,7 @@ export async function loadFieldWeek(supabase: SupabaseClient, me: Profile): Prom
         off_schedule: boolean;
       }[]).filter((p) => new Date(p.clock_in_at).toLocaleDateString("en-CA", { timeZone: "America/Toronto" }) === today)
     : [];
+  const todaysJobIds = [...new Set([...entries.filter((e) => e.work_date === today).map((e) => e.job_id), ...punches.map((p) => p.job_id)])].filter((id) => visibleIds.includes(id));
   const entryIds = punches.map((p) => p.id);
   const acks = entryIds.length
     ? (((await supabase.from("toolbox_talk_acknowledgements").select("time_entry_id").in("time_entry_id", entryIds)).data ?? []) as { time_entry_id: string }[])
@@ -98,8 +99,8 @@ export async function loadFieldWeek(supabase: SupabaseClient, me: Profile): Prom
     const sites: SiteDay[] = [];
     for (const j of visibleJobs) {
       const here = dayEntries.filter((e) => e.job_id === j.id);
-      if (here.length === 0) continue;
       const isToday = date === today;
+      if (here.length === 0 && !(isToday && punches.some((p) => p.job_id === j.id))) continue;
       const crew: CrewRow[] = here
         .filter((e) => e.worker_id !== me.id)
         .map((e) => {

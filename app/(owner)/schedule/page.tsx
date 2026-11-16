@@ -3,12 +3,14 @@ import { createClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/supabase/env";
 import { SetupBanner } from "@/components/ui/SetupBanner";
 import { AddScheduleForm, RemoveScheduleButton } from "@/components/dashboard/ScheduleForm";
+import { todayToronto } from "@/lib/today";
 import type { Job, Profile, ScheduleEntry } from "@/lib/types/database";
 
-function weekDates(start: Date, days: number) {
+// Dates are Toronto calendar days (not UTC, which flips to "tomorrow" in the evening).
+function weekDates(startIso: string, days: number) {
   return Array.from({ length: days }, (_, i) => {
-    const d = new Date(start);
-    d.setDate(d.getDate() + i);
+    const d = new Date(`${startIso}T12:00:00Z`);
+    d.setUTCDate(d.getUTCDate() + i);
     return d.toISOString().slice(0, 10);
   });
 }
@@ -17,7 +19,7 @@ export default async function SchedulePage() {
   if (!isSupabaseConfigured) return <SetupBanner />;
 
   const supabase = await createClient();
-  const dates = weekDates(new Date(), 7);
+  const dates = weekDates(todayToronto(), 7);
 
   const [{ data: jobs }, { data: crew }, { data: entries }] = await Promise.all([
     supabase.from("jobs").select("*").eq("status", "active").order("job_number"),
