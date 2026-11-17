@@ -50,8 +50,10 @@ export default function Terms() {
       <h2>Acceptable use</h2>
       <p>Do not misuse the service: no unlawful use, no attempts to break into the service or other customers' data, no overloading it, and no reselling it without our written agreement.</p>
 
-      <h2>Fees and plans</h2>
-      <p>Plans, prices and what is included are agreed with you directly before you start. We will tell you before any change takes effect.</p>
+      <h2>Term, fees and plans</h2>
+      <p>
+        The service is provided for an <b>agreed term, on a one-year basis</b>, set out in the agreement between you and us. Plans, prices and what is included are agreed with you directly before you start, and they apply for that term. We will not change the agreed price during the term. What happens at the end of the term, including any renewal, is as set out in your agreement.
+      </p>
 
       <h2>Availability</h2>
       <p>
@@ -64,13 +66,15 @@ export default function Terms() {
       </p>
 
       <h2>Ending the service</h2>
-      <p>You may stop using the service at any time. We may suspend or end access for serious or repeated breaches of these terms. On request we will help you export your records.</p>
+      <p>
+        Your agreed term runs for its full length unless your agreement says otherwise. You can stop using the service at any time, but fees for the agreed term remain payable unless your agreement says otherwise. We may suspend or end access for serious or repeated breaches of these terms. At the end of the term, or on request, we will help you export your records.
+      </p>
 
       <h2>Governing law</h2>
       <p>These terms are governed by the laws of Ontario and the federal laws of Canada that apply there.</p>
 
       <h2>Changes</h2>
-      <p>We may update these terms. If a change is meaningful, we will update the date above and tell customers before it applies.</p>
+      <p>We may update these terms. If a change is meaningful, we will update the date above and tell customers before it applies. A change does not alter the price or length of a term you have already agreed.</p>
     </LegalLayout>
   );
 }
