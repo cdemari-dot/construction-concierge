@@ -39,7 +39,7 @@ export async function proxy(request: NextRequest) {
   } = await supabase.auth.getUser();
   const pathname = request.nextUrl.pathname;
   // Public marketing pages and the "Book a demo" form, signed in or not.
-  if (pathname === "/api/demo-request" || pathname === "/privacy" || pathname === "/terms") return response;
+  if (["/api/demo-request", "/privacy", "/terms", "/robots.txt", "/sitemap.xml"].includes(pathname) || pathname.startsWith("/opengraph-image")) return response;
   const isPublic = PUBLIC_PATHS.some((p) => pathname.startsWith(p));
 
   if (!user) {

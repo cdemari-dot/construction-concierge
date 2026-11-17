@@ -5,9 +5,12 @@ const description =
   "The owner's CFO and back office for subcontractors of every trade, from one-truck micro shops to growing medium-size crews. Live job cost from the punch clock, cash flow you can trust, and field paperwork that signs itself off.";
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://www.constructionconcierge.ai"),
+  alternates: { canonical: "/" },
   title: "Construction Concierge | The owner's CFO and back office for contractors",
   description,
-  openGraph: { title: "Construction Concierge", description, type: "website", siteName: "Construction Concierge" },
+  openGraph: { title: "Construction Concierge", description, type: "website", siteName: "Construction Concierge", url: "/" },
+  twitter: { card: "summary_large_image", title: "Construction Concierge", description },
 };
 
 export default function SiteLayout({ children }: { children: React.ReactNode }) {
