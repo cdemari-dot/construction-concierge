@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import type { GlobeInstance } from "globe.gl";
 import { fmt } from "@/lib/format";
+import { Odometer } from "@/components/ui/Odometer";
 
 export interface JobCard {
   id: string;
@@ -19,6 +20,7 @@ export interface JobCard {
   outstanding: number;
   margin: number | null;
   labourCost: number;
+  bills: number;
   labourHours: number;
   openShifts?: number;
   openRate?: number;
@@ -264,15 +266,13 @@ export function JobsGlobe({ jobs }: { jobs: JobCard[] }) {
                 />
               </div>
 
-              {(j.labourHours > 0 || j.unratedShifts > 0) && (
-                <div style={{ marginTop: 8, fontSize: 11.5, color: "var(--mute)" }}>
-                  {(j.openShifts ?? 0) > 0 ? (
-                    <LiveLabour base={j.labourCost} baseHours={j.labourHours} rate={j.openRate ?? 0} crew={j.openShifts ?? 0} />
-                  ) : (
-                    <>Labour: {j.labourHours.toFixed(1)} hrs · {fmt(j.labourCost)}</>
-                  )}
+              {(j.labourHours > 0 || j.unratedShifts > 0 || j.bills > 0) && (
+                <div style={{ marginTop: 10, paddingTop: 10, borderTop: "1px solid var(--line, rgba(255,255,255,.08))" }}>
+                  <LiveJobCost labour={j.labourCost} bills={j.bills} hours={j.labourHours} rate={j.openRate ?? 0} crew={j.openShifts ?? 0} />
                   {j.unratedShifts > 0 && (
-                    <span style={{ color: "var(--amber)" }}> · {j.unratedShifts} shift{j.unratedShifts === 1 ? "" : "s"} with no rate set</span>
+                    <div style={{ fontSize: 11.5, color: "var(--amber)", marginTop: 4 }}>
+                      {j.unratedShifts} shift{j.unratedShifts === 1 ? "" : "s"} with no rate set
+                    </div>
                   )}
                 </div>
               )}
@@ -312,24 +312,33 @@ function Legend({ color, label }: { color: string; label: string }) {
 }
 
 
-// Running labour cost for a job with people clocked in: the saved total plus what the crew on the
-// clock has earned since the page last loaded, ticking every second. The page re-fetches every 30 s.
-function LiveLabour({ base, baseHours, rate, crew }: { base: number; baseHours: number; rate: number; crew: number }) {
+// Job cost so far (bills coded to the job + labour) as a rolling odometer. With people clocked in it
+// ticks every second at the crew's combined hourly rate; the page re-fetches every 30 s to resync.
+function LiveJobCost({ labour, bills, hours, rate, crew }: { labour: number; bills: number; hours: number; rate: number; crew: number }) {
   const loaded = useRef(Date.now());
   const [now, setNow] = useState(() => Date.now());
   useEffect(() => {
     loaded.current = Date.now();
     setNow(Date.now());
-  }, [base, baseHours, rate]);
+  }, [labour, bills, hours, rate]);
   useEffect(() => {
+    if (rate <= 0) return;
     const id = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(id);
-  }, []);
-  const hrs = Math.max(0, now - loaded.current) / 3600000;
-  const cost = base + rate * hrs;
+  }, [rate]);
+  const labourNow = labour + (rate * Math.max(0, now - loaded.current)) / 3600000;
+  const total = labourNow + bills;
+  const money = (n: number) => "$" + n.toLocaleString("en-CA", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   return (
-    <>
-      <span style={{ color: "var(--lime)" }}>● Live</span> labour: ${cost.toLocaleString("en-CA", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} · {crew} clocked in · +{fmt(rate)}/hr
-    </>
+    <div>
+      <div style={{ fontSize: 10.5, letterSpacing: ".08em", textTransform: "uppercase", color: "var(--mute)", marginBottom: 2 }}>
+        {crew > 0 && <span style={{ color: "var(--lime)" }}>● Live </span>}Job cost so far
+      </div>
+      <Odometer text={money(total)} size={26} color={crew > 0 ? "var(--lime)" : "var(--text, inherit)"} />
+      <div style={{ fontSize: 11.5, color: "var(--mute)", marginTop: 3 }}>
+        Labour {money(labourNow)} · {hours.toFixed(1)} hrs · Bills {money(bills)}
+        {crew > 0 && ` · ${crew} clocked in · +${fmt(rate)}/hr`}
+      </div>
+    </div>
   );
 }

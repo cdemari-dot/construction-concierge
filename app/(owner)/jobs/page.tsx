@@ -43,6 +43,7 @@ export default async function JobsPage() {
       billed,
       outstanding: s?.total_outstanding ?? 0,
       labourCost,
+      bills,
       labourHours: Number(l?.hours ?? 0),
       unratedShifts: Number(l?.unrated_shifts ?? 0),
       openShifts: Number(l?.open_shifts ?? 0),
