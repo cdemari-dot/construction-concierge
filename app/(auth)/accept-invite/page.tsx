@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import Image from "next/image";
+import { AuthShell, AuthField } from "@/components/site/AuthShell";
 import { createClient } from "@/lib/supabase/client";
 
 // For an Owner/PM who was invited (a placeholder `profiles` row already
@@ -37,52 +37,16 @@ export default function AcceptInvitePage() {
   }
 
   return (
-    <main style={{ flex: 1, display: "grid", placeItems: "center", minHeight: "100vh", padding: 20 }}>
-      <div style={{ width: "100%", maxWidth: 400 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 28 }}>
-          <Image src="/brand/logo-mark.png" alt="" width={34} height={34} />
-          <div>
-            <b className="display" style={{ fontSize: 17, letterSpacing: ".08em" }}>
-              Accept your invite
-            </b>
-            <div style={{ fontSize: 11, color: "var(--mute)", letterSpacing: 1 }}>JOIN YOUR COMPANY</div>
-          </div>
-        </div>
-
-        <div className="cc-card">
-          <p style={{ color: "var(--text2)", fontSize: 13.5, marginBottom: 16, lineHeight: 1.6 }}>
-            Use the exact email your Owner or PM invited — it links your new account to the company automatically.
-          </p>
-          {error && <div style={{ fontSize: 12.5, color: "var(--red)", marginBottom: 12 }}>{error}</div>}
-          {notice && <div style={{ fontSize: 12.5, color: "var(--lime)", marginBottom: 12 }}>{notice}</div>}
-          <form onSubmit={handleSubmit} style={{ display: "grid", gap: 12 }}>
-            <label style={{ fontSize: 12, color: "var(--mute)", display: "grid", gap: 4 }}>
-              Email (must match your invite)
-              <input
-                type="email"
-                value={email}
-                required
-                onChange={(e) => setEmail(e.target.value)}
-                style={{ background: "var(--panel)", border: "1px solid var(--line2)", borderRadius: 10, color: "var(--text)", padding: "9px 10px", fontSize: 14 }}
-              />
-            </label>
-            <label style={{ fontSize: 12, color: "var(--mute)", display: "grid", gap: 4 }}>
-              Choose a password
-              <input
-                type="password"
-                value={password}
-                required
-                minLength={6}
-                onChange={(e) => setPassword(e.target.value)}
-                style={{ background: "var(--panel)", border: "1px solid var(--line2)", borderRadius: 10, color: "var(--text)", padding: "9px 10px", fontSize: 14 }}
-              />
-            </label>
-            <button className="cc-btn lime" type="submit" disabled={busy}>
-              {busy ? "Working…" : "Create my login"}
-            </button>
-          </form>
-        </div>
-      </div>
-    </main>
+    <AuthShell tag="Join your company" title="Set your password." lede="Use the exact email your Owner or PM invited. It links your new account to the company automatically.">
+      {error && <div className="auth-err">{error}</div>}
+      {notice && <div className="auth-ok">{notice}</div>}
+      <form className="auth-form" onSubmit={handleSubmit}>
+        <AuthField label="Email (must match your invite)" type="email" value={email} onChange={setEmail} required autoComplete="email" />
+        <AuthField label="Choose a password" type="password" value={password} onChange={setPassword} required minLength={6} autoComplete="new-password" />
+        <button className="site-btn primary lg" type="submit" disabled={busy}>
+          {busy ? "Working…" : "Create my login"}
+        </button>
+      </form>
+    </AuthShell>
   );
 }

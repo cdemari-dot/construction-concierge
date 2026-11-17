@@ -5,26 +5,26 @@ import { Odometer } from "@/components/ui/Odometer";
 
 // The hero "product": a job-cost card whose counter ticks up like the real Jobs page does.
 // All numbers are made-up example data and the card says so.
-export function HeroTicker() {
+export function HeroTicker({ compact = false }: { compact?: boolean }) {
   const base = 4860.12;
   const ratePerHour = 585;
   const [t0] = useState(() => Date.now());
   const [now, setNow] = useState(() => Date.now());
-  const [size, setSize] = useState(64);
+  const [size, setSize] = useState(compact ? 44 : 64);
   useEffect(() => {
     const id = setInterval(() => setNow(Date.now()), 1000);
-    const fit = () => setSize(Math.max(34, Math.min(84, Math.round(window.innerWidth * 0.085))));
+    const fit = () => setSize(compact ? Math.max(32, Math.min(46, Math.round(window.innerWidth * 0.034))) : Math.max(34, Math.min(84, Math.round(window.innerWidth * 0.085))));
     fit();
     window.addEventListener("resize", fit);
     return () => {
       clearInterval(id);
       window.removeEventListener("resize", fit);
     };
-  }, []);
+  }, [compact]);
   const cost = base + (ratePerHour * (now - t0)) / 3600000;
   const money = "$" + cost.toLocaleString("en-CA", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   return (
-    <div className="showcase" aria-label="Example job card with a live cost counter">
+    <div className={`showcase${compact ? " compact" : ""}`} aria-label="Example job card with a live cost counter">
       <div className="sc-glow" aria-hidden="true" />
       <div className="sc-head">
         <div>

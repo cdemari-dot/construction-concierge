@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import Image from "next/image";
+import { AuthShell, AuthField } from "@/components/site/AuthShell";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 
@@ -36,62 +36,15 @@ export default function OnboardingPage() {
   }
 
   return (
-    <main style={{ flex: 1, display: "grid", placeItems: "center", minHeight: "100vh", padding: 20 }}>
-      <div style={{ width: "100%", maxWidth: 400 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 28 }}>
-          <Image src="/brand/logo-mark.png" alt="" width={34} height={34} />
-          <div>
-            <b className="display" style={{ fontSize: 17, letterSpacing: ".08em" }}>
-              Finish setting up
-            </b>
-            <div style={{ fontSize: 11, color: "var(--mute)", letterSpacing: 1 }}>ONE LAST STEP</div>
-          </div>
-        </div>
-
-        <div className="cc-card">
-          <p style={{ color: "var(--text2)", fontSize: 13.5, marginBottom: 16, lineHeight: 1.6 }}>
-            Your email is confirmed. Name your company to finish creating your Owner account.
-          </p>
-          {error && <div style={{ fontSize: 12.5, color: "var(--red)", marginBottom: 12 }}>{error}</div>}
-          <form onSubmit={handleSubmit} style={{ display: "grid", gap: 12 }}>
-            <label style={{ fontSize: 12, color: "var(--mute)", display: "grid", gap: 4 }}>
-              Your name
-              <input
-                value={fullName}
-                required
-                onChange={(e) => setFullName(e.target.value)}
-                style={{
-                  background: "var(--panel)",
-                  border: "1px solid var(--line2)",
-                  borderRadius: 10,
-                  color: "var(--text)",
-                  padding: "9px 10px",
-                  fontSize: 14,
-                }}
-              />
-            </label>
-            <label style={{ fontSize: 12, color: "var(--mute)", display: "grid", gap: 4 }}>
-              Company name
-              <input
-                value={companyName}
-                required
-                onChange={(e) => setCompanyName(e.target.value)}
-                style={{
-                  background: "var(--panel)",
-                  border: "1px solid var(--line2)",
-                  borderRadius: 10,
-                  color: "var(--text)",
-                  padding: "9px 10px",
-                  fontSize: 14,
-                }}
-              />
-            </label>
-            <button className="cc-btn lime" type="submit" disabled={busy} style={{ marginTop: 4 }}>
-              {busy ? "Creating…" : "Create my company"}
-            </button>
-          </form>
-        </div>
-      </div>
-    </main>
+    <AuthShell tag="One last step" title="Finish setting up." lede="Your email is confirmed. Name your company to finish creating your Owner account.">
+      {error && <div className="auth-err">{error}</div>}
+      <form className="auth-form" onSubmit={handleSubmit}>
+        <AuthField label="Your name" value={fullName} onChange={setFullName} required autoComplete="name" />
+        <AuthField label="Company name" value={companyName} onChange={setCompanyName} required autoComplete="organization" />
+        <button className="site-btn primary lg" type="submit" disabled={busy}>
+          {busy ? "Creating…" : "Create my company"}
+        </button>
+      </form>
+    </AuthShell>
   );
 }

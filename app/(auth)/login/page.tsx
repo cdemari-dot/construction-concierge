@@ -1,11 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { isSupabaseConfigured } from "@/lib/supabase/env";
-import { ThemeToggle } from "@/components/ui/ThemeToggle";
+import { AuthShell, AuthField } from "@/components/site/AuthShell";
 import { SetupBanner } from "@/components/ui/SetupBanner";
 
 type Mode = "sign-in" | "new-company";
@@ -72,111 +71,39 @@ export default function LoginPage() {
   }
 
   return (
-    <main
-      style={{
-        flex: 1,
-        display: "grid",
-        placeItems: "center",
-        minHeight: "100vh",
-        padding: 20,
-      }}
+    <AuthShell
+      tag={mode === "sign-in" ? "Welcome back" : "Get started"}
+      title={mode === "sign-in" ? "Log in." : "Start your company."}
+      lede={mode === "sign-in" ? "Your jobs, crew and cash, live." : "Create your owner account and set up your company in minutes."}
+      foot="Foreman and Worker: use the punch clock on the jobsite iPad, not this page."
     >
-      <div style={{ width: "100%", maxWidth: 400 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 28 }}>
-          <Image src="/brand/logo-mark.png" alt="" width={34} height={34} />
-          <div>
-            <b className="display" style={{ fontSize: 17, letterSpacing: ".08em" }}>
-              Construction Concierge
-            </b>
-            <div style={{ fontSize: 11, color: "var(--mute)", letterSpacing: 1 }}>OWNER&apos;S CFO</div>
-          </div>
-        </div>
+      {!isSupabaseConfigured && <SetupBanner />}
 
-        {!isSupabaseConfigured && <SetupBanner />}
-
-        <div className="cc-card">
-          <div style={{ display: "flex", gap: 8, marginBottom: 18 }}>
-            <button
-              className={`cc-btn ${mode === "sign-in" ? "" : "ghost"}`}
-              onClick={() => setMode("sign-in")}
-              type="button"
-            >
-              Sign in
-            </button>
-            <button
-              className={`cc-btn ${mode === "new-company" ? "" : "ghost"}`}
-              onClick={() => setMode("new-company")}
-              type="button"
-            >
-              Start a new company
-            </button>
-          </div>
-
-          {notice && (
-            <div style={{ fontSize: 12.5, color: "var(--lime)", marginBottom: 12 }}>{notice}</div>
-          )}
-          {error && <div style={{ fontSize: 12.5, color: "var(--red)", marginBottom: 12 }}>{error}</div>}
-
-          <form onSubmit={mode === "sign-in" ? handleSignIn : handleNewCompany} style={{ display: "grid", gap: 12 }}>
-            {mode === "new-company" && (
-              <>
-                <Field label="Your name" value={fullName} onChange={setFullName} required />
-                <Field label="Company name" value={companyName} onChange={setCompanyName} required />
-              </>
-            )}
-            <Field label="Email" type="email" value={email} onChange={setEmail} required />
-            <Field label="Password" type="password" value={password} onChange={setPassword} required minLength={6} />
-            <button className="cc-btn lime" type="submit" disabled={busy || !isSupabaseConfigured} style={{ marginTop: 4 }}>
-              {busy ? "Working…" : mode === "sign-in" ? "Sign in" : "Create company"}
-            </button>
-          </form>
-        </div>
-
-        <div style={{ marginTop: 14 }}>
-          <ThemeToggle />
-        </div>
-
-        <p style={{ fontSize: 11.5, color: "var(--mute)", marginTop: 16, lineHeight: 1.6 }}>
-          Foreman and Worker: use the punch clock on the jobsite iPad, not this page.
-        </p>
+      <div className="auth-seg" role="tablist" aria-label="Sign in or create a company">
+        <button className={mode === "sign-in" ? "on" : ""} onClick={() => setMode("sign-in")} type="button" role="tab" aria-selected={mode === "sign-in"}>
+          Sign in
+        </button>
+        <button className={mode === "new-company" ? "on" : ""} onClick={() => setMode("new-company")} type="button" role="tab" aria-selected={mode === "new-company"}>
+          Start a new company
+        </button>
       </div>
-    </main>
-  );
-}
 
-function Field({
-  label,
-  value,
-  onChange,
-  type = "text",
-  required,
-  minLength,
-}: {
-  label: string;
-  value: string;
-  onChange: (v: string) => void;
-  type?: string;
-  required?: boolean;
-  minLength?: number;
-}) {
-  return (
-    <label style={{ fontSize: 12, color: "var(--mute)", display: "grid", gap: 4 }}>
-      {label}
-      <input
-        type={type}
-        value={value}
-        required={required}
-        minLength={minLength}
-        onChange={(e) => onChange(e.target.value)}
-        style={{
-          background: "var(--panel)",
-          border: "1px solid var(--line2)",
-          borderRadius: 10,
-          color: "var(--text)",
-          padding: "9px 10px",
-          fontSize: 14,
-        }}
-      />
-    </label>
+      {notice && <div className="auth-ok">{notice}</div>}
+      {error && <div className="auth-err">{error}</div>}
+
+      <form className="auth-form" onSubmit={mode === "sign-in" ? handleSignIn : handleNewCompany}>
+        {mode === "new-company" && (
+          <>
+            <AuthField label="Your name" value={fullName} onChange={setFullName} required autoComplete="name" />
+            <AuthField label="Company name" value={companyName} onChange={setCompanyName} required autoComplete="organization" />
+          </>
+        )}
+        <AuthField label="Email" type="email" value={email} onChange={setEmail} required autoComplete="email" />
+        <AuthField label="Password" type="password" value={password} onChange={setPassword} required minLength={6} autoComplete={mode === "sign-in" ? "current-password" : "new-password"} />
+        <button className="site-btn primary lg" type="submit" disabled={busy || !isSupabaseConfigured}>
+          {busy ? "Working…" : mode === "sign-in" ? "Sign in" : "Create company"}
+        </button>
+      </form>
+    </AuthShell>
   );
 }
