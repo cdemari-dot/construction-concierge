@@ -8,6 +8,7 @@ import { CashFlowChart } from "@/components/charts/CashFlowChart";
 import { InjectionCard } from "@/components/finance/InjectionCard";
 import { CoachPanel } from "@/components/finance/CoachPanel";
 import { AffordPanel } from "@/components/finance/AffordPanel";
+import { CodeBills } from "@/components/finance/CodeBills";
 import { marginActual, revenueActual } from "@/lib/afford/plan";
 import { AddBillForm, AddInvoiceForm, MarkBillPaidButton, MarkInvoicePaidButton } from "@/components/dashboard/FinanceForms";
 import { analyseInjection } from "@/lib/cashflow/injection";
@@ -146,7 +147,22 @@ export default async function FinancePage({ searchParams }: { searchParams: Prom
             <b>🧮 Add your yearly revenue first.</b> You have no invoices in the last 12 months and no revenue target. Add invoices, or set a target in <Link href="/finance?tab=settings" style={{ color: "var(--cyan)" }}>Playbook &amp; settings</Link> (also check your gross margin target and profit %), or look at the <Link href="/finance?tab=afford&demo=1" style={{ color: "var(--cyan)" }}>sample numbers</Link>.
           </div>
         ) : (
-          <AffordPanel a={a} revenue={revenue} margin={margin} demo={demo} />
+          <>
+            <AffordPanel a={a} revenue={revenue} margin={margin} demo={demo} />
+            {!demo && (() => {
+              const codedByVendor = new Map<string, string>();
+              for (const b of [...billList].sort((x, y) => x.created_at.localeCompare(y.created_at))) if (b.job_id) codedByVendor.set(b.vendor_name.trim().toLowerCase(), b.job_id);
+              const uncoded = billList
+                .filter((b) => !b.job_id)
+                .map((b) => ({ id: b.id, vendor: b.vendor_name, description: b.description, amount: b.amount, due: b.due_date, suggestJobId: codedByVendor.get(b.vendor_name.trim().toLowerCase()) ?? null }));
+              const codedAmount = billList.filter((b) => b.job_id).reduce((s, b) => s + b.amount, 0);
+              return (
+                <div style={{ marginTop: 16 }}>
+                  <CodeBills bills={uncoded} jobs={jobList.map((j) => ({ id: j.id, label: `${j.job_number} · ${j.name}` }))} codedPct={margin.codedCostPct} codedAmount={codedAmount} />
+                </div>
+              );
+            })()}
+          </>
         )}
       </div>
     );

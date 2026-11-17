@@ -79,3 +79,15 @@ export async function markBillPaid(billId: string) {
   revalidatePath("/dashboard");
   revalidatePath("/cashflow");
 }
+
+// Tie a bill to the job it was spent on (or back to company overhead with null). This only changes
+// job margin; the cash forecast already counts every unpaid bill regardless of job.
+export async function codeBillToJob(billId: string, jobId: string | null) {
+  const user = await getCurrentUser();
+  if (!user) throw new Error("Not signed in");
+  const supabase = await createClient();
+  const { error } = await supabase.from("bills").update({ job_id: jobId }).eq("id", billId);
+  if (error) throw new Error(error.message);
+  revalidatePath("/finance");
+  revalidatePath("/jobs");
+}

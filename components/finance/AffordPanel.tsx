@@ -79,6 +79,12 @@ export function AffordPanel({ a, revenue, margin, demo }: { a: CashFlowAssumptio
           warn={actualMar != null && !margin.reliable}
         />
 
+        {margin.pct != null && margin.codedCostPct < 15 && (
+          <div style={{ fontSize: 12.5, marginTop: 4 }}>
+            <a href="#code-bills" style={{ color: "var(--cyan)" }}>Tie your bills to their jobs</a> to make this margin real.
+          </div>
+        )}
+
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 16, marginTop: 14, paddingTop: 14, borderTop: "1px solid var(--line)" }}>
           <Slider label="Yearly revenue" value={fmt(revenueV)} min={100000} max={maxRev} step={10000} v={Math.min(revenueV, maxRev)} on={setRevenue} />
           <Slider label="Gross margin" value={`${marginV}%`} min={0} max={70} step={0.5} v={marginV} on={setMargin} />
