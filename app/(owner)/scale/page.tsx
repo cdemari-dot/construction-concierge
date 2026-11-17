@@ -1,3 +1,4 @@
+import { AdviceNote } from "@/components/ui/AdviceNote";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/supabase/env";
@@ -198,6 +199,7 @@ export default async function ScalePage({ searchParams }: { searchParams: Promis
           Estimates only. Cash tied up per new revenue dollar ≈ {(plan.wcPerDollar * 100).toFixed(1)}¢ (your {Math.round(plan.dso)}-day payment time, your margin, and 10% holdback held ~60 days). Confirm major decisions with your accountant.
         </div>
       </section>
+      <AdviceNote top={14} />
     </div>
   );
 }

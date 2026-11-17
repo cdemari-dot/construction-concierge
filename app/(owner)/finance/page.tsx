@@ -1,3 +1,4 @@
+import { AdviceNote } from "@/components/ui/AdviceNote";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/supabase/env";
@@ -69,6 +70,7 @@ export default async function FinancePage({ searchParams }: { searchParams: Prom
           </Link>
         ))}
       </div>
+      <AdviceNote top={10} />
     </div>
   );
 

@@ -82,6 +82,8 @@ export function DemoForm() {
       </button>
       <p className="demo-alt wide">
         Prefer email? Write to <a href="mailto:hello@constructionconcierge.com">hello@constructionconcierge.com</a>.
+        <br />
+        We use these details only to reply. See our <a href="/privacy">privacy policy</a>.
       </p>
     </form>
   );
