@@ -5,6 +5,7 @@ import { SignOutButton } from "@/components/dashboard/SignOutButton";
 import { HubNav } from "@/components/dashboard/HubNav";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import { AgentDrawer } from "@/components/agent/AgentDrawer";
+import { HubFX } from "@/components/ui/HubFX";
 
 export default async function OwnerLayout({ children }: { children: React.ReactNode }) {
   const user = isSupabaseConfigured ? await requireRole(["owner", "pm"]) : null;
@@ -38,6 +39,7 @@ export default async function OwnerLayout({ children }: { children: React.ReactN
         </div>
       </aside>
 
+      <HubFX />
       <main className="hub-main">{children}</main>
       {user && <AgentDrawer />}
     </div>

@@ -227,7 +227,7 @@ export function JobsGlobe({ jobs: jobsIn }: { jobs: JobCard[] }) {
           return (
             <div
               key={j.id}
-              className="cc-card"
+              className={`cc-card lift job-card${on ? " on" : ""}`}
               onClick={async () => {
                 if (hasGps) return setSelected(on ? null : j.id);
                 if (!j.address) return setLocateMsg(`${j.jobNumber} has no address. Add one to put it on the map.`);

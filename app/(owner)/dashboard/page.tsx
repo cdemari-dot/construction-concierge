@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/supabase/env";
 import { SetupBanner } from "@/components/ui/SetupBanner";
 import { StatCard } from "@/components/ui/StatCard";
+import { AnimatedValue } from "@/components/ui/AnimatedValue";
 import { Tag } from "@/components/ui/Tag";
 import { Dial } from "@/components/charts/Dial";
 import { ReportButton } from "@/components/dashboard/ReportButton";
@@ -130,27 +131,39 @@ export default async function DashboardPage() {
         </section>
       )}
 
-      <div className="grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(170px, 1fr))", gap: 16, marginBottom: 20 }}>
-        <StatCard
-          ink
-          label="Cash on hand"
-          value={cash?.bank_balance != null ? fmt(cash.bank_balance) : "—"}
-          hint={cash?.as_of_date ? `as of ${cash.as_of_date}` : "no cash snapshot yet"}
-        />
-        <StatCard label="Open AR" value={fmt(cash?.open_ar ?? 0)} color="lime" hint="invoiced, not yet paid" />
-        <StatCard label="Open AP" value={fmt(cash?.open_ap ?? 0)} color="amber" hint="bills unpaid" />
-        <StatCard label="Active jobs" value={String(jobList.filter((j) => j.status === "active").length)} />
-        <StatCard label="Bid pipeline" value={fmt(pipelineValue)} color="cyan" hint={`${openBids.length} open bid${openBids.length === 1 ? "" : "s"}`} />
+      <div className="hub-bento">
+        <section className="cc-card cc-in ink b-hero" style={{ "--i": 0 } as React.CSSProperties}>
+          <div className="b-eyebrow">
+            <span className="cc-dot" /> Cash on hand
+          </div>
+          <div className="b-big">
+            <AnimatedValue value={cash?.bank_balance != null ? fmt(cash.bank_balance) : "—"} ms={1400} />
+          </div>
+          <div className="b-sub">{cash?.as_of_date ? `as of ${cash.as_of_date}` : "no cash snapshot yet"}</div>
+          <div className="b-runway" aria-label={negWeek == null ? "Cash stays positive for all 13 weeks" : `Cash goes negative in week ${negWeek + 1}`}>
+            {Array.from({ length: 13 }, (_, i) => (
+              <i key={i} className={negWeek != null && i >= negWeek ? "neg" : ""} style={{ "--i": i } as React.CSSProperties} />
+            ))}
+          </div>
+          <div className="b-legend">
+            <span>13-week runway</span>
+            <span>{negWeek == null ? "positive all 13 weeks" : `negative in week ${negWeek + 1}`}</span>
+          </div>
+        </section>
+        <StatCard index={1} label="Open AR" value={fmt(cash?.open_ar ?? 0)} color="lime" hint="invoiced, not yet paid" />
+        <StatCard index={2} label="Open AP" value={fmt(cash?.open_ap ?? 0)} color="amber" hint="bills unpaid" />
+        <StatCard index={3} label="Bid pipeline" value={fmt(pipelineValue)} hint={`${openBids.length} open bid${openBids.length === 1 ? "" : "s"}`} />
+        <StatCard index={4} label="Active jobs" value={String(jobList.filter((j) => j.status === "active").length)} hint="in progress" />
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(170px, 1fr))", gap: 16, marginBottom: 20 }}>
+      <div className="hub-rings">
         <Dial value={runwayWeeks} max={13} label="Cash runway" suffix=" wk" color={runwayWeeks < 6 ? "red" : runwayWeeks < 13 ? "amber" : "lime"} hint={negWeek == null ? "positive all 13 weeks" : `negative in week ${negWeek + 1}`} />
         <Dial value={invoiced > 0 ? (collected / invoiced) * 100 : 0} max={100} label="Collected" suffix="%" color="cyan" hint={invoiced > 0 ? `${fmt(collected)} of ${fmt(invoiced)}` : "no invoices yet"} />
         <Dial value={avgProgress} max={100} label="Job progress" suffix="%" color="lime" hint={`${activeJobs.length} active job${activeJobs.length === 1 ? "" : "s"}`} />
         <Dial value={crew.length} max={Math.max(crewTotal, crew.length, 1)} label="Crew on site" color="amber" hint={`of ${crewTotal} on the roster`} />
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "1.2fr 1fr", gap: 16 }}>
+      <div className="hub-cols">
         <section className="cc-card">
           <h3 style={{ fontSize: 11.5, letterSpacing: 1.6, textTransform: "uppercase", color: "var(--mute)", marginBottom: 12 }}>
             Jobs

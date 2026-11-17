@@ -739,3 +739,98 @@ html:has(.kiosk-ink) { background: #0b0b0c; }
 
 /* kiosk: PIN pad and big controls read as dark keys */
 .hub.kiosk-ink .fa-title { font-size: clamp(30px, 6vw, 40px); }
+
+/* =====================================================================
+   HUB MODULES: Apple x Kith. Scroll reveals, count-ups, ring gauges,
+   bento tiles, hairline tables, soft boards.
+   ===================================================================== */
+
+/* scroll reveal: hidden only once JS is running, then rises in (same easing as the website) */
+@keyframes hub-rise { from { opacity: 0; transform: translateY(30px); } }
+.hub.fx-on :is(.cc-card, .cc-in, .fx):not(.in) { opacity: 0; }
+.hub.fx-on :is(.cc-card, .cc-in, .fx).in {
+  animation: hub-rise 0.85s cubic-bezier(0.2, 0.7, 0.2, 1) backwards;
+  animation-delay: calc(var(--i, 0) * 70ms);
+}
+/* nested cards inside an already-revealed card should not rise a second time */
+.hub.fx-on :is(.cc-card, .cc-in, .fx) :is(.cc-card, .cc-in).in { animation-duration: 0.6s; }
+.hub .cc-in { animation-name: none; }
+.hub.fx-on .cc-in.in { animation-name: hub-rise; }
+
+/* lift on hover (Apple tiles) */
+.hub .lift { transition: transform 0.35s cubic-bezier(0.2, 0.7, 0.2, 1), box-shadow 0.35s ease; }
+.hub .lift:hover { transform: translateY(-5px); box-shadow: 0 28px 56px -30px rgba(0, 0, 0, 0.35); }
+:root[data-theme="dark"] .hub .lift:hover { box-shadow: 0 28px 56px -26px rgba(0, 0, 0, 0.8); }
+
+/* cards: bigger, calmer */
+.hub .cc-card { border-radius: 28px; padding: 24px; }
+.hub .cc-card h3 { font-family: var(--font-inter), system-ui, sans-serif; }
+
+/* stat tiles */
+.hub .stat { display: flex; flex-direction: column; min-height: 150px; }
+.hub .stat-label { font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--mute); font-weight: 600; }
+.hub .stat-value { font-size: clamp(26px, 2.5vw, 38px); font-weight: 700; letter-spacing: -0.045em; line-height: 1.05; margin-top: auto; padding-top: 18px; overflow-wrap: anywhere; }
+.hub .stat-hint { font-size: 12px; color: var(--mute); margin-top: 6px; }
+
+/* bento (Command) */
+.hub-bento { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; margin-bottom: 14px; }
+.hub-bento > .stat { min-height: 170px; }
+.b-hero { grid-column: span 2; grid-row: span 2; display: flex; flex-direction: column; padding: 30px 32px 28px !important; position: relative; overflow: hidden; }
+.b-hero::before { content: ""; position: absolute; width: 70%; aspect-ratio: 1; right: -18%; top: -34%; background: radial-gradient(closest-side, rgba(31, 163, 90, 0.38), transparent 70%); pointer-events: none; animation: site-drift 9s ease-in-out infinite; }
+@keyframes site-drift { 0%, 100% { transform: translate(0, 0) scale(1); } 50% { transform: translate(-6%, 8%) scale(1.12); } }
+.b-eyebrow { position: relative; font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase; color: rgba(255, 255, 255, 0.6); font-weight: 600; display: flex; align-items: center; gap: 8px; }
+.b-big { position: relative; font-size: clamp(46px, 6vw, 88px); font-weight: 700; letter-spacing: -0.055em; line-height: 0.95; margin: 22px 0 8px; }
+.b-sub { position: relative; font-size: 13px; color: rgba(255, 255, 255, 0.6); }
+.b-runway { position: relative; display: grid; grid-template-columns: repeat(13, minmax(0, 1fr)); gap: 5px; margin-top: auto; padding-top: 28px; }
+.b-runway i { display: block; height: 52px; border-radius: 999px; background: var(--lime); transform-origin: bottom; animation: hub-seg 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) backwards; animation-delay: calc(var(--i) * 45ms + 300ms); }
+.b-runway i.neg { background: var(--red); }
+@keyframes hub-seg { from { transform: scaleY(0.1); opacity: 0; } }
+.b-legend { position: relative; display: flex; justify-content: space-between; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: rgba(255, 255, 255, 0.5); margin-top: 10px; }
+.hub-rings { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; margin-bottom: 14px; }
+.hub-cols { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 14px; }
+@media (max-width: 1100px) {
+  .hub-bento, .hub-rings { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .hub-cols { grid-template-columns: 1fr; }
+}
+@media (max-width: 560px) {
+  .hub-bento, .hub-rings { grid-template-columns: 1fr; }
+  .b-hero { grid-column: auto; grid-row: auto; }
+}
+
+/* rings (Activity-ring style) */
+.hub .dial { padding: 22px 16px 20px; display: flex; flex-direction: column; align-items: center; }
+.hub .dial-ring { position: relative; width: min(100%, 148px); aspect-ratio: 1; }
+.hub .dial-ring svg { width: 100%; height: 100%; display: block; }
+.hub .dial-num { position: absolute; inset: 0; display: grid; place-items: center; font-size: 30px; font-weight: 700; letter-spacing: -0.05em; }
+.hub .dial-label { margin-top: 14px; font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; font-weight: 600; color: var(--mute); }
+.hub .dial-hint { margin-top: 4px; font-size: 12px; font-weight: 500; }
+
+/* tables: Kith hairlines, uppercase heads, soft row hover */
+.hub table { border-collapse: separate; border-spacing: 0; width: 100%; }
+.hub table thead th { font-size: 10.5px !important; letter-spacing: 0.16em !important; text-transform: uppercase; color: var(--mute) !important; font-weight: 600; border-bottom: 1px solid var(--text); padding: 10px 12px !important; }
+.hub table tbody tr { border-top: 0 !important; }
+.hub table tbody td { border-top: 1px solid var(--line); transition: background 0.2s ease; padding-top: 12px !important; padding-bottom: 12px !important; }
+.hub table tbody tr:first-child td { border-top: 0; }
+.hub table tbody tr:hover td { background: var(--panel2); }
+.hub table tbody tr td:first-child { border-radius: 14px 0 0 14px; }
+.hub table tbody tr td:last-child { border-radius: 0 14px 14px 0; }
+
+/* section titles inside cards */
+.hub .cc-card > h3, .hub section > h3 { font-size: 11px !important; letter-spacing: 0.18em !important; font-weight: 600; }
+
+/* boards */
+.hub .board-col { background: var(--panel2) !important; border: 1px solid transparent !important; border-radius: 28px !important; padding: 14px !important; }
+.hub .board-col .cc-card { background: var(--panel); border-radius: 22px; padding: 14px; }
+
+/* job cards on the Jobs page */
+.hub .job-card { border-radius: 28px; }
+.hub .job-card.on { box-shadow: 0 0 0 1.5px var(--text), 0 24px 50px -28px rgba(0, 0, 0, 0.4) !important; border-color: var(--text) !important; }
+
+/* chips and nav pills settle */
+.hub .cc-chip { border-radius: 999px; padding: 7px 14px; font-weight: 500; }
+
+@media (prefers-reduced-motion: reduce) {
+  .hub.fx-on :is(.cc-card, .cc-in, .fx):not(.in) { opacity: 1; }
+  .hub.fx-on :is(.cc-card, .cc-in, .fx).in, .b-runway i, .b-hero::before { animation: none; }
+  .hub .lift:hover { transform: none; }
+}

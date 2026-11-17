@@ -1,5 +1,6 @@
 import { requireRole } from "@/lib/auth/session";
 import { isSupabaseConfigured } from "@/lib/supabase/env";
+import { HubFX } from "@/components/ui/HubFX";
 
 export default async function FieldLayout({ children }: { children: React.ReactNode }) {
   if (isSupabaseConfigured) {
@@ -11,6 +12,7 @@ export default async function FieldLayout({ children }: { children: React.ReactN
 
   return (
     <div className="hub" style={{ minHeight: "100vh", padding: 16 }}>
+      <HubFX />
       {children}
     </div>
   );

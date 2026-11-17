@@ -1,3 +1,5 @@
+import { AnimatedValue } from "./AnimatedValue";
+
 export function StatCard({
   label,
   value,
@@ -14,24 +16,12 @@ export function StatCard({
   ink?: boolean;
 }) {
   return (
-    <div className={`cc-card cc-in${ink ? " ink" : ""}`} style={{ "--i": index } as React.CSSProperties}>
-      <div style={{ fontSize: 11, letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--mute)", fontWeight: 600 }}>
-        {label}
+    <div className={`cc-card cc-in lift stat${ink ? " ink" : ""}`} style={{ "--i": index } as React.CSSProperties}>
+      <div className="stat-label">{label}</div>
+      <div className="mono stat-value" style={{ color: color ? `var(--${color})` : "var(--text)" }}>
+        <AnimatedValue value={value} />
       </div>
-      <div
-        className="mono"
-        style={{
-          fontSize: "clamp(22px, 2.15vw, 34px)",
-          fontWeight: 700,
-          letterSpacing: "-0.04em",
-          lineHeight: 1.05,
-          marginTop: 6,
-          color: color ? `var(--${color})` : "var(--text)",
-        }}
-      >
-        {value}
-      </div>
-      {hint && <div style={{ fontSize: 12, color: "var(--mute)", marginTop: 4 }}>{hint}</div>}
+      {hint && <div className="stat-hint">{hint}</div>}
     </div>
   );
 }

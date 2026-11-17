@@ -92,7 +92,7 @@ export function CashFlowChart({ buckets, payrollLine }: { buckets: WeekBucket[];
               y={y0 - h}
               width={cw * 0.3}
               height={h}
-              rx="2"
+              rx="5"
               fill={fill}
               opacity={op}
               style={{ transformBox: "fill-box", transformOrigin: "bottom", animation: `cc-grow 520ms cubic-bezier(.2,.8,.2,1) ${i * 55}ms both` }}
@@ -119,7 +119,7 @@ export function CashFlowChart({ buckets, payrollLine }: { buckets: WeekBucket[];
           strokeWidth="2.5"
           pathLength={1}
           strokeDasharray="1 1"
-          style={{ stroke: "var(--lime)", filter: "drop-shadow(0 0 4px var(--lime))", animation: `cc-draw ${lineMs - 350}ms cubic-bezier(.2,.8,.2,1) 350ms both` }}
+          style={{ stroke: "var(--text)", animation: `cc-draw ${lineMs - 350}ms cubic-bezier(.2,.8,.2,1) 350ms both` }}
         />
 
         {pts.map((p, i) => {
@@ -133,7 +133,7 @@ export function CashFlowChart({ buckets, payrollLine }: { buckets: WeekBucket[];
               r={i === low ? 6 : 3.5}
               strokeWidth="2"
               style={{
-                fill: bad ? "var(--red)" : "var(--lime)",
+                fill: bad ? "var(--red)" : "var(--text)",
                 stroke: "var(--bg)",
                 transformBox: "fill-box",
                 transformOrigin: "center",

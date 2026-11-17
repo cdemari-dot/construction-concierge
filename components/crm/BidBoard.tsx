@@ -55,7 +55,7 @@ export function BidBoard({ bids, clientNames }: { bids: Bid[]; clientNames: Reco
           return (
             <section
               key={col.stage}
-              className="cc-in"
+              className="cc-in board-col"
               onDragOver={(e) => {
                 e.preventDefault();
                 setOverStage(col.stage);

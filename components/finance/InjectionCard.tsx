@@ -26,7 +26,10 @@ export function InjectionCard({ inj, missing = [] }: { inj: InjectionResult; mis
   const L = LEVEL[inj.level];
   const weekDate = (i: number) => inj.buckets[i]?.weekStart;
   return (
-    <section className="cc-card cc-in" style={{ marginBottom: 16, background: L.bg, borderColor: L.border }}>
+    <section
+      className={`cc-card cc-in${inj.level === "soon" || inj.level === "urgent" ? " ink" : ""}`}
+      style={inj.level === "soon" || inj.level === "urgent" ? { marginBottom: 16, padding: 28 } : { marginBottom: 16, background: "var(--panel2)", borderColor: "var(--line2)" }}
+    >
       <div style={{ display: "flex", justifyContent: "space-between", gap: 16, flexWrap: "wrap", alignItems: "center" }}>
         <div style={{ minWidth: 240, flex: 1 }}>
           <div style={{ fontSize: 11, letterSpacing: 1.4, textTransform: "uppercase", color: "var(--mute)" }}>Cash injection forecast</div>
@@ -52,7 +55,7 @@ export function InjectionCard({ inj, missing = [] }: { inj: InjectionResult; mis
         {inj.level !== "none" && (
           <div style={{ textAlign: "center", minWidth: 160 }}>
             <div style={{ fontSize: 11, letterSpacing: 1.2, textTransform: "uppercase", color: "var(--mute)" }}>Amount needed</div>
-            <div className="mono" style={{ fontSize: 34, fontWeight: 700, color: L.color }}>
+            <div className="mono" style={{ fontSize: "clamp(34px, 4vw, 56px)", fontWeight: 700, letterSpacing: "-0.05em", color: L.color }}>
               $<CountUp value={inj.needed} />
             </div>
             <div style={{ fontSize: 12, color: "var(--mute)" }}>stress case (customers 2 wks late): {fmt(inj.stress.needed)}</div>
