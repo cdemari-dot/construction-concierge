@@ -107,7 +107,7 @@ export function AffordPanel({ a, basis, demo }: { a: CashFlowAssumptions; basis:
         </div>
       </section>
 
-      {!demo && <ShareEditor a={a} />}
+      {!demo && <ShareEditor key={JSON.stringify(a.afford_weights)} a={a} />}
 
       {!demo && (
         <section className="cc-card cc-in" style={{ "--i": 7 } as React.CSSProperties}>
