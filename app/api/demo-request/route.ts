@@ -38,11 +38,19 @@ export async function POST(req: Request) {
 </table>
 <p style="margin:16px 0 4px;color:#555">Message</p><p style="margin:0;white-space:pre-wrap">${esc(message) || "—"}</p></div>`;
 
-  const res = await fetch("https://api.resend.com/emails", {
-    method: "POST",
-    headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
-    body: JSON.stringify({ from, to: [to], reply_to: email, subject: `Demo request: ${company}`, html }),
-  });
+  const send = (sender: string) =>
+    fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ from: sender, to: [to], reply_to: email, subject: `Demo request: ${company}`, html }),
+    });
+
+  let res = await send(from);
+  // Until the sending domain is verified in Resend, the hello@ sender is refused. Resend's own test sender
+  // works straight away and delivers to the Resend account's email, so retry with it instead of failing.
+  if (!res.ok && (res.status === 403 || res.status === 422) && !from.includes("onboarding@resend.dev")) {
+    res = await send("Construction Concierge <onboarding@resend.dev>");
+  }
   if (!res.ok) return NextResponse.json({ error: `We couldn't send that. Please email us at ${CONTACT}.`, fallback: true }, { status: 502 });
   return NextResponse.json({ ok: true });
 }
