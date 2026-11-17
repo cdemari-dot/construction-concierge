@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { CountUp } from "@/components/ui/CountUp";
 import { fmt } from "@/lib/format";
-import { CATEGORIES, planAfford, resolveShares, type CatStatus, type RevenueBasis } from "@/lib/afford/plan";
+import { CATEGORIES, planAfford, resolveShares, type CatStatus, type MarginActual, type RevenueActual } from "@/lib/afford/plan";
 import { saveAffordShares, saveOverheadBreakdown } from "@/app/(owner)/cashflow/actions";
 import type { CashFlowAssumptions } from "@/lib/types/database";
 
@@ -17,34 +17,80 @@ const TONE: Record<CatStatus, { color: string; label: string }> = {
 const h3: React.CSSProperties = { fontSize: 11.5, letterSpacing: 1.6, textTransform: "uppercase", color: "var(--mute)", marginBottom: 10 };
 const inputStyle: React.CSSProperties = { background: "var(--panel)", border: "1px solid var(--line2)", borderRadius: 10, color: "var(--text)", padding: "9px 10px", fontSize: 14, width: "100%" };
 
-export function AffordPanel({ a, basis, demo }: { a: CashFlowAssumptions; basis: RevenueBasis; demo: boolean }) {
-  const baseMargin = a.gross_margin_target > 0 ? a.gross_margin_target : 25;
+export function AffordPanel({ a, revenue, margin, demo }: { a: CashFlowAssumptions; revenue: RevenueActual; margin: MarginActual; demo: boolean }) {
+  const targetRev = a.revenue_target_annual > 0 ? a.revenue_target_annual : null;
+  const targetMar = a.gross_margin_target > 0 ? a.gross_margin_target : null;
   const baseProfit = a.profit_allocation_pct > 0 ? a.profit_allocation_pct : 8;
-  const [revenue, setRevenue] = useState(Math.round(basis.annual / 50000) * 50000 || basis.annual);
-  const [margin, setMargin] = useState(baseMargin);
+
+  // Start from, and reset to, the real numbers. A target is used only where there is no actual yet.
+  const actualRev = revenue.annual != null ? Math.round(revenue.annual / 1000) * 1000 : null;
+  const actualMar = margin.pct != null ? Math.round(margin.pct * 10) / 10 : null;
+  const startRev = actualRev ?? targetRev ?? 0;
+  const startMar = actualMar ?? targetMar ?? 25;
+
+  const [revenueV, setRevenue] = useState(startRev);
+  const [marginV, setMargin] = useState(startMar);
   const [profit, setProfit] = useState(baseProfit);
 
-  const r = planAfford({ revenue, marginPct: margin, profitPct: profit, overheadMonthly: a.overhead_monthly, a });
-  const changed = revenue !== Math.round(basis.annual / 50000) * 50000 || margin !== baseMargin || profit !== baseProfit;
+  const r = planAfford({ revenue: revenueV, marginPct: marginV, profitPct: profit, overheadMonthly: a.overhead_monthly, a });
+  const changed = revenueV !== startRev || marginV !== startMar || profit !== baseProfit;
   const levelTone = r.level === "healthy" ? "var(--lime)" : r.level === "tight" ? "var(--amber)" : "var(--red)";
   const levelText = r.level === "healthy" ? "Healthy" : r.level === "tight" ? "Tight" : "Over budget";
-  const maxRev = Math.max(6_000_000, basis.annual * 2);
+  const maxRev = Math.max(6_000_000, (targetRev ?? 0) * 2, (actualRev ?? 0) * 2);
+
+  const revSource = revenueV === actualRev ? "actual" : revenueV === targetRev ? "target" : "custom";
+  const marSource = marginV === actualMar ? "actual" : marginV === targetMar ? "target" : "custom";
+  const gap = actualRev != null && targetRev ? Math.round(((actualRev - targetRev) / targetRev) * 100) : null;
+  const marGap = actualMar != null && targetMar ? Math.round((actualMar - targetMar) * 10) / 10 : null;
 
   return (
     <div style={{ display: "grid", gap: 16 }}>
       <section className="cc-card cc-in">
-        <h3 style={h3}>How this is worked out</h3>
+        <h3 style={h3}>Where the numbers come from</h3>
         <p style={{ fontSize: 13, color: "var(--text2)", lineHeight: 1.6, marginBottom: 14 }}>
-          Each dollar you bill has to cover job costs, overhead and your profit. At <b>{margin}%</b> gross margin and <b>{profit}%</b> kept as profit, overhead can take <b>{r.overheadPct.toFixed(0)}%</b> of revenue. {basis.note}
+          Each dollar you bill has to cover job costs, overhead and your profit. At <b>{marginV}%</b> gross margin and <b>{profit}%</b> kept as profit, overhead can take <b>{r.overheadPct.toFixed(0)}%</b> of revenue. Pick your actual numbers or your targets for each line.
         </p>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 16 }}>
-          <Slider label="Yearly revenue" value={fmt(revenue)} min={100000} max={maxRev} step={50000} v={revenue} on={setRevenue} />
-          <Slider label="Gross margin" value={`${margin}%`} min={10} max={50} step={1} v={margin} on={setMargin} />
+
+        <SourceRow
+          label="Yearly revenue"
+          actual={actualRev != null ? fmt(actualRev) : null}
+          target={targetRev != null ? fmt(targetRev) : null}
+          source={revSource}
+          onActual={actualRev != null ? () => setRevenue(actualRev) : undefined}
+          onTarget={targetRev != null ? () => setRevenue(targetRev) : undefined}
+          note={revenue.note}
+          flag={gap != null && gap <= -15 ? { tone: "var(--amber)", text: `You are ${Math.abs(gap)}% below your target.` } : gap != null && gap >= 15 ? { tone: "var(--lime)", text: `You are ${gap}% above your target.` } : null}
+          warn={actualRev != null && !revenue.reliable}
+        />
+        <SourceRow
+          label="Gross margin"
+          actual={actualMar != null ? `${actualMar}%` : null}
+          target={targetMar != null ? `${targetMar}%` : null}
+          source={marSource}
+          onActual={actualMar != null ? () => setMargin(actualMar) : undefined}
+          onTarget={targetMar != null ? () => setMargin(targetMar) : undefined}
+          note={margin.note}
+          flag={marGap != null && marGap <= -5 ? { tone: "var(--amber)", text: `Your real margin is ${Math.abs(marGap)} points below your target.` } : marGap != null && marGap >= 5 ? { tone: "var(--lime)", text: `Your real margin is ${marGap} points above your target.` } : null}
+          warn={actualMar != null && !margin.reliable}
+        />
+
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 16, marginTop: 14, paddingTop: 14, borderTop: "1px solid var(--line)" }}>
+          <Slider label="Yearly revenue" value={fmt(revenueV)} min={100000} max={maxRev} step={10000} v={Math.min(revenueV, maxRev)} on={setRevenue} />
+          <Slider label="Gross margin" value={`${marginV}%`} min={0} max={70} step={0.5} v={marginV} on={setMargin} />
           <Slider label="Profit you keep" value={`${profit}%`} min={0} max={25} step={1} v={profit} on={setProfit} />
         </div>
         {changed && (
-          <button type="button" className="cc-btn ghost sm" style={{ marginTop: 10 }} onClick={() => { setRevenue(Math.round(basis.annual / 50000) * 50000 || basis.annual); setMargin(baseMargin); setProfit(baseProfit); }}>
-            Reset to my numbers
+          <button
+            type="button"
+            className="cc-btn ghost sm"
+            style={{ marginTop: 10 }}
+            onClick={() => {
+              setRevenue(startRev);
+              setMargin(startMar);
+              setProfit(baseProfit);
+            }}
+          >
+            Reset to my actual numbers
           </button>
         )}
       </section>
@@ -193,5 +239,59 @@ function ShareEditor({ a }: { a: CashFlowAssumptions }) {
         </div>
       </form>
     </section>
+  );
+}
+
+function SourceRow({
+  label,
+  actual,
+  target,
+  source,
+  onActual,
+  onTarget,
+  note,
+  flag,
+  warn,
+}: {
+  label: string;
+  actual: string | null;
+  target: string | null;
+  source: "actual" | "target" | "custom";
+  onActual?: () => void;
+  onTarget?: () => void;
+  note: string;
+  flag: { tone: string; text: string } | null;
+  warn: boolean;
+}) {
+  const pill = (on: boolean): React.CSSProperties => ({
+    background: on ? "var(--card-a)" : "transparent",
+    border: `1px solid ${on ? "var(--text)" : "var(--line2)"}`,
+    borderRadius: 10,
+    padding: "8px 12px",
+    color: "var(--text)",
+    textAlign: "left",
+    cursor: "pointer",
+    minWidth: 140,
+  });
+  return (
+    <div style={{ padding: "10px 0", borderTop: "1px solid var(--line)" }}>
+      <div style={{ fontSize: 12, color: "var(--mute)", marginBottom: 6 }}>{label}</div>
+      <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+        <button type="button" disabled={!onActual} onClick={onActual} style={{ ...pill(source === "actual"), opacity: onActual ? 1 : 0.5 }} aria-pressed={source === "actual"}>
+          <div style={{ fontSize: 10.5, letterSpacing: 1.1, textTransform: "uppercase", color: "var(--mute)" }}>Your actual</div>
+          <div className="mono" style={{ fontSize: 17, fontWeight: 600 }}>{actual ?? "No data yet"}</div>
+        </button>
+        <button type="button" disabled={!onTarget} onClick={onTarget} style={{ ...pill(source === "target"), opacity: onTarget ? 1 : 0.5 }} aria-pressed={source === "target"}>
+          <div style={{ fontSize: 10.5, letterSpacing: 1.1, textTransform: "uppercase", color: "var(--mute)" }}>Your target</div>
+          <div className="mono" style={{ fontSize: 17, fontWeight: 600 }}>{target ?? "Not set"}</div>
+        </button>
+      </div>
+      <div style={{ fontSize: 12, color: "var(--mute)", marginTop: 6, lineHeight: 1.55 }}>
+        {note}
+        {source === "custom" ? " You are testing your own number." : ""}
+      </div>
+      {flag && <div style={{ fontSize: 12.5, color: flag.tone, marginTop: 4, fontWeight: 600 }}>{flag.text}</div>}
+      {warn && <div style={{ fontSize: 12, color: "var(--amber)", marginTop: 4 }}>Early estimate: treat it as a rough guide until there is more history.</div>}
+    </div>
   );
 }

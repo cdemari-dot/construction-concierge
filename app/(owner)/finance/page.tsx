@@ -8,7 +8,7 @@ import { CashFlowChart } from "@/components/charts/CashFlowChart";
 import { InjectionCard } from "@/components/finance/InjectionCard";
 import { CoachPanel } from "@/components/finance/CoachPanel";
 import { AffordPanel } from "@/components/finance/AffordPanel";
-import { revenueBasis } from "@/lib/afford/plan";
+import { marginActual, revenueActual } from "@/lib/afford/plan";
 import { AddBillForm, AddInvoiceForm, MarkBillPaidButton, MarkInvoicePaidButton } from "@/components/dashboard/FinanceForms";
 import { analyseInjection } from "@/lib/cashflow/injection";
 import { coachFinance } from "@/lib/coach/finance";
@@ -130,19 +130,23 @@ export default async function FinancePage({ searchParams }: { searchParams: Prom
   }
 
   if (tab === "afford") {
-    const basis = revenueBasis(demo ? [] : invoiceList, a, todayToronto());
+    const labourRows = demo ? [] : (((await supabase.from("job_labour_cost").select("job_id, labour_cost")).data ?? []) as { job_id: string; labour_cost: number }[]);
+    const labourByJob = Object.fromEntries(labourRows.map((l) => [l.job_id, Number(l.labour_cost ?? 0)]));
+    const revenue = demo ? { annual: null, trailing: 0, months: 0, reliable: false, note: "Sample numbers." } : revenueActual(invoiceList, todayToronto());
+    const margin = demo ? { pct: null, jobs: 0, billed: 0, labourSet: false, reliable: false, note: "Sample numbers." } : marginActual({ invoices: invoiceList, bills: billList, labourByJob });
+    const nothing = revenue.annual == null && !(a.revenue_target_annual > 0);
     return (
       <div>
         {header}
         <p style={{ color: "var(--mute)", fontSize: 13, marginBottom: 16, maxWidth: 760, lineHeight: 1.6 }}>
-          How much you can spend on rent, vehicles, insurance and staff and still keep the profit you are aiming for. Move the sliders to test a bigger or smaller year.
+          How much you can spend on rent, vehicles, insurance and staff and still keep the profit you are aiming for. It starts from your real billing and real job margin, and you can switch any line to your target or move the sliders to test a bigger or smaller year.
         </p>
-        {basis.source === "none" ? (
+        {nothing ? (
           <div className="cc-card cc-in" style={{ borderColor: "rgba(200,164,100,.6)", background: "rgba(200,164,100,.08)" }}>
-            <b>🧮 Add your yearly revenue first.</b> {basis.note} Set it in <Link href="/finance?tab=settings" style={{ color: "var(--cyan)" }}>Playbook &amp; settings</Link> (also check your gross margin target and profit %), or look at the <Link href="/finance?tab=afford&demo=1" style={{ color: "var(--cyan)" }}>sample numbers</Link>.
+            <b>🧮 Add your yearly revenue first.</b> You have no invoices in the last 12 months and no revenue target. Add invoices, or set a target in <Link href="/finance?tab=settings" style={{ color: "var(--cyan)" }}>Playbook &amp; settings</Link> (also check your gross margin target and profit %), or look at the <Link href="/finance?tab=afford&demo=1" style={{ color: "var(--cyan)" }}>sample numbers</Link>.
           </div>
         ) : (
-          <AffordPanel a={a} basis={basis} demo={demo} />
+          <AffordPanel a={a} revenue={revenue} margin={margin} demo={demo} />
         )}
       </div>
     );
