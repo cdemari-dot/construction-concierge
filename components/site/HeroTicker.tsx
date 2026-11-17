@@ -3,29 +3,43 @@
 import { useEffect, useState } from "react";
 import { Odometer } from "@/components/ui/Odometer";
 
-// Illustrative job-cost card for the hero: the counter ticks up like the real Jobs page does.
+// The hero "product": a job-cost card whose counter ticks up like the real Jobs page does.
 // All numbers are made-up example data and the card says so.
 export function HeroTicker() {
   const base = 4860.12;
   const ratePerHour = 585;
   const [t0] = useState(() => Date.now());
   const [now, setNow] = useState(() => Date.now());
+  const [size, setSize] = useState(64);
   useEffect(() => {
     const id = setInterval(() => setNow(Date.now()), 1000);
-    return () => clearInterval(id);
+    const fit = () => setSize(Math.max(34, Math.min(84, Math.round(window.innerWidth * 0.085))));
+    fit();
+    window.addEventListener("resize", fit);
+    return () => {
+      clearInterval(id);
+      window.removeEventListener("resize", fit);
+    };
   }, []);
   const cost = base + (ratePerHour * (now - t0)) / 3600000;
   const money = "$" + cost.toLocaleString("en-CA", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   return (
-    <div className="hero-card" aria-label="Example job card with a live cost counter">
-      <div className="hero-card-top">
+    <div className="showcase" aria-label="Example job card with a live cost counter">
+      <div className="sc-glow" aria-hidden="true" />
+      <div className="sc-head">
         <div>
-          <div className="hc-job">J-2026-114 · Unit 12 fit-out</div>
-          <div className="hc-addr">Mississauga, ON</div>
+          <span className="sc-live">
+            <i /> Live job cost
+          </span>
+          <div className="sc-job">J-2026-114 · Unit 12 fit-out · Mississauga, ON</div>
         </div>
-        <span className="hc-pill">9 on site</span>
+        <span className="sc-pill">9 on site</span>
       </div>
-      <div className="hc-stats">
+      <div className="sc-num">
+        <Odometer text={money} size={size} color="#ffffff" />
+      </div>
+      <div className="sc-sub">Labour and bills so far · 9 clocked in · +$585/hr</div>
+      <div className="sc-stats">
         <div>
           <small>Contract</small>
           <b>$42,000</b>
@@ -36,21 +50,14 @@ export function HeroTicker() {
         </div>
         <div>
           <small>Owing</small>
-          <b className="amber">$18,500</b>
+          <b>$18,500</b>
         </div>
         <div>
           <small>Margin</small>
-          <b className="green">34%</b>
+          <b className="g">34%</b>
         </div>
       </div>
-      <div className="hc-live">
-        <small>
-          <i /> Live job cost so far
-        </small>
-        <Odometer text={money} size={34} color="var(--lime)" />
-        <div className="hc-sub">Labour and bills · 9 clocked in · +$585/hr</div>
-      </div>
-      <div className="hc-note">Example data</div>
+      <div className="sc-note">Example data</div>
     </div>
   );
 }
