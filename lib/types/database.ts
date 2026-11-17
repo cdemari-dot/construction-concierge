@@ -317,6 +317,8 @@ export interface JobLabourCost {
   hours: number;
   labour_cost: number;
   unrated_shifts: number;
+  open_shifts?: number;
+  open_rate?: number;
 }
 
 export interface WhoIsClockedIn {

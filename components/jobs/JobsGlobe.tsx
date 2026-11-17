@@ -20,6 +20,8 @@ export interface JobCard {
   margin: number | null;
   labourCost: number;
   labourHours: number;
+  openShifts?: number;
+  openRate?: number;
   unratedShifts: number;
   onSite: number;
 }
@@ -264,7 +266,11 @@ export function JobsGlobe({ jobs }: { jobs: JobCard[] }) {
 
               {(j.labourHours > 0 || j.unratedShifts > 0) && (
                 <div style={{ marginTop: 8, fontSize: 11.5, color: "var(--mute)" }}>
-                  Labour: {j.labourHours.toFixed(1)} hrs · {fmt(j.labourCost)}
+                  {(j.openShifts ?? 0) > 0 ? (
+                    <LiveLabour base={j.labourCost} baseHours={j.labourHours} rate={j.openRate ?? 0} crew={j.openShifts ?? 0} />
+                  ) : (
+                    <>Labour: {j.labourHours.toFixed(1)} hrs · {fmt(j.labourCost)}</>
+                  )}
                   {j.unratedShifts > 0 && (
                     <span style={{ color: "var(--amber)" }}> · {j.unratedShifts} shift{j.unratedShifts === 1 ? "" : "s"} with no rate set</span>
                   )}
@@ -302,5 +308,28 @@ function Legend({ color, label }: { color: string; label: string }) {
       <i style={{ width: 8, height: 8, borderRadius: "50%", background: color, display: "inline-block" }} />
       {label}
     </span>
+  );
+}
+
+
+// Running labour cost for a job with people clocked in: the saved total plus what the crew on the
+// clock has earned since the page last loaded, ticking every second. The page re-fetches every 30 s.
+function LiveLabour({ base, baseHours, rate, crew }: { base: number; baseHours: number; rate: number; crew: number }) {
+  const loaded = useRef(Date.now());
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    loaded.current = Date.now();
+    setNow(Date.now());
+  }, [base, baseHours, rate]);
+  useEffect(() => {
+    const id = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(id);
+  }, []);
+  const hrs = Math.max(0, now - loaded.current) / 3600000;
+  const cost = base + rate * hrs;
+  return (
+    <>
+      <span style={{ color: "var(--lime)" }}>● Live</span> labour: ${cost.toLocaleString("en-CA", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} · {crew} clocked in · +{fmt(rate)}/hr
+    </>
   );
 }

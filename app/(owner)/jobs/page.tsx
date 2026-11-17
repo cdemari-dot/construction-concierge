@@ -2,6 +2,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/supabase/env";
 import { SetupBanner } from "@/components/ui/SetupBanner";
+import { LiveRefresh } from "@/components/ui/LiveRefresh";
 import { JobsGlobe, type JobCard } from "@/components/jobs/JobsGlobe";
 import type { Job, JobFinancialSummary, JobLabourCost, WhoIsClockedIn } from "@/lib/types/database";
 
@@ -44,6 +45,8 @@ export default async function JobsPage() {
       labourCost,
       labourHours: Number(l?.hours ?? 0),
       unratedShifts: Number(l?.unrated_shifts ?? 0),
+      openShifts: Number(l?.open_shifts ?? 0),
+      openRate: Number(l?.open_rate ?? 0),
       margin: billed > 0 ? (billed - bills - labourCost) / billed : null,
       onSite: onSite.get(j.id) ?? 0,
     };
@@ -60,8 +63,9 @@ export default async function JobsPage() {
         </Link>
       </div>
       <p style={{ color: "var(--mute)", fontSize: 12.5, marginBottom: 16 }}>
-        Margin = (billed − bills coded to the job − labour cost) ÷ billed. Labour = completed shift hours × each person&apos;s hourly cost (set on the Team page).
+        Margin = (billed − bills coded to the job − labour cost) ÷ billed. Labour = shift hours × each person&apos;s hourly cost (set on the Team page). It is live: people still clocked in count up to this minute, and the page refreshes every 30 seconds.
       </p>
+      <LiveRefresh seconds={30} />
       <JobsGlobe jobs={cards} />
     </div>
   );
