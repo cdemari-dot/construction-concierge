@@ -101,7 +101,7 @@ export function marginActual(input: { invoices: Invoice[]; bills: Bill[]; labour
   if (billed <= 0) return { pct: null, jobs, billed, labourSet, reliable: false, note: "No billed jobs yet." };
   const pct = ((billed - cost) / billed) * 100;
   const reliable = jobs >= 3 && billed >= 50000 && labourSet;
-  const caveats = [!labourSet ? "labour cost is not set up (add hourly costs on Team), so this is probably too high" : null, jobs < 3 ? "fewer than 3 billed jobs" : null].filter(Boolean);
+  const caveats = [!labourSet ? "no labour is recorded yet (it comes from crew clocking in on Crew Punch times their hourly cost on Team), so this is probably too high" : null, jobs < 3 ? "fewer than 3 billed jobs" : null].filter(Boolean);
   return {
     pct,
     jobs,
