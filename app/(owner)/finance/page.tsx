@@ -11,7 +11,7 @@ import { AffordPanel } from "@/components/finance/AffordPanel";
 import { marginActual, revenueActual } from "@/lib/afford/plan";
 import { AddBillForm, AddInvoiceForm, MarkBillPaidButton, MarkInvoicePaidButton } from "@/components/dashboard/FinanceForms";
 import { analyseInjection } from "@/lib/cashflow/injection";
-import { coachFinance } from "@/lib/coach/finance";
+import { coachFinance, monthlyPayroll } from "@/lib/coach/finance";
 import { fmt, fmtDate } from "@/lib/format";
 import { todayToronto } from "@/lib/today";
 import { DEMO_ASSUMPTIONS, DEMO_BANK, DEMO_BILLS, DEMO_CLIENT_NAMES, DEMO_INVOICES } from "@/lib/demo/finance";
@@ -133,7 +133,7 @@ export default async function FinancePage({ searchParams }: { searchParams: Prom
     const labourRows = demo ? [] : (((await supabase.from("job_labour_cost").select("job_id, labour_cost")).data ?? []) as { job_id: string; labour_cost: number }[]);
     const labourByJob = Object.fromEntries(labourRows.map((l) => [l.job_id, Number(l.labour_cost ?? 0)]));
     const revenue = demo ? { annual: null, trailing: 0, months: 0, reliable: false, note: "Sample numbers." } : revenueActual(invoiceList, todayToronto());
-    const margin = demo ? { pct: null, jobs: 0, billed: 0, labourSet: false, reliable: false, note: "Sample numbers." } : marginActual({ invoices: invoiceList, bills: billList, labourByJob });
+    const margin = demo ? { pct: null, jobs: 0, billed: 0, labourSource: "none" as const, codedCostPct: 0, reliable: false, note: "Sample numbers." } : marginActual({ invoices: invoiceList, bills: billList, labourByJob, payrollEstimate: monthlyPayroll(a) * revenue.months });
     const nothing = revenue.annual == null && !(a.revenue_target_annual > 0);
     return (
       <div>

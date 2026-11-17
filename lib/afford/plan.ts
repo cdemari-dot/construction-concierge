@@ -75,40 +75,57 @@ export interface MarginActual {
   pct: number | null; // real gross margin across jobs, in percent
   jobs: number;
   billed: number;
-  labourSet: boolean;
+  labourSource: "clocked" | "payroll" | "none";
+  codedCostPct: number; // job-coded bills as a share of billing
   reliable: boolean;
   note: string;
 }
 
 // Same idea as the Jobs page: (billed - bills coded to the job - labour) / billed, summed over all jobs.
-export function marginActual(input: { invoices: Invoice[]; bills: Bill[]; labourByJob: Record<string, number> }): MarginActual {
-  const { invoices, bills, labourByJob } = input;
+// Labour is the clocked-in hours x hourly cost once there are enough of them; until then it is
+// estimated from payroll (payrollEstimate = payroll per month x months of billing history).
+export function marginActual(input: { invoices: Invoice[]; bills: Bill[]; labourByJob: Record<string, number>; payrollEstimate: number }): MarginActual {
+  const { invoices, bills, labourByJob, payrollEstimate } = input;
   const billedByJob = new Map<string, number>();
   for (const i of invoices) billedByJob.set(i.job_id, (billedByJob.get(i.job_id) ?? 0) + (i.subtotal ?? 0));
   const costByJob = new Map<string, number>();
   for (const b of bills) if (b.job_id) costByJob.set(b.job_id, (costByJob.get(b.job_id) ?? 0) + b.amount);
 
   let billed = 0;
-  let cost = 0;
+  let billCost = 0;
+  let clocked = 0;
   let jobs = 0;
   for (const [jobId, amt] of billedByJob) {
     if (amt <= 0) continue;
     jobs++;
     billed += amt;
-    cost += (costByJob.get(jobId) ?? 0) + (labourByJob[jobId] ?? 0);
+    billCost += costByJob.get(jobId) ?? 0;
+    clocked += labourByJob[jobId] ?? 0;
   }
-  const labourSet = Object.values(labourByJob).some((v) => v > 0);
-  if (billed <= 0) return { pct: null, jobs, billed, labourSet, reliable: false, note: "No billed jobs yet." };
-  const pct = ((billed - cost) / billed) * 100;
-  const reliable = jobs >= 3 && billed >= 50000 && labourSet;
-  const caveats = [!labourSet ? "no labour is recorded yet (it comes from crew clocking in on Crew Punch times their hourly cost on Team), so this is probably too high" : null, jobs < 3 ? "fewer than 3 billed jobs" : null].filter(Boolean);
+  if (billed <= 0) return { pct: null, jobs, billed, labourSource: "none", codedCostPct: 0, reliable: false, note: "No billed jobs yet." };
+
+  // Clocked hours only cover part of payroll (office staff are not on jobs), so trust them once they reach 60% of it.
+  const useClocked = clocked > 0 && (payrollEstimate <= 0 || clocked >= payrollEstimate * 0.6);
+  const labourSource: MarginActual["labourSource"] = useClocked ? "clocked" : payrollEstimate > 0 ? "payroll" : "none";
+  const labour = useClocked ? clocked : payrollEstimate > 0 ? payrollEstimate : 0;
+  const pct = ((billed - billCost - labour) / billed) * 100;
+  const codedCostPct = (billCost / billed) * 100;
+
+  const caveats = [
+    labourSource === "payroll" ? "labour is estimated from your payroll until enough shifts are clocked in" : null,
+    labourSource === "none" ? "no labour is recorded and no payroll is set" : null,
+    codedCostPct < 15 ? `only ${Math.round(codedCostPct)}% of your billing has bills coded to its job (materials, subs and equipment are probably missing, so this is too high)` : null,
+    jobs < 3 ? "fewer than 3 billed jobs" : null,
+  ].filter(Boolean);
+  const reliable = jobs >= 3 && billed >= 50000 && labourSource !== "none" && codedCostPct >= 15;
   return {
     pct,
     jobs,
     billed,
-    labourSet,
+    labourSource,
+    codedCostPct,
     reliable,
-    note: `Across ${jobs} billed job${jobs === 1 ? "" : "s"}: billed minus the bills and labour coded to each job.${caveats.length ? ` Careful: ${caveats.join("; ")}.` : ""}`,
+    note: `Across ${jobs} billed job${jobs === 1 ? "" : "s"}: billed minus the bills coded to each job minus labour (${labourSource === "clocked" ? "clocked-in hours" : labourSource === "payroll" ? "estimated from payroll" : "none yet"}).${caveats.length ? ` Careful: ${caveats.join("; ")}.` : ""}`,
   };
 }
 

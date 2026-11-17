@@ -86,7 +86,7 @@ export function AffordPanel({ a, revenue, margin, demo }: { a: CashFlowAssumptio
         </div>
         {earlyActuals && (
           <div style={{ fontSize: 12, color: "var(--amber)", marginTop: 10, lineHeight: 1.55 }}>
-            Your actual numbers are still early, so the page starts from the lower of your actual and your target to avoid overstating what you can afford. It switches to your actual numbers by itself once you have 3 months of billing, 3 billed jobs and some clocked-in labour recorded.
+            Your actual numbers are still early, so the page starts from the lower of your actual and your target to avoid overstating what you can afford. It switches to your actual numbers by itself once you have 3 months of billing and 3 billed jobs, with your job costs (bills) coded to their jobs.
           </div>
         )}
         {changed && (
