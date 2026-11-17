@@ -124,7 +124,10 @@ export default async function FieldReportsPage({ searchParams }: { searchParams:
           // eslint-disable-next-line @next/next/no-img-element
           <img src={signed[i]!} alt="Superintendent signature" style={{ background: "#fff", borderRadius: 8, height: 64, justifySelf: "start", padding: 4 }} />
         )}
-        <div style={{ display: "flex", gap: 8 }}>
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+          <Link href={`/field-reports/tm/${r.id}`} className="cc-btn lime sm">
+            View / print sheet
+          </Link>
           {r.super_email && r.super_signature_path && (r.status === "signed" || r.status === "sent_to_gc") && (
             <ReportButton
               label={r.status === "signed" ? `Email copy to ${r.super_email}` : "Email again"}

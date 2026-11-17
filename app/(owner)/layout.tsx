@@ -26,7 +26,7 @@ export default async function OwnerLayout({ children }: { children: React.ReactN
   const user = isSupabaseConfigured ? await requireRole(["owner", "pm"]) : null;
 
   return (
-    <div style={{ display: "grid", gridTemplateColumns: "230px 1fr", minHeight: "100vh" }}>
+    <div className="owner-shell" style={{ display: "grid", gridTemplateColumns: "230px 1fr", minHeight: "100vh" }}>
       <aside
         style={{
           borderRight: "1px solid var(--line)",

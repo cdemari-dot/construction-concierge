@@ -115,6 +115,7 @@ export function AgentDrawer() {
         onClick={() => setOpen((v) => !v)}
         type="button"
         aria-label="Open AI agent"
+        className="cc-agent-fab"
         style={{
           position: "fixed",
           right: 22,
