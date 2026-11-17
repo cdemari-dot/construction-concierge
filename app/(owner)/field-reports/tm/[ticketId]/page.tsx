@@ -128,8 +128,7 @@ export default async function TmSheetPage({ params }: { params: Promise<{ ticket
             <span className="tm-x" aria-hidden>
               ×
             </span>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img className="tm-cc" src="/brand/logo-mark.png" alt="Construction Concierge" />
+            <span className="tm-cc-text">Construction Concierge</span>
           </div>
           <div className="tm-ref">
             <div className="tm-no">{ticketNo}</div>
