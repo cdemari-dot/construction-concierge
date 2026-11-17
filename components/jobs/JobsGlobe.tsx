@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import type { GlobeInstance } from "globe.gl";
 import { fmt } from "@/lib/format";
+import { locateJob } from "@/app/(owner)/jobs/actions";
 import { Odometer } from "@/components/ui/Odometer";
 
 export interface JobCard {
@@ -50,7 +51,11 @@ function makePin(j: JobCard, selected: boolean, onPick: (id: string) => void): H
   return el;
 }
 
-export function JobsGlobe({ jobs }: { jobs: JobCard[] }) {
+export function JobsGlobe({ jobs: jobsIn }: { jobs: JobCard[] }) {
+  const [coords, setCoords] = useState<Record<string, { lat: number; lon: number }>>({});
+  const [locating, setLocating] = useState<string | null>(null);
+  const [locateMsg, setLocateMsg] = useState<string | null>(null);
+  const jobs = jobsIn.map((j) => (j.lat == null && coords[j.id] ? { ...j, lat: coords[j.id].lat, lon: coords[j.id].lon } : j));
   const wrapRef = useRef<HTMLDivElement>(null);
   const globeRef = useRef<GlobeInstance | null>(null);
   const selectedRef = useRef<string | null>(null);
@@ -214,7 +219,8 @@ export function JobsGlobe({ jobs }: { jobs: JobCard[] }) {
         )}
       </div>
 
-      <div style={{ display: "grid", gap: 10, maxHeight: 640, overflowY: "auto" }}>
+      <div style={{ display: "grid", gap: 10, maxHeight: 640, overflowY: "auto", alignContent: "start" }}>
+        {locateMsg && <div style={{ fontSize: 12, color: "var(--amber)" }}>{locateMsg}</div>}
         {jobs.map((j) => {
           const on = selected === j.id;
           const hasGps = j.lat != null && j.lon != null;
@@ -222,9 +228,19 @@ export function JobsGlobe({ jobs }: { jobs: JobCard[] }) {
             <div
               key={j.id}
               className="cc-card"
-              onClick={() => hasGps && setSelected(on ? null : j.id)}
+              onClick={async () => {
+                if (hasGps) return setSelected(on ? null : j.id);
+                if (!j.address) return setLocateMsg(`${j.jobNumber} has no address. Add one to put it on the map.`);
+                setLocating(j.id);
+                setLocateMsg(null);
+                const found = await locateJob(j.id).catch(() => null);
+                setLocating(null);
+                if (!found) return setLocateMsg(`Couldn't find ${j.jobNumber} on the map from its address.`);
+                setCoords((c) => ({ ...c, [j.id]: found }));
+                setSelected(j.id);
+              }}
               style={{
-                cursor: hasGps ? "pointer" : "default",
+                cursor: hasGps || j.address ? "pointer" : "default",
                 borderColor: on ? "var(--cyan)" : undefined,
                 transform: on ? "scale(1.015)" : "scale(1)",
                 boxShadow: on ? "0 0 0 1px var(--cyan), 0 8px 30px rgba(200,164,100,.18)" : undefined,
@@ -236,7 +252,7 @@ export function JobsGlobe({ jobs }: { jobs: JobCard[] }) {
                   <b>{j.jobNumber}</b> · {j.name}
                   <div style={{ color: "var(--mute)", fontSize: 11.5, marginTop: 2 }}>
                     {j.address ?? "No address"}
-                    {hasGps ? ` · ${j.lat!.toFixed(3)}, ${j.lon!.toFixed(3)}` : " · no GPS"}
+                    {hasGps ? ` · ${j.lat!.toFixed(3)}, ${j.lon!.toFixed(3)}` : locating === j.id ? " · finding on the map…" : j.address ? " · tap to find on the map" : " · no GPS"}
                   </div>
                 </div>
                 <div style={{ textAlign: "right", whiteSpace: "nowrap" }}>

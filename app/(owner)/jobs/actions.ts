@@ -46,3 +46,20 @@ export async function createJob(formData: FormData) {
   revalidatePath("/dashboard");
   redirect(`/jobs/${job.id}`);
 }
+
+// Looks up a job's address, saves the coordinates on the job, and returns them (null if it can't be found).
+export async function locateJob(jobId: string): Promise<{ lat: number; lon: number } | null> {
+  const user = await getCurrentUser();
+  if (!user) throw new Error("Not signed in");
+  const supabase = await createClient();
+  const { data: job } = await supabase.from("jobs").select("address").eq("id", jobId).maybeSingle();
+  const address = (job as { address: string | null } | null)?.address;
+  if (!address) return null;
+  const found = await geocode(address);
+  if (!found) return null;
+  const [lat, lon] = found;
+  const { error } = await supabase.from("jobs").update({ geofence_lat: lat, geofence_lon: lon }).eq("id", jobId);
+  if (error) return null;
+  revalidatePath("/jobs");
+  return { lat, lon };
+}
