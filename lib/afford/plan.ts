@@ -15,6 +15,20 @@ export const CATEGORIES: { key: CategoryKey; label: string; weight: number; fiel
   { key: "other", label: "Phones, software, tools", weight: 1.5, field: "other_monthly", hint: "Typically 1 to 2% of revenue" },
 ];
 
+// The share of the overhead budget each category gets, as percentages that add to 100.
+// Uses the company's own split if saved, otherwise the typical one.
+export function resolveShares(a: Pick<CashFlowAssumptions, "afford_weights">): Record<CategoryKey, number> {
+  const custom = a.afford_weights;
+  const raw = CATEGORIES.map((c) => {
+    const v = custom ? Number(custom[c.key]) : NaN;
+    return Number.isFinite(v) && v >= 0 ? v : c.weight;
+  });
+  const useCustom = custom && CATEGORIES.every((c) => Number.isFinite(Number(custom[c.key])) && Number(custom[c.key]) >= 0) && raw.some((v) => v > 0);
+  const w = useCustom ? raw : CATEGORIES.map((c) => c.weight);
+  const total = w.reduce((s, v) => s + v, 0);
+  return Object.fromEntries(CATEGORIES.map((c, i) => [c.key, (w[i] / total) * 100])) as Record<CategoryKey, number>;
+}
+
 export type CatStatus = "ok" | "tight" | "over" | "unknown";
 
 export interface CategoryResult {
@@ -67,10 +81,10 @@ export function planAfford(input: { revenue: number; marginPct: number; profitPc
   const { revenue, marginPct, profitPct, overheadMonthly, a } = input;
   const overheadPct = Math.max(0, marginPct - profitPct);
   const roomMonthly = (revenue * overheadPct) / 100 / 12;
-  const totalW = CATEGORIES.reduce((s, c) => s + c.weight, 0);
+  const shares = resolveShares(a);
 
   const categories: CategoryResult[] = CATEGORIES.map((c) => {
-    const ceiling = (roomMonthly * c.weight) / totalW;
+    const ceiling = (roomMonthly * shares[c.key]) / 100;
     const spend = Number(a[c.field] ?? 0);
     const status: CatStatus = spend <= 0 ? "unknown" : spend <= ceiling * 0.9 ? "ok" : spend <= ceiling ? "tight" : "over";
     return { key: c.key, label: c.label, hint: c.hint, ceiling, spend, status, gap: ceiling - spend };

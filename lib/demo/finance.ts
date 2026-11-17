@@ -23,6 +23,7 @@ export const DEMO_ASSUMPTIONS = {
   insurance_monthly: 3100,
   office_staff_monthly: 7000,
   other_monthly: 1400,
+  afford_weights: null,
   updated_by: null,
   updated_at: new Date().toISOString(),
 } as CashFlowAssumptions;

@@ -84,3 +84,27 @@ export async function saveOverheadBreakdown(formData: FormData) {
   revalidatePath("/scale");
   revalidatePath("/dashboard");
 }
+
+// Own split of the overhead budget for "What you can afford". Percentages are scaled to add to 100.
+// Sending "reset" goes back to the typical contractor split.
+export async function saveAffordShares(formData: FormData) {
+  const supabase = await createClient();
+  const user = await getCurrentUser();
+  if (!user) throw new Error("Not signed in");
+
+  let weights: Record<string, number> | null = null;
+  if (formData.get("reset") == null) {
+    const keys = ["rent", "vehicles", "insurance", "office", "other"];
+    const raw = keys.map((k) => Math.max(0, Number(formData.get(`share_${k}`) ?? 0) || 0));
+    const sum = raw.reduce((s, v) => s + v, 0);
+    if (sum <= 0) throw new Error("Give at least one category a share above zero.");
+    weights = Object.fromEntries(keys.map((k, i) => [k, Math.round((raw[i] / sum) * 1000) / 10]));
+  }
+
+  const { error } = await supabase
+    .from("cash_flow_assumptions")
+    .update({ afford_weights: weights, updated_by: user.profile.id, updated_at: new Date().toISOString() })
+    .eq("company_id", user.profile.company_id);
+  if (error) throw new Error(error.message);
+  revalidatePath("/finance");
+}

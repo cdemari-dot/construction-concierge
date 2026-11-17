@@ -243,6 +243,7 @@ export interface CashFlowAssumptions {
   insurance_monthly: number;
   office_staff_monthly: number;
   other_monthly: number;
+  afford_weights: Record<string, number> | null;
   updated_by: string | null;
   updated_at: string;
 }

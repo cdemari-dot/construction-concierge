@@ -3,8 +3,8 @@
 import { useState } from "react";
 import { CountUp } from "@/components/ui/CountUp";
 import { fmt } from "@/lib/format";
-import { CATEGORIES, planAfford, type CatStatus, type RevenueBasis } from "@/lib/afford/plan";
-import { saveOverheadBreakdown } from "@/app/(owner)/cashflow/actions";
+import { CATEGORIES, planAfford, resolveShares, type CatStatus, type RevenueBasis } from "@/lib/afford/plan";
+import { saveAffordShares, saveOverheadBreakdown } from "@/app/(owner)/cashflow/actions";
 import type { CashFlowAssumptions } from "@/lib/types/database";
 
 const TONE: Record<CatStatus, { color: string; label: string }> = {
@@ -89,7 +89,7 @@ export function AffordPanel({ a, basis, demo }: { a: CashFlowAssumptions; basis:
             );
           })}
         </div>
-        <div style={{ fontSize: 11.5, color: "var(--mute)", marginTop: 14 }}>The black marker is the ceiling. These shares are typical for contractors, a guide rather than a rule.</div>
+        <div style={{ fontSize: 11.5, color: "var(--mute)", marginTop: 14 }}>The black marker is the ceiling. Change the split in the box below to fit your business.</div>
       </section>
 
       <section className="cc-card cc-in" style={{ "--i": 6 } as React.CSSProperties}>
@@ -106,6 +106,8 @@ export function AffordPanel({ a, basis, demo }: { a: CashFlowAssumptions; basis:
           That covers the payment, insurance and fuel for the new vehicle together, so count all three. {r.unitemised > 0 && `About ${fmt(r.unitemised)} a month of your overhead is not assigned to a category yet.`}
         </div>
       </section>
+
+      {!demo && <ShareEditor a={a} />}
 
       {!demo && (
         <section className="cc-card cc-in" style={{ "--i": 7 } as React.CSSProperties}>
@@ -150,6 +152,46 @@ function Stat({ i, label, value, sub }: { i: number; label: string; value: numbe
         $<CountUp value={value} />
       </div>
       <div style={{ fontSize: 12, color: "var(--mute)" }}>{sub}</div>
+    </section>
+  );
+}
+
+// Edit how the overhead budget is split across categories. Numbers are scaled to add to 100%.
+function ShareEditor({ a }: { a: CashFlowAssumptions }) {
+  const current = resolveShares(a);
+  const [vals, setVals] = useState<Record<string, string>>(() => Object.fromEntries(CATEGORIES.map((c) => [c.key, String(Math.round(current[c.key] * 10) / 10)])));
+  const sum = CATEGORIES.reduce((s, c) => s + (Number(vals[c.key]) || 0), 0);
+  const custom = a.afford_weights != null;
+
+  return (
+    <section className="cc-card cc-in" style={{ "--i": 6 } as React.CSSProperties}>
+      <h3 style={h3}>How your overhead budget is split</h3>
+      <p style={{ fontSize: 12.5, color: "var(--mute)", marginBottom: 12, lineHeight: 1.6 }}>
+        {custom ? "You are using your own split." : "This is the typical contractor split."} A roofer with a big truck fleet might give vehicles more and rent less. Enter what makes sense for you; it is scaled to add to 100%.
+      </p>
+      <form action={saveAffordShares} style={{ display: "grid", gap: 10 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(170px, 1fr))", gap: 10 }}>
+          {CATEGORIES.map((c) => (
+            <label key={c.key} style={{ fontSize: 11.5, color: "var(--mute)", display: "grid", gap: 4 }}>
+              {c.label} (%)
+              <input name={`share_${c.key}`} type="number" min={0} max={100} step="0.1" value={vals[c.key]} onChange={(e) => setVals((v) => ({ ...v, [c.key]: e.target.value }))} style={inputStyle} />
+            </label>
+          ))}
+        </div>
+        <div style={{ fontSize: 12, color: Math.abs(sum - 100) < 0.5 ? "var(--lime)" : "var(--amber)" }}>
+          Adds up to {Math.round(sum * 10) / 10}%{Math.abs(sum - 100) < 0.5 ? "" : ", it will be scaled to 100%"}
+        </div>
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+          <button className="cc-btn lime sm" type="submit">
+            Save my split
+          </button>
+          {custom && (
+            <button className="cc-btn ghost sm" type="submit" name="reset" value="1">
+              Back to typical
+            </button>
+          )}
+        </div>
+      </form>
     </section>
   );
 }
