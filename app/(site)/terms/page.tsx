@@ -8,7 +8,7 @@ export default function Terms() {
     <LegalLayout title="Terms of service" updated="November 17, 2026">
       <p>
         These terms apply when you use Construction Concierge ("the service"). By using the service you agree to them on behalf of yourself and the company you represent. Questions go to{" "}
-        <a href="mailto:hello@constructionconcierge.com">hello@constructionconcierge.com</a>.
+        <a href="mailto:hello@constructionconcierge.ai">hello@constructionconcierge.ai</a>.
       </p>
 
       <h2>The service</h2>

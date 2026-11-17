@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
 
-const CONTACT = "hello@constructionconcierge.com";
+const CONTACT = "hello@constructionconcierge.ai";
 const esc = (s: string) => s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]!);
 
-// Public "Book a demo" form. Emails hello@constructionconcierge.com through Resend. Needs RESEND_API_KEY, and the
+// Public "Book a demo" form. Emails hello@constructionconcierge.ai through Resend. Needs RESEND_API_KEY, and the
 // sender domain verified in Resend. A hidden "website" field catches simple bots.
 export async function POST(req: Request) {
   const body = (await req.json().catch(() => null)) as Record<string, unknown> | null;

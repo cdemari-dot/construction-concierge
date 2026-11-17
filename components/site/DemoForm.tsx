@@ -20,7 +20,7 @@ export function DemoForm() {
       if (!res.ok) {
         if (out.fallback) {
           const body = `Name: ${data.name}\nCompany: ${data.company}\nEmail: ${data.email}\nPhone: ${data.phone || ""}\n\n${data.message || ""}`;
-          setMailto(`mailto:hello@constructionconcierge.com?subject=${encodeURIComponent("Demo request: " + data.company)}&body=${encodeURIComponent(body)}`);
+          setMailto(`mailto:hello@constructionconcierge.ai?subject=${encodeURIComponent("Demo request: " + data.company)}&body=${encodeURIComponent(body)}`);
         }
         throw new Error(out.error ?? "Something went wrong. Try again.");
       }
@@ -81,7 +81,7 @@ export function DemoForm() {
         {state === "sending" ? "Sending…" : "Book a demo"}
       </button>
       <p className="demo-alt wide">
-        Prefer email? Write to <a href="mailto:hello@constructionconcierge.com">hello@constructionconcierge.com</a>.
+        Prefer email? Write to <a href="mailto:hello@constructionconcierge.ai">hello@constructionconcierge.ai</a>.
         <br />
         We use these details only to reply. See our <a href="/privacy">privacy policy</a>.
       </p>

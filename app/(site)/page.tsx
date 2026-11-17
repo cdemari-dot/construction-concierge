@@ -292,7 +292,7 @@ export default async function SiteHome() {
               <Link href="/login">Log in</Link>
               <Link href="/privacy">Privacy</Link>
               <Link href="/terms">Terms</Link>
-              <a href="mailto:hello@constructionconcierge.com">hello@constructionconcierge.com</a>
+              <a href="mailto:hello@constructionconcierge.ai">hello@constructionconcierge.ai</a>
             </nav>
             <small>© {new Date().getFullYear()} Construction Concierge. All rights reserved.</small>
           </div>

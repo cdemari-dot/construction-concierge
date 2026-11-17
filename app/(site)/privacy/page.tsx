@@ -8,7 +8,7 @@ export default function Privacy() {
     <LegalLayout title="Privacy policy" updated="November 17, 2026">
       <p>
         Construction Concierge ("we", "us") is a business-management service for subcontractors. This policy explains what information we collect, why, and the choices you have. If anything here is unclear, write to{" "}
-        <a href="mailto:hello@constructionconcierge.com">hello@constructionconcierge.com</a>.
+        <a href="mailto:hello@constructionconcierge.ai">hello@constructionconcierge.ai</a>.
       </p>
 
       <h2>Who this covers</h2>
@@ -81,7 +81,7 @@ export default function Privacy() {
 
       <h2>Contact</h2>
       <p>
-        <a href="mailto:hello@constructionconcierge.com">hello@constructionconcierge.com</a>
+        <a href="mailto:hello@constructionconcierge.ai">hello@constructionconcierge.ai</a>
       </p>
     </LegalLayout>
   );
