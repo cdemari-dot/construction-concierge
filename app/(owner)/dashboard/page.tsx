@@ -100,7 +100,7 @@ export default async function DashboardPage() {
       {tmToBill.length > 0 && (
         <section
           className="cc-card"
-          style={{ marginBottom: 20, borderColor: "rgba(200,164,100,.6)", background: "rgba(200,164,100,.08)" }}
+          style={{ marginBottom: 20, borderColor: "var(--line2)", background: "var(--panel2)" }}
         >
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap", marginBottom: 10 }}>
             <b style={{ fontSize: 15 }}>

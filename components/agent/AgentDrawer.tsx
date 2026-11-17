@@ -203,8 +203,9 @@ export function AgentDrawer() {
                   fontSize: 13.5,
                   lineHeight: 1.55,
                   whiteSpace: "pre-wrap",
-                  background: m.role === "user" ? "rgba(200,164,100,.14)" : "var(--panel2)",
-                  border: `1px solid ${m.role === "user" ? "rgba(200,164,100,.3)" : "var(--line2)"}`,
+                  background: m.role === "user" ? "var(--text)" : "var(--panel2)",
+                  border: `1px solid ${m.role === "user" ? "var(--text)" : "var(--line2)"}`,
+                  color: m.role === "user" ? "var(--bg)" : "var(--text)",
                 }}
               >
                 {m.content}

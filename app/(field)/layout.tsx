@@ -9,5 +9,9 @@ export default async function FieldLayout({ children }: { children: React.ReactN
     await requireRole(["owner", "pm", "foreman", "worker", "kiosk"]);
   }
 
-  return <div style={{ minHeight: "100vh", padding: 16 }}>{children}</div>;
+  return (
+    <div className="hub" style={{ minHeight: "100vh", padding: 16 }}>
+      {children}
+    </div>
+  );
 }

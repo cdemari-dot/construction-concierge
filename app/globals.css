@@ -670,3 +670,72 @@ html[data-theme="dark"]:has(.hub) { background: #0b0b0c; }
   .hub-side { position: static; height: auto; flex-direction: column; border-right: 0; border-bottom: 1px solid var(--line); }
   .hub-nav { grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); }
 }
+
+/* T&M sheet: same Inter as the rest of the system */
+.tm-sheet, .tm-sheet h1, .tm-sheet h2 { font-family: var(--font-inter), system-ui, sans-serif; }
+
+/* =====================================================================
+   CREW APPS, same system as the website.
+   Field (phone) = the light site look. Crew Punch (jobsite iPad) = the
+   dark showcase look (.kiosk-ink). Everything keys off the .hub tokens.
+   ===================================================================== */
+.hub.kiosk-ink {
+  --bg: #0b0b0c;
+  --panel: #141416;
+  --panel2: #1b1b1e;
+  --line: #242427;
+  --line2: #34343a;
+  --cyan: #ffffff;
+  --lime: #3ddc84;
+  --amber: #f5a524;
+  --red: #ff6b6e;
+  --violet: #9b9b94;
+  --text: #f5f5f2;
+  --mute: #8d8d86;
+  --text2: #cfcfc9;
+  --sunk: #111113;
+  --card-a: #141416;
+  --card-b: #141416;
+  --glass: rgba(11, 11, 12, 0.92);
+  --on-lime: #06210f;
+  background: #0b0b0c;
+  margin: -16px;
+  padding: 16px;
+  min-height: 100vh;
+}
+html:has(.kiosk-ink) { background: #0b0b0c; }
+
+.hub .fa-hello, .hub .fa-title { font-family: var(--font-inter), system-ui, sans-serif; letter-spacing: -0.04em; font-weight: 700; }
+.hub .fa-hello { font-size: clamp(30px, 8vw, 40px); line-height: 1.02; }
+.hub .fa-title { font-size: clamp(26px, 7vw, 34px); line-height: 1.05; }
+.hub .fa-help, .hub .fa-sub { color: var(--mute); }
+.hub .fa-label { font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--mute); font-weight: 600; margin: 20px 0 8px; }
+.hub .fa-input { border-radius: 18px; background: var(--panel); border: 1px solid var(--line2); padding: 16px 18px; }
+.hub .fa-input:focus { outline: none; border-color: var(--text); box-shadow: 0 0 0 3px color-mix(in srgb, var(--text) 10%, transparent); }
+.hub .fa-job { border-radius: 22px; background: var(--panel); border: 1px solid var(--line2); }
+
+/* buttons: big ink pills, green go, red stop */
+.hub .fa-btn { border-radius: 999px; min-height: 60px; border: 1px solid var(--text); background: var(--text); color: var(--bg); font-weight: 700; letter-spacing: -0.01em; transition: transform 0.18s ease, opacity 0.18s ease; }
+.hub .fa-btn:active { transform: scale(0.985); }
+.hub .fa-btn.go { background: var(--lime); border-color: var(--lime); color: var(--on-lime); }
+.hub .fa-btn.stop { background: transparent; border-color: var(--red); color: var(--red); }
+.hub .fa-btn.quiet { background: transparent; border-color: var(--line2); color: var(--text); }
+
+/* chips and steppers */
+.hub .fa-chip { border-radius: 22px; background: var(--panel); border: 1px solid var(--line2); }
+.hub .fa-chip.on { background: var(--text); border-color: var(--text); color: var(--bg); }
+.hub .fa-stepper button { border-radius: 999px; background: var(--panel); border: 1px solid var(--line2); }
+.hub .fa-stepper .v { letter-spacing: -0.04em; }
+
+/* notices */
+.hub .fa-ok { background: color-mix(in srgb, var(--lime) 12%, transparent); border-color: color-mix(in srgb, var(--lime) 45%, transparent); color: var(--lime); border-radius: 18px; }
+.hub .fa-err { background: color-mix(in srgb, var(--red) 10%, transparent); border-color: color-mix(in srgb, var(--red) 45%, transparent); color: var(--red); border-radius: 18px; }
+
+/* tab bar: floating glass pill */
+.hub .fa-tabbar { left: 10px; right: 10px; bottom: calc(10px + env(safe-area-inset-bottom)); border: 1px solid var(--line); border-radius: 999px; background: var(--glass); backdrop-filter: saturate(180%) blur(18px); padding: 6px; gap: 2px; box-shadow: 0 18px 44px rgba(0, 0, 0, 0.18); }
+.hub .fa-tab { border-radius: 999px; padding: 8px 2px; }
+.hub .fa-tab.on { background: var(--text); color: var(--bg); }
+.hub .fa-wrap { padding-bottom: 120px; }
+
+/* kiosk: PIN pad and big controls read as dark keys */
+.hub.kiosk-ink .fa-title { font-size: clamp(30px, 6vw, 40px); }

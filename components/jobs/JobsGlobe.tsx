@@ -86,7 +86,7 @@ export function JobsGlobe({ jobs: jobsIn }: { jobs: JobCard[] }) {
         .globeTileEngineUrl((x: number, y: number, l: number) => `https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/${l}/${y}/${x}`)
         .globeTileEngineMaxLevel(17)
         .backgroundColor("rgba(0,0,0,0)")
-        .atmosphereColor("#C8A464")
+        .atmosphereColor("#b9bdb6")
         .atmosphereAltitude(0.22)
         .width(size())
         .height(size())
@@ -243,7 +243,7 @@ export function JobsGlobe({ jobs: jobsIn }: { jobs: JobCard[] }) {
                 cursor: hasGps || j.address ? "pointer" : "default",
                 borderColor: on ? "var(--cyan)" : undefined,
                 transform: on ? "scale(1.015)" : "scale(1)",
-                boxShadow: on ? "0 0 0 1px var(--cyan), 0 8px 30px rgba(200,164,100,.18)" : undefined,
+                boxShadow: on ? "0 0 0 1px var(--cyan), 0 8px 30px rgba(0,0,0,.14)" : undefined,
                 transition: "transform .3s ease, box-shadow .3s ease, border-color .3s ease",
               }}
             >

@@ -9,5 +9,5 @@ export const metadata: Metadata = {
 export const viewport: Viewport = { themeColor: "#0B0B0D" };
 
 export default function KioskLayout({ children }: { children: React.ReactNode }) {
-  return children;
+  return <div className="hub kiosk-ink">{children}</div>;
 }

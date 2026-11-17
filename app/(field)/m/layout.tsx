@@ -6,9 +6,9 @@ import { requireRole } from "@/lib/auth/session";
 export const metadata: Metadata = {
   title: "CC Field",
   manifest: "/field-app.webmanifest",
-  appleWebApp: { capable: true, title: "CC Field", statusBarStyle: "black-translucent" },
+  appleWebApp: { capable: true, title: "CC Field", statusBarStyle: "default" },
 };
-export const viewport: Viewport = { themeColor: "#0B0B0D" };
+export const viewport: Viewport = { themeColor: "#FAFAF8" };
 
 export default async function FieldAppLayout({ children }: { children: React.ReactNode }) {
   // The punch-clock login (Worker role) belongs to the kiosk app, not the foreman app.

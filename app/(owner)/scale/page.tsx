@@ -103,7 +103,7 @@ export default async function ScalePage({ searchParams }: { searchParams: Promis
         <p style={{ color: "var(--mute)", fontSize: 13, marginBottom: 16, maxWidth: 720, lineHeight: 1.6 }}>
           A conservative plan to scale without running out of cash, built from your own numbers.
         </p>
-        <div className="cc-card cc-in" style={{ marginBottom: 16, borderColor: "rgba(200,164,100,.6)", background: "rgba(200,164,100,.08)" }}>
+        <div className="cc-card cc-in" style={{ marginBottom: 16, borderColor: "var(--line2)", background: "var(--panel2)" }}>
           <b>Add your numbers first.</b> Still missing: {missing.join(", ")}. Enter them in <Link href="/finance?tab=settings" style={{ color: "var(--cyan)" }}>Playbook &amp; settings</Link> and this page will show how much you can safely grow, the largest job you can float, and whether you&apos;re ready.
         </div>
         <section className="cc-card cc-in" style={{ "--i": 1 } as React.CSSProperties}>
@@ -143,7 +143,7 @@ export default async function ScalePage({ searchParams }: { searchParams: Promis
     <div>
       <h1 className="display" style={{ fontSize: 22, marginBottom: 4 }}>Grow Safely</h1>
       {demo && (
-        <div className="cc-card" style={{ marginBottom: 12, borderColor: "rgba(200,164,100,.6)", background: "rgba(200,164,100,.08)", fontSize: 13 }}>
+        <div className="cc-card" style={{ marginBottom: 12, borderColor: "var(--line2)", background: "var(--panel2)", fontSize: 13 }}>
           <b>Demo data.</b> Sample numbers so you can see the page populated. <Link href="/scale" style={{ color: "var(--cyan)" }}>Switch to your real numbers</Link>
         </div>
       )}

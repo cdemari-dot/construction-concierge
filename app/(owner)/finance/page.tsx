@@ -59,7 +59,7 @@ export default async function FinancePage({ searchParams }: { searchParams: Prom
         Finance &amp; Cash
       </h1>
       {demo && (
-        <div className="cc-card" style={{ marginBottom: 12, borderColor: "rgba(200,164,100,.6)", background: "rgba(200,164,100,.08)", fontSize: 13 }}>
+        <div className="cc-card" style={{ marginBottom: 12, borderColor: "var(--line2)", background: "var(--panel2)", fontSize: 13 }}>
           <b>Demo data.</b> These are sample numbers so you can see the page populated. <Link href={`/finance?tab=${tab}`} style={{ color: "var(--cyan)" }}>Switch to your real numbers</Link>
         </div>
       )}
@@ -145,7 +145,7 @@ export default async function FinancePage({ searchParams }: { searchParams: Prom
           How much you can spend on rent, vehicles, insurance and staff and still keep the profit you are aiming for. It starts from your real billing and real job margin, and you can switch any line to your target or move the sliders to test a bigger or smaller year.
         </p>
         {nothing ? (
-          <div className="cc-card cc-in" style={{ borderColor: "rgba(200,164,100,.6)", background: "rgba(200,164,100,.08)" }}>
+          <div className="cc-card cc-in" style={{ borderColor: "var(--line2)", background: "var(--panel2)" }}>
             <b>Add your yearly revenue first.</b> You have no invoices in the last 12 months and no revenue target. Add invoices, or set a target in <Link href="/finance?tab=settings" style={{ color: "var(--cyan)" }}>Playbook &amp; settings</Link> (also check your gross margin target and profit %), or look at the <Link href="/finance?tab=afford&demo=1" style={{ color: "var(--cyan)" }}>sample numbers</Link>.
           </div>
         ) : (

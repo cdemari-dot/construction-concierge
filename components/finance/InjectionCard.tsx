@@ -13,7 +13,7 @@ const LEVEL = {
 export function InjectionCard({ inj, missing = [] }: { inj: InjectionResult; missing?: string[] }) {
   if (missing.length > 0) {
     return (
-      <section className="cc-card cc-in" style={{ marginBottom: 16, borderColor: "rgba(200,164,100,.6)", background: "rgba(200,164,100,.08)" }}>
+      <section className="cc-card cc-in" style={{ marginBottom: 16, borderColor: "var(--line2)", background: "var(--panel2)" }}>
         <div style={{ fontSize: 11, letterSpacing: 1.4, textTransform: "uppercase", color: "var(--mute)" }}>Cash injection forecast</div>
         <div style={{ fontSize: 18, fontWeight: 700, margin: "4px 0 6px" }}>Add your numbers to see if and when you&apos;ll need cash</div>
         <div style={{ fontSize: 13.5, lineHeight: 1.6, color: "var(--text2)" }}>

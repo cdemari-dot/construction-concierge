@@ -35,7 +35,7 @@ export function stampPhoto(
 
       ctx.fillStyle = "rgba(5,9,18,.78)";
       ctx.fillRect(0, H - 96, W, 96);
-      ctx.fillStyle = "#C8A464";
+      ctx.fillStyle = "#ffffff";
       ctx.font = "bold 20px monospace";
       ctx.fillText(opts.label + "  " + new Date().toLocaleString("en-CA"), 16, H - 62);
       ctx.fillStyle = "#e6edf7";

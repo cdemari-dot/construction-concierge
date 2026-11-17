@@ -17,7 +17,7 @@ export function PinPad({
   message?: string;
   error?: string | null;
 }) {
-  const key: React.CSSProperties = { height: 72, fontSize: 28, fontWeight: 600, borderRadius: 18 };
+  const key: React.CSSProperties = { height: 72, fontSize: 28, fontWeight: 600, borderRadius: 999 };
   return (
     <div style={{ textAlign: "center" }}>
       <div style={{ display: "grid", placeItems: "center", color: "var(--cyan)" }}>
@@ -40,8 +40,7 @@ export function PinPad({
               display: "inline-block",
               border: "2px solid var(--line2)",
               background: i < pin.length ? "var(--cyan)" : "transparent",
-              boxShadow: i < pin.length ? "0 0 10px var(--cyan)" : "none",
-            }}
+                          }}
           />
         ))}
       </div>

@@ -56,8 +56,8 @@ export function CashFlowChart({ buckets, payrollLine }: { buckets: WeekBucket[];
             <stop offset="1" style={{ stopColor: "var(--lime)" }} stopOpacity="0" />
           </linearGradient>
           <linearGradient id="cfIn" x1="0" x2="0" y1="0" y2="1">
-            <stop offset="0" stopColor="#C8A464" />
-            <stop offset="1" stopColor="#C8A464" stopOpacity=".35" />
+            <stop offset="0" style={{ stopColor: "var(--text)" }} />
+            <stop offset="1" style={{ stopColor: "var(--text)", stopOpacity: 0.3 }} />
           </linearGradient>
           <linearGradient id="cfOut" x1="0" x2="0" y1="0" y2="1">
             <stop offset="0" stopColor="#E5484D" />
