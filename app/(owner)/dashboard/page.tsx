@@ -78,7 +78,7 @@ export default async function DashboardPage() {
         <section className="cc-card" style={{ marginBottom: 20, borderColor: "rgba(245,166,35,.6)", background: "rgba(245,166,35,.07)" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap", marginBottom: 8 }}>
             <b style={{ fontSize: 15 }}>
-              ⏰ {followUpsDue.length} bid follow-up{followUpsDue.length === 1 ? "" : "s"} due
+              {followUpsDue.length} bid follow-up{followUpsDue.length === 1 ? "" : "s"} due
             </b>
             <Link href="/crm" className="cc-btn sm">
               Open CRM
@@ -104,7 +104,7 @@ export default async function DashboardPage() {
         >
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap", marginBottom: 10 }}>
             <b style={{ fontSize: 15 }}>
-              🧾 {tmToBill.length} signed T&amp;M ticket{tmToBill.length === 1 ? "" : "s"} need{tmToBill.length === 1 ? "s" : ""} to be billed
+              {tmToBill.length} signed T&amp;M ticket{tmToBill.length === 1 ? "" : "s"} need{tmToBill.length === 1 ? "s" : ""} to be billed
             </b>
             <Link href="/field-reports?tab=tm" className="cc-btn sm">
               Open T&amp;M tickets
@@ -132,6 +132,7 @@ export default async function DashboardPage() {
 
       <div className="grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(170px, 1fr))", gap: 16, marginBottom: 20 }}>
         <StatCard
+          ink
           label="Cash on hand"
           value={cash?.bank_balance != null ? fmt(cash.bank_balance) : "—"}
           hint={cash?.as_of_date ? `as of ${cash.as_of_date}` : "no cash snapshot yet"}

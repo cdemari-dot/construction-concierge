@@ -502,3 +502,171 @@ h2,
   .tm-sheet, .tm-sheet * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
   @page { margin: 14mm; }
 }
+
+/* =====================================================================
+   HUB (owner app) theme: matches the public website. Light by default
+   (quiet monochrome, bold Inter, pill buttons, big rounded cards, the
+   logo's green as the only colour). Dark is available from the toggle.
+   Scoped to .hub so the crew apps keep their own look.
+   ===================================================================== */
+.hub {
+  --bg: #fafaf8;
+  --panel: #ffffff;
+  --panel2: #f4f4f0;
+  --line: #e4e4de;
+  --line2: #d3d3cc;
+  --cyan: #0b0b0b;
+  --lime: #1fa35a;
+  --amber: #c27a0a;
+  --red: #c0262c;
+  --violet: #7a7a73;
+  --text: #0b0b0b;
+  --mute: #7a7a73;
+  --text2: #3a3a37;
+  --sunk: #f1f1ed;
+  --card-a: #ffffff;
+  --card-b: #ffffff;
+  --glass: rgba(250, 250, 248, 0.92);
+  --radius: 24px;
+  --on-lime: #ffffff;
+  background: var(--bg);
+  color: var(--text);
+  -webkit-font-smoothing: antialiased;
+}
+:root[data-theme="dark"] .hub {
+  --bg: #0b0b0c;
+  --panel: #141416;
+  --panel2: #1b1b1e;
+  --line: #242427;
+  --line2: #34343a;
+  --cyan: #ffffff;
+  --lime: #3ddc84;
+  --amber: #f5a524;
+  --red: #ff6b6e;
+  --violet: #9b9b94;
+  --text: #f5f5f2;
+  --mute: #8d8d86;
+  --text2: #cfcfc9;
+  --sunk: #111113;
+  --card-a: #141416;
+  --card-b: #141416;
+  --glass: rgba(11, 11, 12, 0.92);
+  --on-lime: #06210f;
+}
+html:has(.hub) { background: #fafaf8; }
+html[data-theme="dark"]:has(.hub) { background: #0b0b0c; }
+
+/* type: bold Inter, tight, like the site */
+.hub h1,
+.hub h2,
+.hub h3,
+.hub .display {
+  font-family: var(--font-inter), system-ui, sans-serif;
+  letter-spacing: -0.035em;
+  font-weight: 700;
+}
+.hub h1.display { font-size: clamp(32px, 3.8vw, 52px) !important; line-height: 1 !important; margin-bottom: 8px !important; }
+.hub .mono { font-variant-numeric: tabular-nums; letter-spacing: -0.03em; }
+
+/* cards */
+.hub .cc-card {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 24px;
+  padding: 22px;
+}
+.hub .cc-card.ink {
+  --panel: #0b0b0c;
+  --text: #ffffff;
+  --mute: rgba(255, 255, 255, 0.55);
+  --text2: rgba(255, 255, 255, 0.75);
+  --line: rgba(255, 255, 255, 0.14);
+  background: #0b0b0c;
+  border-color: #0b0b0c;
+  color: #ffffff;
+}
+.hub .cc-chip { border-radius: 999px; }
+
+/* buttons: black pills, outline pills, green action pills */
+.hub .cc-btn {
+  background: var(--text);
+  color: var(--bg);
+  border: 1px solid var(--text);
+  border-radius: 999px;
+  padding: 9px 18px;
+  font-size: 13px;
+  font-weight: 600;
+  transition: transform 0.18s ease, opacity 0.18s ease, background 0.18s ease;
+}
+.hub .cc-btn:hover { background: var(--text); opacity: 0.86; transform: translateY(-1px); }
+.hub .cc-btn.ghost { background: transparent; color: var(--text); border-color: var(--line2); }
+.hub .cc-btn.ghost:hover { background: transparent; border-color: var(--text); opacity: 1; }
+.hub .cc-btn.lime { background: var(--lime); border-color: var(--lime); color: var(--on-lime); }
+.hub .cc-btn.lime:hover { background: var(--lime); }
+.hub .cc-btn.red { background: transparent; border-color: var(--red); color: var(--red); }
+.hub .cc-btn.red:hover { background: transparent; }
+.hub .cc-btn.sm { padding: 6px 13px; font-size: 12px; border-radius: 999px; }
+
+/* tags */
+.hub .cc-tag { border-radius: 999px; letter-spacing: 0.02em; }
+.hub .cc-tag.cyan { color: var(--text); border-color: var(--line2); background: var(--panel2); }
+.hub .cc-tag.lime { color: var(--lime); border-color: color-mix(in srgb, var(--lime) 45%, transparent); background: color-mix(in srgb, var(--lime) 10%, transparent); }
+.hub .cc-tag.amber { color: var(--amber); border-color: color-mix(in srgb, var(--amber) 45%, transparent); background: color-mix(in srgb, var(--amber) 10%, transparent); }
+.hub .cc-tag.red { color: var(--red); border-color: color-mix(in srgb, var(--red) 45%, transparent); background: color-mix(in srgb, var(--red) 10%, transparent); }
+
+/* progress bars */
+.hub .cc-bar { height: 8px; background: var(--line); }
+.hub .cc-bar i { background: var(--lime); }
+.hub .cc-bar i::after { display: none; }
+
+/* fields (many pages style these inline, so the radius needs !important) */
+.hub :is(input, select, textarea):not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]) {
+  border-radius: 14px !important;
+}
+.hub :is(input, select, textarea):focus {
+  outline: none;
+  border-color: var(--text) !important;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--text) 10%, transparent);
+}
+
+/* layout shell + sidebar */
+.hub-shell { display: grid; grid-template-columns: 252px minmax(0, 1fr); min-height: 100vh; }
+.hub-side {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 22px 16px 18px;
+  background: var(--bg);
+  border-right: 1px solid var(--line);
+  overflow-y: auto;
+}
+.hub-brand { display: flex; align-items: center; gap: 11px; padding: 2px 8px 22px; }
+.hub-brand img { border-radius: 8px; }
+.hub-brand b { display: block; font-size: 13px; letter-spacing: 0.06em; text-transform: uppercase; font-weight: 700; line-height: 1.15; }
+.hub-brand small { display: block; font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--mute); margin-top: 3px; }
+.hub-nav { display: grid; gap: 2px; }
+.hub-nav a {
+  display: flex;
+  align-items: center;
+  padding: 9px 14px;
+  border-radius: 999px;
+  font-size: 13.5px;
+  font-weight: 500;
+  color: var(--text2);
+  text-decoration: none;
+  transition: background 0.18s ease, color 0.18s ease;
+}
+.hub-nav a:hover { background: var(--panel2); color: var(--text); }
+.hub-nav a.on { background: var(--text); color: var(--bg); font-weight: 600; }
+.hub-foot { margin-top: auto; padding-top: 16px; display: grid; gap: 8px; }
+.hub-user { border: 1px solid var(--line); border-radius: 18px; padding: 12px 14px; font-size: 12px; color: var(--mute); line-height: 1.5; background: var(--panel); }
+.hub-user b { display: block; color: var(--text); font-weight: 600; font-size: 13px; word-break: break-all; }
+.hub-main { padding: clamp(22px, 3vw, 44px) clamp(18px, 3vw, 48px) 80px; min-width: 0; max-width: 1480px; width: 100%; }
+@media (max-width: 860px) {
+  .hub-shell { grid-template-columns: 1fr; }
+  .hub-side { position: static; height: auto; flex-direction: column; border-right: 0; border-bottom: 1px solid var(--line); }
+  .hub-nav { grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); }
+}

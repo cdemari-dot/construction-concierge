@@ -48,7 +48,7 @@ export function BidForm({ clients }: { clients: { id: string; name: string }[] }
       }
     >
       <b className="display" style={{ fontSize: 16 }}>New bid</b>
-      {error && <div className="fa-err">⚠️ {error}</div>}
+      {error && <div className="fa-err">{error}</div>}
       <input name="name" placeholder="Project name" required style={input} />
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
         <select name="client_id" defaultValue="" style={input}>

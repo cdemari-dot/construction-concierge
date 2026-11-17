@@ -21,11 +21,11 @@ import { addCashSnapshot, updateAssumptions } from "@/app/(owner)/cashflow/actio
 import type { Bill, CashFlowAssumptions, Client, CompanyCashPosition, Invoice, Job } from "@/lib/types/database";
 
 const TABS = [
-  { key: "forecast", label: "📈 13-week forecast" },
-  { key: "coach", label: "🧠 Finance coach" },
-  { key: "afford", label: "🏢 What you can afford" },
-  { key: "invoices", label: "🧾 Invoices & bills" },
-  { key: "settings", label: "⚙️ Playbook & settings" },
+  { key: "forecast", label: "13-week forecast" },
+  { key: "coach", label: "Finance coach" },
+  { key: "afford", label: "What you can afford" },
+  { key: "invoices", label: "Invoices & bills" },
+  { key: "settings", label: "Playbook & settings" },
 ] as const;
 
 export default async function FinancePage({ searchParams }: { searchParams: Promise<{ tab?: string; demo?: string }> }) {
@@ -60,7 +60,7 @@ export default async function FinancePage({ searchParams }: { searchParams: Prom
       </h1>
       {demo && (
         <div className="cc-card" style={{ marginBottom: 12, borderColor: "rgba(200,164,100,.6)", background: "rgba(200,164,100,.08)", fontSize: 13 }}>
-          🧪 <b>Demo data.</b> These are sample numbers so you can see the page populated. <Link href={`/finance?tab=${tab}`} style={{ color: "var(--cyan)" }}>Switch to your real numbers</Link>
+          <b>Demo data.</b> These are sample numbers so you can see the page populated. <Link href={`/finance?tab=${tab}`} style={{ color: "var(--cyan)" }}>Switch to your real numbers</Link>
         </div>
       )}
       <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
@@ -103,10 +103,10 @@ export default async function FinancePage({ searchParams }: { searchParams: Prom
           <h3 style={h3}>What your finance coach will do once it has your numbers</h3>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 12 }}>
             {[
-              ["🩺", "Cash health score", "One number for how safe your cash is, and why."],
-              ["🗓️", "Friday savings routine", "Exactly how much to move into HST, tax, equipment, profit and cushion each week."],
-              ["🚨", "Cash injection warning", "If and when you'll need extra cash, how much, and the cheapest way to get it."],
-              ["📞", "Who to call today", "Overdue invoices and bills coming due, in the order to tackle them."],
+              ["", "Cash health score", "One number for how safe your cash is, and why."],
+              ["", "Friday savings routine", "Exactly how much to move into HST, tax, equipment, profit and cushion each week."],
+              ["", "Cash injection warning", "If and when you'll need extra cash, how much, and the cheapest way to get it."],
+              ["", "Who to call today", "Overdue invoices and bills coming due, in the order to tackle them."],
             ].map(([e, t, d], i) => (
               <div key={t} className="cc-in" style={{ "--i": i + 2, background: "var(--panel)", border: "1px solid var(--line2)", borderRadius: 14, padding: 12 } as React.CSSProperties}>
                 <b>
@@ -146,7 +146,7 @@ export default async function FinancePage({ searchParams }: { searchParams: Prom
         </p>
         {nothing ? (
           <div className="cc-card cc-in" style={{ borderColor: "rgba(200,164,100,.6)", background: "rgba(200,164,100,.08)" }}>
-            <b>🧮 Add your yearly revenue first.</b> You have no invoices in the last 12 months and no revenue target. Add invoices, or set a target in <Link href="/finance?tab=settings" style={{ color: "var(--cyan)" }}>Playbook &amp; settings</Link> (also check your gross margin target and profit %), or look at the <Link href="/finance?tab=afford&demo=1" style={{ color: "var(--cyan)" }}>sample numbers</Link>.
+            <b>Add your yearly revenue first.</b> You have no invoices in the last 12 months and no revenue target. Add invoices, or set a target in <Link href="/finance?tab=settings" style={{ color: "var(--cyan)" }}>Playbook &amp; settings</Link> (also check your gross margin target and profit %), or look at the <Link href="/finance?tab=afford&demo=1" style={{ color: "var(--cyan)" }}>sample numbers</Link>.
           </div>
         ) : (
           <>

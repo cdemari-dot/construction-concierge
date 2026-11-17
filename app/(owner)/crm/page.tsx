@@ -22,7 +22,7 @@ export default async function CrmPage() {
     return (
       <div>
         <h1 className="display" style={{ fontSize: 22, marginBottom: 12 }}>CRM</h1>
-        <div className="fa-err">⚠️ Couldn&apos;t load bids: {error.message}. The bids table may not be set up yet.</div>
+        <div className="fa-err">Couldn&apos;t load bids: {error.message}. The bids table may not be set up yet.</div>
       </div>
     );
   }

@@ -49,7 +49,7 @@ export function CoachPanel({ coach }: { coach: CoachResult }) {
             <div className="cc-barx" style={{ width: `${Math.max(2, cushionPct)}%`, height: "100%", background: cushionPct >= 100 ? "var(--lime)" : "var(--cyan)", borderRadius: 8 }} />
           </div>
           <div style={{ fontSize: 12.5, color: "var(--mute)" }}>
-            {coach.cushion.weeksToGoal === 0 ? "Goal reached 🎉" : coach.cushion.weeksToGoal == null ? "Add revenue data to estimate a timeline." : `About ${coach.cushion.weeksToGoal} weeks at your current collections.`}
+            {coach.cushion.weeksToGoal === 0 ? "Goal reached" : coach.cushion.weeksToGoal == null ? "Add revenue data to estimate a timeline." : `About ${coach.cushion.weeksToGoal} weeks at your current collections.`}
           </div>
         </section>
       </div>

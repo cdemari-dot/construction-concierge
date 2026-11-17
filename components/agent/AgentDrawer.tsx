@@ -125,23 +125,24 @@ export function AgentDrawer() {
           height: 56,
           borderRadius: "50%",
           border: 0,
-          background: "conic-gradient(from 0deg, #C8A464, #F3E3BD, #8C6A2E, #E9D3A2, #C8A464)",
-          boxShadow: "0 0 24px rgba(200,164,100,.4)",
+          background: "var(--text)",
+          boxShadow: "0 14px 34px rgba(0,0,0,.28)",
           display: "grid",
           placeItems: "center",
         }}
       >
         <span
           style={{
-            width: 46,
-            height: 46,
+            width: 56,
+            height: 56,
             borderRadius: "50%",
-            background: "var(--panel)",
+            background: "transparent",
             display: "grid",
             placeItems: "center",
-            color: "var(--cyan)",
+            color: "var(--bg)",
             fontWeight: 700,
-            fontSize: 12,
+            fontSize: 14,
+            letterSpacing: ".06em",
           }}
         >
           AI
@@ -167,7 +168,7 @@ export function AgentDrawer() {
             <b className="display">CFO Agent</b>
             <span style={{ flex: 1 }} />
             <button className="cc-btn ghost sm" onClick={toggleVoice} type="button" aria-pressed={voiceOn} title="Speak replies aloud">
-              {voiceOn ? "🔊 Voice on" : "🔇 Voice off"}
+              {voiceOn ? "Voice on" : "Voice off"}
             </button>
             <button
               className="cc-btn ghost sm"
@@ -250,7 +251,7 @@ export function AgentDrawer() {
               aria-label={listening ? "Stop listening" : "Speak your question"}
               style={{ fontSize: 18, borderColor: listening ? "var(--red)" : undefined }}
             >
-              {listening ? "⏹" : "🎙️"}
+              {listening ? "Stop" : "Mic"}
             </button>
             <button className="cc-btn lime" type="submit" disabled={busy}>
               Send

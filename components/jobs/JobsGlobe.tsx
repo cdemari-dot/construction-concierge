@@ -169,7 +169,7 @@ export function JobsGlobe({ jobs: jobsIn }: { jobs: JobCard[] }) {
           <div ref={wrapRef} style={{ width: "100%", height: "100%", display: "grid", placeItems: "center", cursor: "grab" }} />
           {!ready && (
             <div style={{ position: "absolute", inset: 0, display: "grid", placeItems: "center", color: "var(--mute)", fontSize: 13 }}>
-              🌍 Loading globe…
+              Loading globe…
             </div>
           )}
           <div
@@ -195,7 +195,7 @@ export function JobsGlobe({ jobs: jobsIn }: { jobs: JobCard[] }) {
             {selectedJob && (
               <>
                 <b>
-                  📍 {selectedJob.jobNumber} · {selectedJob.name}
+                  {selectedJob.jobNumber} · {selectedJob.name}
                 </b>
                 <div style={{ color: "var(--mute)", fontSize: 11.5 }}>{selectedJob.address ?? "No address"}</div>
                 <button type="button" className="cc-btn ghost sm" style={{ marginTop: 6 }} onClick={() => setSelected(null)}>

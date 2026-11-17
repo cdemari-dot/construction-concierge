@@ -13,7 +13,7 @@ import { DEMO_ASSUMPTIONS, DEMO_BANK, DEMO_BILLS, DEMO_INVOICES } from "@/lib/de
 import { todayToronto } from "@/lib/today";
 import type { Bid, Bill, CashFlowAssumptions, CompanyCashPosition, Invoice, Job, JobFinancialSummary, JobLabourCost } from "@/lib/types/database";
 
-const ICON: Record<GateStatus, string> = { pass: "✅", warn: "⚠️", fail: "⛔" };
+const ICON: Record<GateStatus, string> = { pass: "✓", warn: "!", fail: "✕" };
 const COLOR: Record<GateStatus, string> = { pass: "var(--lime)", warn: "var(--amber)", fail: "var(--red)" };
 
 export default async function ScalePage({ searchParams }: { searchParams: Promise<{ demo?: string }> }) {
@@ -104,18 +104,18 @@ export default async function ScalePage({ searchParams }: { searchParams: Promis
           A conservative plan to scale without running out of cash, built from your own numbers.
         </p>
         <div className="cc-card cc-in" style={{ marginBottom: 16, borderColor: "rgba(200,164,100,.6)", background: "rgba(200,164,100,.08)" }}>
-          <b>🧮 Add your numbers first.</b> Still missing: {missing.join(", ")}. Enter them in <Link href="/finance?tab=settings" style={{ color: "var(--cyan)" }}>Playbook &amp; settings</Link> and this page will show how much you can safely grow, the largest job you can float, and whether you&apos;re ready.
+          <b>Add your numbers first.</b> Still missing: {missing.join(", ")}. Enter them in <Link href="/finance?tab=settings" style={{ color: "var(--cyan)" }}>Playbook &amp; settings</Link> and this page will show how much you can safely grow, the largest job you can float, and whether you&apos;re ready.
         </div>
         <section className="cc-card cc-in" style={{ "--i": 1 } as React.CSSProperties}>
           <h3 style={{ fontSize: 11.5, letterSpacing: 1.6, textTransform: "uppercase", color: "var(--mute)", marginBottom: 12 }}>The conservative growth ladder</h3>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))", gap: 12 }}>
             {[
-              ["1️⃣", "Fix cash first", "Keep the 13-week forecast above your safety cushion. Never grow into a cash gap."],
-              ["2️⃣", "Grow in small steps", "10–15% more revenue per quarter, and only after every readiness check has been green for two months."],
-              ["3️⃣", "Hire one crew at a time", "Add a crew when current crews are over 85% booked for six weeks, with 8 weeks of that crew's payroll in cash."],
-              ["4️⃣", "Cap job size", "Don't take one job so big that a single bad month could sink you."],
-              ["5️⃣", "Fund growth before you need it", "Open a credit line while your numbers look strong, and use it as a bridge, not a crutch."],
-              ["6️⃣", "Protect margin and terms", "Price for your target margin and ask for deposits or progress billing."],
+              ["1", "Fix cash first", "Keep the 13-week forecast above your safety cushion. Never grow into a cash gap."],
+              ["2", "Grow in small steps", "10–15% more revenue per quarter, and only after every readiness check has been green for two months."],
+              ["3", "Hire one crew at a time", "Add a crew when current crews are over 85% booked for six weeks, with 8 weeks of that crew's payroll in cash."],
+              ["4", "Cap job size", "Don't take one job so big that a single bad month could sink you."],
+              ["5", "Fund growth before you need it", "Open a credit line while your numbers look strong, and use it as a bridge, not a crutch."],
+              ["6", "Protect margin and terms", "Price for your target margin and ask for deposits or progress billing."],
             ].map(([e, t, d], i) => (
               <div key={t} className="cc-in" style={{ "--i": i + 2, background: "var(--panel)", border: "1px solid var(--line2)", borderRadius: 14, padding: 12 } as React.CSSProperties}>
                 <b style={{ fontSize: 14 }}>
@@ -131,12 +131,12 @@ export default async function ScalePage({ searchParams }: { searchParams: Promis
   }
 
   const steps = [
-    { e: "1️⃣", t: "Fix cash first", d: `Get the 13-week forecast above your ${fmt(inj.buffer)} cushion and keep it there. Never grow into a cash gap.` },
-    { e: "2️⃣", t: "Grow in small steps", d: `Add at most 10–15% revenue per quarter (about ${fmt(plan.annualRun * 0.125)} a year at today's pace). Only step up after every check below has stayed green for two months.` },
-    { e: "3️⃣", t: "Hire one crew at a time", d: `Add a crew only after your current crews are over 85% booked for six weeks. Keep ${fmt(plan.crewCushion)} in cash to carry a crew of four for 8 weeks before their work pays.` },
-    { e: "4️⃣", t: "Cap job size", d: `Don't take a single job bigger than about ${fmt(plan.maxJob)} on your own cash. Big jobs need money up front, and one bad one can sink you.` },
-    { e: "5️⃣", t: "Fund growth before you need it", d: "Open a credit line while your numbers look strong. Use it as a bridge for timing, never to cover losses." },
-    { e: "6️⃣", t: "Protect margin and cash terms", d: "Price for your target margin, ask for deposits or progress billing, and don't trade payment terms for volume." },
+    { e: "1", t: "Fix cash first", d: `Get the 13-week forecast above your ${fmt(inj.buffer)} cushion and keep it there. Never grow into a cash gap.` },
+    { e: "2", t: "Grow in small steps", d: `Add at most 10–15% revenue per quarter (about ${fmt(plan.annualRun * 0.125)} a year at today's pace). Only step up after every check below has stayed green for two months.` },
+    { e: "3", t: "Hire one crew at a time", d: `Add a crew only after your current crews are over 85% booked for six weeks. Keep ${fmt(plan.crewCushion)} in cash to carry a crew of four for 8 weeks before their work pays.` },
+    { e: "4", t: "Cap job size", d: `Don't take a single job bigger than about ${fmt(plan.maxJob)} on your own cash. Big jobs need money up front, and one bad one can sink you.` },
+    { e: "5", t: "Fund growth before you need it", d: "Open a credit line while your numbers look strong. Use it as a bridge for timing, never to cover losses." },
+    { e: "6", t: "Protect margin and cash terms", d: "Price for your target margin, ask for deposits or progress billing, and don't trade payment terms for volume." },
   ];
 
   return (
@@ -144,7 +144,7 @@ export default async function ScalePage({ searchParams }: { searchParams: Promis
       <h1 className="display" style={{ fontSize: 22, marginBottom: 4 }}>Grow Safely</h1>
       {demo && (
         <div className="cc-card" style={{ marginBottom: 12, borderColor: "rgba(200,164,100,.6)", background: "rgba(200,164,100,.08)", fontSize: 13 }}>
-          🧪 <b>Demo data.</b> Sample numbers so you can see the page populated. <Link href="/scale" style={{ color: "var(--cyan)" }}>Switch to your real numbers</Link>
+          <b>Demo data.</b> Sample numbers so you can see the page populated. <Link href="/scale" style={{ color: "var(--cyan)" }}>Switch to your real numbers</Link>
         </div>
       )}
       <p style={{ color: "var(--mute)", fontSize: 13, marginBottom: 16, maxWidth: 720, lineHeight: 1.6 }}>

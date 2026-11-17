@@ -78,14 +78,13 @@ export function Dial({ value, max, label, hint, color = "cyan", suffix = "" }: D
         <circle className="cc-spin rev" cx="60" cy="60" r="40" fill="none" stroke={stroke} strokeOpacity=".12" strokeDasharray="14 6" />
         {ticks}
         <circle cx="60" cy="60" r={R} fill="none" style={{ stroke: "var(--line)" }} strokeWidth="7" strokeDasharray={`${ARC} ${C}`} transform="rotate(135 60 60)" strokeLinecap="round" />
-        <circle cx="60" cy="60" r={R} fill="none" stroke={stroke} strokeWidth="7" strokeDasharray={dash} transform="rotate(135 60 60)" strokeLinecap="round" filter={`url(#${id}f)`} opacity=".7" style={{ transition: `stroke-dasharray ${easing}` }} />
         <circle cx="60" cy="60" r={R} fill="none" stroke={stroke} strokeWidth="5" strokeDasharray={dash} transform="rotate(135 60 60)" strokeLinecap="round" style={{ transition: `stroke-dasharray ${easing}` }} />
         <g style={{ transformOrigin: "60px 60px", transform: `rotate(${135 + 270 * pct * k}deg)`, transition: `transform ${easing}` }}>
           <circle cx={60 + R} cy="60" r="6.5" fill={stroke} opacity=".25" />
-          <circle cx={60 + R} cy="60" r="3.4" fill={stroke} filter={`url(#${id}f)`} />
+          <circle cx={60 + R} cy="60" r="3.4" fill={stroke} />
           <circle cx={60 + R} cy="60" r="2.2" fill="#fff" />
         </g>
-        <text x="60" y="66" textAnchor="middle" style={{ fill: "var(--text)", fontFamily: "var(--font-bodoni), Didot, serif" }} fontSize="19" fontWeight="500">
+        <text x="60" y="66" textAnchor="middle" style={{ fill: "var(--text)", fontFamily: "var(--font-inter), system-ui, sans-serif", letterSpacing: "-0.04em" }} fontSize="20" fontWeight="700">
           {Math.round(shown)}{suffix}
         </text>
       </svg>

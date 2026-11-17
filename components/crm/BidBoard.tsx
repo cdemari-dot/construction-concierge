@@ -9,11 +9,11 @@ import { todayToronto } from "@/lib/today";
 import type { Bid, BidStage } from "@/lib/types/database";
 
 const COLUMNS: { stage: BidStage; label: string; emoji: string }[] = [
-  { stage: "lead", label: "Lead", emoji: "🎯" },
-  { stage: "estimating", label: "Estimating", emoji: "🧮" },
-  { stage: "submitted", label: "Bid sent", emoji: "📤" },
-  { stage: "won", label: "Won", emoji: "🏆" },
-  { stage: "lost", label: "Lost", emoji: "🥀" },
+  { stage: "lead", label: "Lead", emoji: "" },
+  { stage: "estimating", label: "Estimating", emoji: "" },
+  { stage: "submitted", label: "Bid sent", emoji: "" },
+  { stage: "won", label: "Won", emoji: "" },
+  { stage: "lost", label: "Lost", emoji: "" },
 ];
 
 export function BidBoard({ bids, clientNames }: { bids: Bid[]; clientNames: Record<string, string> }) {
@@ -46,7 +46,7 @@ export function BidBoard({ bids, clientNames }: { bids: Bid[]; clientNames: Reco
 
   return (
     <div>
-      {error && <div className="fa-err" style={{ marginBottom: 12 }}>⚠️ {error}</div>}
+      {error && <div className="fa-err" style={{ marginBottom: 12 }}>{error}</div>}
       <div style={{ display: "grid", gridAutoFlow: "column", gridAutoColumns: "minmax(250px, 1fr)", gap: 12, overflowX: "auto", paddingBottom: 8, opacity: pending ? 0.75 : 1 }}>
         {COLUMNS.map((col) => {
           const items = bids.filter((b) => b.stage === col.stage);
@@ -141,7 +141,7 @@ function BidCardView({
       {(client || bid.contact) && (
         <div style={{ color: "var(--mute)", fontSize: 12 }}>{[client, bid.contact].filter(Boolean).join(" · ")}</div>
       )}
-      {bid.address && <div style={{ color: "var(--mute)", fontSize: 11.5 }}>📍 {bid.address}</div>}
+      {bid.address && <div style={{ color: "var(--mute)", fontSize: 11.5 }}>{bid.address}</div>}
 
       <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
         <span style={{ fontSize: 12, color: "var(--mute)" }}>$</span>
@@ -162,10 +162,10 @@ function BidCardView({
       {open && (
         <div style={{ display: "grid", gap: 4, fontSize: 11.5 }}>
           {bid.bid_due && (
-            <div style={{ color: dueSoon ? "var(--amber)" : "var(--mute)" }}>📅 Bid due {bid.bid_due}{dueSoon ? " (soon)" : ""}</div>
+            <div style={{ color: dueSoon ? "var(--amber)" : "var(--mute)" }}>Bid due {bid.bid_due}{dueSoon ? " (soon)" : ""}</div>
           )}
           <label style={{ display: "flex", alignItems: "center", gap: 6, color: overdue ? "var(--amber)" : "var(--mute)" }}>
-            ⏰ Follow up
+            Follow up
             <input
               type="date"
               defaultValue={bid.follow_up_on ?? ""}
@@ -190,7 +190,7 @@ function BidCardView({
           />
           {bid.stage === "submitted" && (
             <div style={{ color: "var(--mute)" }}>
-              🤖 Auto follow-ups {bid.auto_follow_up ? "on" : "off"} · {bid.follow_up_count} of {FOLLOW_UP_DAYS.length} sent
+              Auto follow-ups {bid.auto_follow_up ? "on" : "off"} · {bid.follow_up_count} of {FOLLOW_UP_DAYS.length} sent
               {bid.auto_follow_up && bid.contact_email && nextFollowUpInDays(bid) != null && (
                 <> · {nextFollowUpInDays(bid) === 0 ? "due at the next daily run" : `next in ${nextFollowUpInDays(bid)} day${nextFollowUpInDays(bid) === 1 ? "" : "s"}`}</>
               )}
@@ -211,7 +211,7 @@ function BidCardView({
                   if (window.confirm(`Send a follow-up email to ${bid.contact_email} now?`)) run(() => sendFollowUpNow(bid.id));
                 }}
               >
-                ✉️ Send now
+                Send now
               </button>
             </div>
           )}
@@ -224,7 +224,7 @@ function BidCardView({
       {bid.stage === "won" &&
         (bid.job_id ? (
           <Link href={`/jobs/${bid.job_id}`} className="cc-btn lime sm" style={{ justifySelf: "start" }}>
-            ✅ Open job
+            Open job
           </Link>
         ) : (
           <div style={{ display: "flex", gap: 6 }}>

@@ -56,7 +56,7 @@ export function coachFinance(input: {
 
   // 1. no balance on file
   if (bank == null) {
-    items.push({ id: "snapshot", tone: "amber", emoji: "🏦", title: "Add your bank balance", detail: "Everything here is only as good as your last bank number. Enter this week's balance in Settings. It takes 30 seconds and the forecast, injection and coach all update." });
+    items.push({ id: "snapshot", tone: "amber", emoji: "", title: "Add your bank balance", detail: "Everything here is only as good as your last bank number. Enter this week's balance in Settings. It takes 30 seconds and the forecast, injection and coach all update." });
   }
 
   // 2. cash injection
@@ -64,12 +64,12 @@ export function coachFinance(input: {
     items.push({
       id: "injection",
       tone: inj.level === "urgent" ? "red" : "amber",
-      emoji: "🚨",
+      emoji: "",
       title: inj.level === "urgent" ? `Line up about ${fmt(inj.needed)} of cash now` : `Plan for about ${fmt(inj.needed)} of extra cash`,
       detail: `Your lowest projected balance is ${fmt(inj.minBalance)} in week ${inj.minWeek + 1}, below your safety cushion of ${fmt(inj.buffer)} (one payroll plus one month of overhead). Have funds in place by ${inj.neededBy}. The cheapest fixes, in order: collect faster, stretch bills, then a credit line of about ${fmt(inj.suggestedLine)} set up before you need it.`,
     });
   } else {
-    items.push({ id: "runway", tone: "lime", emoji: "✅", title: "Cash stays above your cushion for 13 weeks", detail: `Your lowest projected balance is ${fmt(inj.minBalance)} (week ${inj.minWeek + 1}), above the ${fmt(inj.buffer)} cushion. Keep it that way: don't pull profit early.` });
+    items.push({ id: "runway", tone: "lime", emoji: "", title: "Cash stays above your cushion for 13 weeks", detail: `Your lowest projected balance is ${fmt(inj.minBalance)} (week ${inj.minWeek + 1}), above the ${fmt(inj.buffer)} cushion. Keep it that way: don't pull profit early.` });
   }
 
   // 3. overdue receivables
@@ -82,7 +82,7 @@ export function coachFinance(input: {
     items.push({
       id: "overdue",
       tone: openAR > 0 && overdueSum / openAR > 0.2 ? "red" : "amber",
-      emoji: "📞",
+      emoji: "",
       title: `${fmt(overdueSum)} is overdue (${overdue.length} invoice${overdue.length === 1 ? "" : "s"})`,
       detail: `Oldest is ${oldestDays} day${oldestDays === 1 ? "" : "s"} late. Call these first today: ${top.map((i) => `${i.invoice_number} (${fmt(i.total_amount)})`).join(", ")}. Money owed to you is the cheapest cash you'll ever find. Ask for a payment date, not "soon".`,
     });
@@ -95,7 +95,7 @@ export function coachFinance(input: {
     items.push({
       id: "bills14",
       tone: due14 > bal ? "amber" : "cyan",
-      emoji: "🧾",
+      emoji: "",
       title: `${fmt(due14)} of bills fall due in the next 14 days`,
       detail: due14 > bal ? `That's more than the ${fmt(bal)} in the bank. Pay payroll and CRA remittances first, then suppliers who can hurt you (materials, equipment), and ask the rest for a short extension before the due date, not after.` : `You can cover it from the bank today (${fmt(bal)}). Pay on the due date, not early, so the cash works for you longer.`,
     });
@@ -108,19 +108,19 @@ export function coachFinance(input: {
     const [topId, topAmt] = [...by.entries()].sort((x, y) => y[1] - x[1])[0];
     const share = topAmt / openAR;
     if (share > 0.5 && invoices.length > 1) {
-      items.push({ id: "concentration", tone: "amber", emoji: "🎯", title: `${Math.round(share * 100)}% of what you're owed is one client`, detail: `${clientNames[topId] ?? "One client"} owes ${fmt(topAmt)}. If they pay late your whole month slides. Keep the relationship, but spread future work across more GCs and get progress billing in writing.` });
+      items.push({ id: "concentration", tone: "amber", emoji: "", title: `${Math.round(share * 100)}% of what you're owed is one client`, detail: `${clientNames[topId] ?? "One client"} owes ${fmt(topAmt)}. If they pay late your whole month slides. Keep the relationship, but spread future work across more GCs and get progress billing in writing.` });
     }
   }
 
   // 6. holdback tied up
   const holdback = invoices.reduce((s, i) => s + (i.holdback_amount ?? 0), 0);
   if (holdback > 0) {
-    items.push({ id: "holdback", tone: "cyan", emoji: "🔒", title: `${fmt(holdback)} is tied up in holdback`, detail: "Put a calendar reminder to request each holdback release the day the lien period ends. Unclaimed holdback is free cash sitting with your client." });
+    items.push({ id: "holdback", tone: "cyan", emoji: "", title: `${fmt(holdback)} is tied up in holdback`, detail: "Put a calendar reminder to request each holdback release the day the lien period ends. Unclaimed holdback is free cash sitting with your client." });
   }
 
   // 7. payroll coverage
   if (a.payroll_per_period > 0 && bal < a.payroll_per_period * 2) {
-    items.push({ id: "payroll", tone: "amber", emoji: "👷", title: "Less than two payrolls in the bank", detail: `Payroll is ${fmt(a.payroll_per_period)} per run and you have ${fmt(bal)}. Your crew is your biggest promise. Build to at least two runs (${fmt(a.payroll_per_period * 2)}) before anything else.` });
+    items.push({ id: "payroll", tone: "amber", emoji: "", title: "Less than two payrolls in the bank", detail: `Payroll is ${fmt(a.payroll_per_period)} per run and you have ${fmt(bal)}. Your crew is your biggest promise. Build to at least two runs (${fmt(a.payroll_per_period * 2)}) before anything else.` });
   }
 
   // 8. the weekly savings routine
@@ -128,7 +128,7 @@ export function coachFinance(input: {
     items.push({
       id: "routine",
       tone: "cyan",
-      emoji: "🗓️",
+      emoji: "",
       title: `Every Friday, move ${fmt(w.total)} into separate accounts`,
       detail: `On an average week of ${fmt(w.avgCollected)} collected: HST ${fmt(w.hst)}, income tax ${fmt(w.tax)}, equipment ${fmt(w.equipment)}, profit ${fmt(w.profit)}, cushion ${fmt(w.cushion)}. Move it the same day the money lands, so it never looks like spendable cash.`,
     });
@@ -138,7 +138,7 @@ export function coachFinance(input: {
   items.push({
     id: "cushion",
     tone: gap === 0 ? "lime" : "cyan",
-    emoji: "🛟",
+    emoji: "",
     title: gap === 0 ? "You've hit your 3-month cushion" : `Build a 3-month cushion: ${fmt(goal)}`,
     detail: gap === 0 ? "Three months of overhead and payroll in the bank. That's what lets you say no to a bad job." : `You're at ${fmt(bal)}, ${fmt(gap)} short. Saving ${CUSHION_PCT}% of every collected dollar gets you there in about ${weeksToGoal ?? "?"} weeks.`,
   });
