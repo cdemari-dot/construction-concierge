@@ -125,9 +125,6 @@ export default async function TmSheetPage({ params }: { params: Promise<{ ticket
             ) : (
               <div className="tm-wordmark">{co?.name ?? "Contractor"}</div>
             )}
-            <span className="tm-x" aria-hidden>
-              ×
-            </span>
             <span className="tm-cc-text">Construction Concierge</span>
           </div>
           <div className="tm-ref">
