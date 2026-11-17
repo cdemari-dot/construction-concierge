@@ -7,6 +7,8 @@ import { StatCard } from "@/components/ui/StatCard";
 import { CashFlowChart } from "@/components/charts/CashFlowChart";
 import { InjectionCard } from "@/components/finance/InjectionCard";
 import { CoachPanel } from "@/components/finance/CoachPanel";
+import { AffordPanel } from "@/components/finance/AffordPanel";
+import { revenueBasis } from "@/lib/afford/plan";
 import { AddBillForm, AddInvoiceForm, MarkBillPaidButton, MarkInvoicePaidButton } from "@/components/dashboard/FinanceForms";
 import { analyseInjection } from "@/lib/cashflow/injection";
 import { coachFinance } from "@/lib/coach/finance";
@@ -19,6 +21,7 @@ import type { Bill, CashFlowAssumptions, Client, CompanyCashPosition, Invoice, J
 const TABS = [
   { key: "forecast", label: "📈 13-week forecast" },
   { key: "coach", label: "🧠 Finance coach" },
+  { key: "afford", label: "🏢 What you can afford" },
   { key: "invoices", label: "🧾 Invoices & bills" },
   { key: "settings", label: "⚙️ Playbook & settings" },
 ] as const;
@@ -122,6 +125,25 @@ export default async function FinancePage({ searchParams }: { searchParams: Prom
         {header}
         <InjectionCard inj={inj} missing={missing} />
         <CoachPanel coach={coach} />
+      </div>
+    );
+  }
+
+  if (tab === "afford") {
+    const basis = revenueBasis(demo ? [] : invoiceList, a, todayToronto());
+    return (
+      <div>
+        {header}
+        <p style={{ color: "var(--mute)", fontSize: 13, marginBottom: 16, maxWidth: 760, lineHeight: 1.6 }}>
+          How much you can spend on rent, vehicles, insurance and staff and still keep the profit you are aiming for. Move the sliders to test a bigger or smaller year.
+        </p>
+        {basis.source === "none" ? (
+          <div className="cc-card cc-in" style={{ borderColor: "rgba(200,164,100,.6)", background: "rgba(200,164,100,.08)" }}>
+            <b>🧮 Add your yearly revenue first.</b> {basis.note} Set it in <Link href="/finance?tab=settings" style={{ color: "var(--cyan)" }}>Playbook &amp; settings</Link> (also check your gross margin target and profit %), or look at the <Link href="/finance?tab=afford&demo=1" style={{ color: "var(--cyan)" }}>sample numbers</Link>.
+          </div>
+        ) : (
+          <AffordPanel a={a} basis={basis} demo={demo} />
+        )}
       </div>
     );
   }

@@ -238,6 +238,11 @@ export interface CashFlowAssumptions {
   profit_allocation_pct: number;
   revenue_target_annual: number;
   gross_margin_target: number;
+  rent_monthly: number;
+  vehicles_monthly: number;
+  insurance_monthly: number;
+  office_staff_monthly: number;
+  other_monthly: number;
   updated_by: string | null;
   updated_at: string;
 }

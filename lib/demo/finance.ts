@@ -18,6 +18,11 @@ export const DEMO_ASSUMPTIONS = {
   profit_allocation_pct: 8,
   revenue_target_annual: 3000000,
   gross_margin_target: 25,
+  rent_monthly: 5200,
+  vehicles_monthly: 9800,
+  insurance_monthly: 3100,
+  office_staff_monthly: 7000,
+  other_monthly: 1400,
   updated_by: null,
   updated_at: new Date().toISOString(),
 } as CashFlowAssumptions;
