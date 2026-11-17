@@ -167,6 +167,12 @@ export interface ChangeOrder {
   created_at: string;
 }
 
+export interface TmLine {
+  item: string;
+  qty: number;
+  unit: string;
+}
+
 export interface TmTicket {
   id: string;
   company_id: string;
@@ -180,6 +186,10 @@ export interface TmTicket {
   equipment_cost: number;
   materials_cost: number;
   photo_paths: string[];
+  work_description?: string | null;
+  work_area?: string | null;
+  equipment?: TmLine[];
+  materials?: TmLine[];
   gps_lat: number | null;
   gps_lon: number | null;
   status: TmTicketStatus;

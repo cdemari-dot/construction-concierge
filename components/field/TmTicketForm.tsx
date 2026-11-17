@@ -7,11 +7,44 @@ import { todayToronto } from "@/lib/today";
 import { SignaturePad } from "./SignaturePad";
 import { Icon } from "./Icon";
 import { Label, Notice, Stepper, Title } from "./ui";
+import type { TmLine } from "@/lib/types/database";
+
+const UNITS = ["ea", "hrs", "days", "m", "m²", "m³", "kg", "L", "bags", "bins", "sheets"];
+
+// Add / edit / remove rows of "item, quantity, unit". Quantities only, no prices.
+function Lines({ rows, onChange, placeholder, addLabel }: { rows: TmLine[]; onChange: (r: TmLine[]) => void; placeholder: string; addLabel: string }) {
+  const set = (i: number, patch: Partial<TmLine>) => onChange(rows.map((r, k) => (k === i ? { ...r, ...patch } : r)));
+  return (
+    <div style={{ display: "grid", gap: 8 }}>
+      {rows.map((r, i) => (
+        <div key={i} style={{ display: "grid", gridTemplateColumns: "1fr 64px 74px 36px", gap: 6, alignItems: "center" }}>
+          <input className="fa-input" style={{ margin: 0 }} placeholder={placeholder} value={r.item} onChange={(e) => set(i, { item: e.target.value })} />
+          <input className="fa-input" style={{ margin: 0 }} type="number" inputMode="decimal" min={0} placeholder="Qty" value={r.qty || ""} onChange={(e) => set(i, { qty: Number(e.target.value) })} />
+          <select className="fa-input" style={{ margin: 0, padding: "0 6px" }} value={r.unit} onChange={(e) => set(i, { unit: e.target.value })}>
+            {UNITS.map((u) => (
+              <option key={u}>{u}</option>
+            ))}
+          </select>
+          <button type="button" className="fa-btn quiet" style={{ margin: 0, padding: 0, height: 40 }} aria-label="Remove row" onClick={() => onChange(rows.filter((_, k) => k !== i))}>
+            ×
+          </button>
+        </div>
+      ))}
+      <button type="button" className="fa-btn quiet" style={{ margin: 0 }} onClick={() => onChange([...rows, { item: "", qty: 0, unit: "ea" }])}>
+        + {addLabel}
+      </button>
+    </div>
+  );
+}
 
 export function TmTicketForm({ companyId, jobId, createdBy }: { companyId: string; jobId: string; createdBy: string }) {
   const [superName, setSuperName] = useState("");
   const [superEmail, setSuperEmail] = useState("");
   const [hours, setHours] = useState(0);
+  const [workDescription, setWorkDescription] = useState("");
+  const [workArea, setWorkArea] = useState("");
+  const [equipment, setEquipment] = useState<TmLine[]>([]);
+  const [materials, setMaterials] = useState<TmLine[]>([]);
   const [photos, setPhotos] = useState<{ file: File; url: string }[]>([]);
   const fileRef = useRef<HTMLInputElement>(null);
   const [signature, setSignature] = useState<Blob | null>(null);
@@ -72,6 +105,10 @@ export function TmTicketForm({ companyId, jobId, createdBy }: { companyId: strin
       super_name: superName,
       super_email: superEmail || null,
       hours,
+      work_description: workDescription.trim() || null,
+      work_area: workArea.trim() || null,
+      equipment: equipment.filter((r) => r.item.trim() && r.qty > 0),
+      materials: materials.filter((r) => r.item.trim() && r.qty > 0),
       photo_paths: photoPaths,
       status: signaturePath ? "signed" : "draft",
       super_signature_path: signaturePath,
@@ -86,6 +123,10 @@ export function TmTicketForm({ companyId, jobId, createdBy }: { companyId: strin
     setSuperName("");
     setSuperEmail("");
     setHours(0);
+    setWorkDescription("");
+    setWorkArea("");
+    setEquipment([]);
+    setMaterials([]);
     photos.forEach((p) => URL.revokeObjectURL(p.url));
     setPhotos([]);
     setSignature(null);
@@ -105,8 +146,20 @@ export function TmTicketForm({ companyId, jobId, createdBy }: { companyId: strin
       <Label>Super&apos;s email (so we can send a copy)</Label>
       <input className="fa-input" type="email" inputMode="email" placeholder="name@company.com" value={superEmail} onChange={(e) => setSuperEmail(e.target.value)} />
 
+      <Label>Area / floor / location on site</Label>
+      <input className="fa-input" placeholder="e.g. Level 12, east corridor" value={workArea} onChange={(e) => setWorkArea(e.target.value)} />
+
+      <Label>Work performed</Label>
+      <textarea className="fa-input" rows={4} placeholder="What was done today, and why it is extra work" value={workDescription} onChange={(e) => setWorkDescription(e.target.value)} />
+
       <Label>Hours worked (filled from today&apos;s clock-ins, change if needed)</Label>
       <Stepper value={hours} onChange={setHours} step={0.5} max={999} unit="h" />
+
+      <Label>Equipment used (quantities only)</Label>
+      <Lines rows={equipment} onChange={setEquipment} placeholder="e.g. Scissor lift" addLabel="Add equipment" />
+
+      <Label>Materials used (quantities only)</Label>
+      <Lines rows={materials} onChange={setMaterials} placeholder="e.g. 6 mil poly" addLabel="Add material" />
 
       <Label>Photos of the work ({photos.length}/8)</Label>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 8, marginBottom: 6 }}>
