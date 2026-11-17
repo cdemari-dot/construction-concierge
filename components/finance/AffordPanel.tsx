@@ -25,14 +25,19 @@ export function AffordPanel({ a, revenue, margin, demo }: { a: CashFlowAssumptio
   // Start from, and reset to, the real numbers. A target is used only where there is no actual yet.
   const actualRev = revenue.annual != null ? Math.round(revenue.annual / 1000) * 1000 : null;
   const actualMar = margin.pct != null ? Math.round(margin.pct * 10) / 10 : null;
-  const startRev = actualRev ?? targetRev ?? 0;
-  const startMar = actualMar ?? targetMar ?? 25;
+  // Use the actual when it can be trusted. While it is still an early estimate, never start higher
+  // than the target: the safer (lower) of the two, so the page cannot overstate what you can afford.
+  const pick = (actual: number | null, target: number | null, reliable: boolean, fallback: number) =>
+    actual != null && (reliable || target == null) ? actual : actual != null && target != null ? Math.min(actual, target) : (target ?? fallback);
+  const startRev = pick(actualRev, targetRev, revenue.reliable, 0);
+  const startMar = pick(actualMar, targetMar, margin.reliable, 25);
 
   const [revenueV, setRevenue] = useState(startRev);
   const [marginV, setMargin] = useState(startMar);
   const [profit, setProfit] = useState(baseProfit);
 
   const r = planAfford({ revenue: revenueV, marginPct: marginV, profitPct: profit, overheadMonthly: a.overhead_monthly, a });
+  const earlyActuals = (actualRev != null && !revenue.reliable) || (actualMar != null && !margin.reliable);
   const changed = revenueV !== startRev || marginV !== startMar || profit !== baseProfit;
   const levelTone = r.level === "healthy" ? "var(--lime)" : r.level === "tight" ? "var(--amber)" : "var(--red)";
   const levelText = r.level === "healthy" ? "Healthy" : r.level === "tight" ? "Tight" : "Over budget";
@@ -79,6 +84,11 @@ export function AffordPanel({ a, revenue, margin, demo }: { a: CashFlowAssumptio
           <Slider label="Gross margin" value={`${marginV}%`} min={0} max={70} step={0.5} v={marginV} on={setMargin} />
           <Slider label="Profit you keep" value={`${profit}%`} min={0} max={25} step={1} v={profit} on={setProfit} />
         </div>
+        {earlyActuals && (
+          <div style={{ fontSize: 12, color: "var(--amber)", marginTop: 10, lineHeight: 1.55 }}>
+            Your actual numbers are still early, so the page starts from the lower of your actual and your target to avoid overstating what you can afford. It switches to your actual numbers by itself once you have 3 months of billing, 3 billed jobs and labour costs set up.
+          </div>
+        )}
         {changed && (
           <button
             type="button"
@@ -90,7 +100,7 @@ export function AffordPanel({ a, revenue, margin, demo }: { a: CashFlowAssumptio
               setProfit(baseProfit);
             }}
           >
-            Reset to my actual numbers
+            {earlyActuals ? "Reset to the safe starting numbers" : "Reset to my actual numbers"}
           </button>
         )}
       </section>
