@@ -81,7 +81,9 @@ export function InviteTeamForm() {
           const email = String(formData.get("email"));
           try {
             await inviteTeamMember(formData);
-            setNotice(`Invited. Tell them to sign up at /accept-invite using ${email} — that links them to this company automatically.`);
+            setNotice(formData.get("role") === "kiosk"
+              ? `Invited. On the iPad open /accept-invite?kiosk=1 and enter ${email}. A 6-digit login code is made for it.`
+              : `Invited. Tell them to sign up at /accept-invite using ${email} — that links them to this company automatically.`);
             (document.getElementById("invite-form") as HTMLFormElement)?.reset();
           } catch (e) {
             setError(e instanceof Error ? e.message : "Failed to invite");
