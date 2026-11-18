@@ -11,9 +11,12 @@ import { PhotoStep } from "./PhotoStep";
 import { PpeStep } from "./PpeStep";
 import { ToolboxTalkStep } from "./ToolboxTalkStep";
 import { ForemanBoard } from "./ForemanBoard";
+import { TmTicketForm } from "@/components/field/TmTicketForm";
+import { DailyLogForm } from "@/components/field/DailyLogForm";
+import { IncidentForm } from "@/components/field/IncidentForm";
 import { InjuryFormStep, InjuryQuestionStep, ReportStep } from "./ClockOutSteps";
 
-type Step = "pin" | "menu" | "board" | "photo" | "ppe" | "ppe-missing" | "toolbox" | "done-in" | "injury-q" | "injury-form" | "report" | "done-out" | "error";
+type Step = "pin" | "menu" | "board" | "tm" | "log" | "incident" | "photo" | "ppe" | "ppe-missing" | "toolbox" | "done-in" | "injury-q" | "injury-form" | "report" | "done-out" | "error";
 
 interface KioskJob {
   id: string;
@@ -62,8 +65,8 @@ export function KioskApp({ job, toolboxTalk }: { job: KioskJob; toolboxTalk: Kio
 
   // Foreman screens close themselves after a minute so the next person starts at the PIN pad.
   useEffect(() => {
-    if (step !== "menu" && step !== "board") return;
-    const t = setTimeout(() => resetAll(), 60000);
+    if (step !== "menu" && step !== "board" && step !== "tm" && step !== "log" && step !== "incident") return;
+    const t = setTimeout(() => resetAll(), step === "menu" || step === "board" ? 60000 : 600000);
     return () => clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [step]);
@@ -306,9 +309,29 @@ export function KioskApp({ job, toolboxTalk }: { job: KioskJob; toolboxTalk: Kio
           <button className="cc-btn" type="button" style={{ height: 64, fontSize: 19 }} onClick={() => setStep("board")}>
             Site board: who&apos;s on site
           </button>
+          <button className="cc-btn" type="button" style={{ height: 64, fontSize: 19 }} onClick={() => setStep("tm")}>
+            Write a T&amp;M ticket
+          </button>
+          <button className="cc-btn" type="button" style={{ height: 64, fontSize: 19 }} onClick={() => setStep("log")}>
+            Daily log
+          </button>
+          <button className="cc-btn" type="button" style={{ height: 64, fontSize: 19 }} onClick={() => setStep("incident")}>
+            Incident report
+          </button>
           <button className="cc-btn ghost" type="button" style={{ height: 52 }} onClick={resetAll}>
             Done
           </button>
+        </div>
+      )}
+
+      {(step === "tm" || step === "log" || step === "incident") && worker && (
+        <div style={{ textAlign: "left" }}>
+          <button className="cc-btn ghost sm" type="button" onClick={() => setStep("menu")} style={{ marginBottom: 12 }}>
+            ← Back to menu
+          </button>
+          {step === "tm" && <TmTicketForm companyId={job.company_id} jobId={job.id} createdBy={worker.id} />}
+          {step === "log" && <DailyLogForm companyId={job.company_id} jobId={job.id} foremanId={worker.id} lat={job.geofence_lat} lon={job.geofence_lon} />}
+          {step === "incident" && <IncidentForm companyId={job.company_id} jobId={job.id} workerId={worker.id} />}
         </div>
       )}
 
