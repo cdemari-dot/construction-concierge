@@ -58,12 +58,11 @@ export function JobsMap({ jobs: jobsIn }: { jobs: JobCard[] }) {
     if (!wrap) return;
     let disposed = false;
     let ro: ResizeObserver | null = null;
-    const onTheme = () => {
-      if (tileRef.current) return; // the same tiles serve both themes; dark is a CSS filter
+    // The same OpenStreetMap tiles serve both themes (dark mode is a CSS filter), so the layer is added once.
+    const addTiles = () => {
       const L = libRef.current;
       const map = mapRef.current;
-      if (!L || !map) return;
-      tileRef.current?.remove();
+      if (!L || !map || tileRef.current) return;
       tileRef.current = L.tileLayer(TILE_URL, { maxZoom: 19, attribution: "© OpenStreetMap contributors" }).addTo(map);
     };
     (async () => {
@@ -74,16 +73,14 @@ export function JobsMap({ jobs: jobsIn }: { jobs: JobCard[] }) {
       L.control.zoom({ position: "bottomright" }).addTo(map);
       mapRef.current = map;
       layerRef.current = L.layerGroup().addTo(map);
-      onTheme();
+      addTiles();
       ro = new ResizeObserver(() => map.invalidateSize());
       ro.observe(wrap);
-      window.addEventListener("cc-theme", onTheme);
       setReady(true);
     })();
     return () => {
       disposed = true;
       ro?.disconnect();
-      window.removeEventListener("cc-theme", onTheme);
       mapRef.current?.remove();
       mapRef.current = null;
       layerRef.current = null;

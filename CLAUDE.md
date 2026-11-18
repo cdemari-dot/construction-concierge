@@ -8,7 +8,7 @@ contractors (≤50 employees). Product site: constructionconcierge.ai
 Two clickable HTML prototypes define the look, feel and feature set. Treat them as
 the UX/visual source of truth; do not redesign without a reason:
 - `construction-concierge-dashboard.html` (desktop) — Owner/PM command center:
-  sidebar nav, animated dials, cash flow chart, kanban, AI agent drawer.
+  sidebar nav, animated dials, cash flow chart, kanban.
 - `construction-concierge-ipad-punch-clock.html` (kiosk) — shared-iPad clock-in flow:
   PIN pad → photo → PPE checklist → toolbox talk sign-off → clock in; clock-out adds
   an injury Y/N question then a shift report.
@@ -69,12 +69,7 @@ client, an invoice, a bill, or a crew member at all. Fixed by adding:
 At the same time, the user asked to pull the AI agent and the Scheduler in
 from "later-phase" into now (the CRM/bids, inventory, and integrations
 marketplace are still deferred — only the agent and scheduler moved up):
-- **AI agent** (`components/agent/AgentDrawer.tsx`, `app/api/agent/route.ts`,
-  `lib/ai/tools.ts`): a chat drawer for Owner/PM, backed by the Anthropic
-  Messages API with tool use. Every tool runs through the signed-in user's
-  own RLS-scoped Supabase client — the agent can only ever see what that
-  user could already see. Needs `ANTHROPIC_API_KEY` in the environment;
-  the route returns a clear 503 instead of crashing if it's unset.
+- **AI agent**: built and later REMOVED (2026-11-18) at the owner's request: the chat drawer, `/api/agent`, `/api/voice` and the Anthropic/ElevenLabs integration are gone. The finance coach and other guidance are rule-based, not AI.
 
 ### Labour costing and job margin
 Each Foreman/Worker has a private hourly cost (wage plus payroll burden) in

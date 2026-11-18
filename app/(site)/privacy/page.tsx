@@ -51,7 +51,6 @@ export default function Privacy() {
         <li>Database, sign-in and file storage, hosted in Canada.</li>
         <li>Web hosting.</li>
         <li>Email delivery, used to send T&amp;M copies, follow-ups and demo replies.</li>
-        <li>An AI model provider, used only when a customer uses the optional assistant. The assistant sees only what the signed-in user is allowed to see.</li>
         <li>Public map and satellite imagery, used for the jobs map. Addresses may be looked up to place a job on the map.</li>
       </ul>
 

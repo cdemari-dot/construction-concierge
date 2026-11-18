@@ -24,7 +24,7 @@ export default function Terms() {
 
       <h2>Suggestions only, never a replacement for a professional</h2>
       <p>
-        Everything the service produces, including the 13-week cash forecast, the finance coach, "what you can afford" limits, growth and capacity guidance, job-cost and margin figures, cash-injection estimates, reserves and any answer from the optional assistant, is a <b>suggestion only</b>. These are rule-based and estimate-based planning aids that depend entirely on the information entered and on assumptions that may be incomplete or wrong. They are not a forecast we guarantee.
+        Everything the service produces, including the 13-week cash forecast, the finance coach, "what you can afford" limits, growth and capacity guidance, job-cost and margin figures, cash-injection estimates and reserves is a <b>suggestion only</b>. These are rule-based and estimate-based planning aids that depend entirely on the information entered and on assumptions that may be incomplete or wrong. They are not a forecast we guarantee.
       </p>
       <ul>
         <li>

@@ -26,10 +26,9 @@ const FEATURES: Tile[] = [
   { i: "receipt", t: "T&M tickets that hold up", d: "Photos, crew hours, equipment and materials, signed on the phone by the GC's super. Print a clean sheet or email a copy.", size: "wide" },
   { i: "chart", t: "13-week cash flow", d: "See the weeks that get tight, how much cash you need, and by when. Includes a stress case where customers pay late.", size: "ink" },
   { i: "home", t: "What you can afford", d: "How much rent, trucks, insurance and office staff your revenue and margin can carry, and the truck payment you can add." },
-  { i: "swap", t: "Change orders and extras", d: "A field extra becomes a priced change order, then goes to the GC. Nothing gets done for free by accident." },
+  { i: "swap", t: "Change orders and extras", d: "A field extra becomes a priced change order, then goes to the GC. Nothing gets done for free by accident.", size: "wide" },
   { i: "target", t: "Bids and follow-ups", d: "A pipeline from lead to won, with automatic follow-up emails on bids that went quiet." },
-  { i: "file", t: "Payroll export", d: "Approved hours as a CSV for your payroll provider. We never run payroll or move money." },
-  { i: "spark", t: "Ask the CFO agent", d: "Ask about your cash, jobs and who owes you, in plain words. It only sees what you can see.", size: "wide" },
+  { i: "file", t: "Payroll export", d: "Approved hours as a CSV for your payroll provider. We never run payroll or move money.", size: "wide" },
 ];
 
 const SIZES = [
