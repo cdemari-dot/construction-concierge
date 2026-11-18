@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
-import type { GlobeInstance } from "globe.gl";
+import type * as Leaflet from "leaflet";
+import "leaflet/dist/leaflet.css";
 import { fmt } from "@/lib/format";
 import { locateJob } from "@/app/(owner)/jobs/actions";
 import { Odometer } from "@/components/ui/Odometer";
@@ -29,166 +30,134 @@ export interface JobCard {
   onSite: number;
 }
 
-const STATUS_COLOR: Record<JobCard["status"], string> = {
-  active: "#3fbf7f",
-  holdback: "#f5a623",
-  closed: "#9a9690",
-};
+const esc = (t: string) => t.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]!);
 
+// OpenStreetMap's standard tiles (no key; fine for light use). Dark mode and a calmer palette come from a CSS filter.
+const TILE_URL = "https://tile.openstreetmap.org/{z}/{x}/{y}.png";
 
-// The 📍 emoji as the job marker (Apple's red pin on Apple devices). Fixed pixel size, so it never
-// balloons when the globe zooms. Status colour comes from the pulsing ring under it.
-function makePin(j: JobCard, selected: boolean, onPick: (id: string) => void): HTMLElement {
-  const el = document.createElement("div");
-  el.title = `${j.jobNumber} · ${j.name}`;
-  // translate(-50%,-100%) puts the pin's tip on the job's coordinates.
-  el.style.cssText = `transform:translate(-50%,-92%);cursor:pointer;transition:opacity .3s;font-size:${selected ? 40 : 30}px;line-height:1;font-family:"Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif;filter:drop-shadow(0 3px 3px rgba(0,0,0,.55));${selected ? "animation:cc-pin-bounce 1.1s ease-in-out infinite;" : ""}`;
-  el.textContent = "📍";
-  el.addEventListener("click", (e) => {
-    e.stopPropagation();
-    onPick(j.id);
-  });
-  return el;
-}
-
-export function JobsGlobe({ jobs: jobsIn }: { jobs: JobCard[] }) {
+export function JobsMap({ jobs: jobsIn }: { jobs: JobCard[] }) {
   const [coords, setCoords] = useState<Record<string, { lat: number; lon: number }>>({});
   const [locating, setLocating] = useState<string | null>(null);
   const [locateMsg, setLocateMsg] = useState<string | null>(null);
   const jobs = jobsIn.map((j) => (j.lat == null && coords[j.id] ? { ...j, lat: coords[j.id].lat, lon: coords[j.id].lon } : j));
   const wrapRef = useRef<HTMLDivElement>(null);
-  const globeRef = useRef<GlobeInstance | null>(null);
-  const selectedRef = useRef<string | null>(null);
+  const mapRef = useRef<Leaflet.Map | null>(null);
+  const libRef = useRef<typeof Leaflet | null>(null);
+  const layerRef = useRef<Leaflet.LayerGroup | null>(null);
+  const tileRef = useRef<Leaflet.TileLayer | null>(null);
   const [selected, setSelected] = useState<string | null>(null);
   const [ready, setReady] = useState(false);
 
   const located = jobs.filter((j) => j.lat != null && j.lon != null);
   const selectedJob = jobs.find((j) => j.id === selected) ?? null;
+  const key = located.map((j) => `${j.id}:${j.lat}:${j.lon}:${j.status}:${j.onSite}`).join("|");
 
-  // Build the globe once (client only, lazy-loaded: it is a big library).
+  // Build the map once (client only, lazy-loaded). Street tiles follow the light/dark setting.
   useEffect(() => {
     const wrap = wrapRef.current;
     if (!wrap) return;
     let disposed = false;
-    let observer: ResizeObserver | null = null;
-
+    let ro: ResizeObserver | null = null;
+    const onTheme = () => {
+      if (tileRef.current) return; // the same tiles serve both themes; dark is a CSS filter
+      const L = libRef.current;
+      const map = mapRef.current;
+      if (!L || !map) return;
+      tileRef.current?.remove();
+      tileRef.current = L.tileLayer(TILE_URL, { maxZoom: 19, attribution: "© OpenStreetMap contributors" }).addTo(map);
+    };
     (async () => {
-      const { default: Globe } = await import("globe.gl");
+      const L = await import("leaflet");
       if (disposed || !wrapRef.current) return;
-
-      const size = () => Math.min(wrap.clientWidth, 520);
-      const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-
-      const world = new Globe(wrap, { animateIn: !reduce, rendererConfig: { alpha: true, antialias: true } })
-        .globeImageUrl("/globe/earth.jpg")
-        .bumpImageUrl("/globe/bump.png")
-        // Sharp satellite tiles stream in as you zoom (the 2K texture above is only the far view).
-        .globeTileEngineUrl((x: number, y: number, l: number) => `https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/${l}/${y}/${x}`)
-        .globeTileEngineMaxLevel(17)
-        .backgroundColor("rgba(0,0,0,0)")
-        .atmosphereColor("#b9bdb6")
-        .atmosphereAltitude(0.22)
-        .width(size())
-        .height(size())
-        .htmlLat("lat")
-        .htmlLng("lon")
-        .htmlAltitude(0)
-        .htmlElement((d: object) => makePin(d as JobCard, (d as JobCard).id === selectedRef.current, (id) => setSelected((cur) => (id === cur ? null : id))))
-        .htmlElementVisibilityModifier((el: HTMLElement, visible: boolean) => {
-          el.style.opacity = visible ? "1" : "0";
-          el.style.pointerEvents = visible ? "auto" : "none";
-        })
-        .ringLat("lat")
-        .ringLng("lon")
-        .ringColor((d: object) => {
-          const c = STATUS_COLOR[(d as JobCard).status];
-          return (t: number) => `${c}${Math.round((1 - t) * 255).toString(16).padStart(2, "0")}`;
-        })
-        .ringMaxRadius(1.6)
-        .ringPropagationSpeed(2.2)
-        .ringRepeatPeriod(1400);
-
-      world.htmlElementsData(located);
-      world.ringsData(located);
-
-      const controls = world.controls();
-      controls.autoRotate = !reduce;
-      controls.autoRotateSpeed = 0.45;
-      controls.minDistance = 100.15; // street level
-      controls.maxDistance = 520;
-      controls.enablePan = false;
-
-      // Intro: start far away and fly in to the first job (or a North America view).
-      const first = located[0];
-      world.pointOfView({ lat: first?.lat ?? 40, lng: first?.lon ?? -80, altitude: 4 }, 0);
-      world.pointOfView({ lat: first?.lat ?? 40, lng: first?.lon ?? -80, altitude: 2.1 }, reduce ? 0 : 2600);
-
-      observer = new ResizeObserver(() => world.width(size()).height(size()));
-      observer.observe(wrap);
-
-      globeRef.current = world;
+      libRef.current = L;
+      const map = L.map(wrap, { zoomControl: false, scrollWheelZoom: true, worldCopyJump: true }).setView([43.7, -79.4], 10);
+      L.control.zoom({ position: "bottomright" }).addTo(map);
+      mapRef.current = map;
+      layerRef.current = L.layerGroup().addTo(map);
+      onTheme();
+      ro = new ResizeObserver(() => map.invalidateSize());
+      ro.observe(wrap);
+      window.addEventListener("cc-theme", onTheme);
       setReady(true);
     })();
-
     return () => {
       disposed = true;
-      observer?.disconnect();
-      const world = globeRef.current as (GlobeInstance & { _destructor?: () => void }) | null;
-      world?._destructor?.();
-      globeRef.current = null;
-      if (wrap) wrap.innerHTML = "";
+      ro?.disconnect();
+      window.removeEventListener("cc-theme", onTheme);
+      mapRef.current?.remove();
+      mapRef.current = null;
+      layerRef.current = null;
+      tileRef.current = null;
+      setReady(false);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [jobs]);
+  }, []);
 
-  // Fly to the selected job (zoom in) or back out.
+  // Pins: a dot per job (green and pulsing while people are on site), the selected one larger with its job number.
   useEffect(() => {
-    selectedRef.current = selected;
-    const world = globeRef.current;
-    if (!world || !ready) return;
+    const L = libRef.current;
+    const map = mapRef.current;
+    const layer = layerRef.current;
+    if (!ready || !L || !map || !layer) return;
+    layer.clearLayers();
+    for (const j of located) {
+      const on = j.id === selected;
+      const html = `<div class="map-pin ${j.status}${j.onSite > 0 ? " live" : ""}${on ? " on" : ""}"><i></i>${on ? `<span>${esc(j.jobNumber)}</span>` : ""}</div>`;
+      const m = L.marker([j.lat as number, j.lon as number], { icon: L.divIcon({ className: "cc-map-icon", html, iconSize: [0, 0] }), title: `${j.jobNumber} · ${j.name}`, keyboard: true });
+      m.on("click", () => setSelected((cur) => (cur === j.id ? null : j.id)));
+      m.addTo(layer);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ready, key, selected]);
+
+  // Frame all jobs, or fly to the selected one.
+  useEffect(() => {
+    const L = libRef.current;
+    const map = mapRef.current;
+    if (!ready || !L || !map) return;
     const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     const job = located.find((j) => j.id === selected);
-    const controls = world.controls();
     if (job) {
-      controls.autoRotate = false;
-      world.pointOfView({ lat: job.lat as number, lng: job.lon as number, altitude: 0.005 }, reduce ? 0 : 2600);
-    } else {
-      const cur = world.pointOfView();
-      world.pointOfView({ lat: cur.lat, lng: cur.lng, altitude: 2.1 }, reduce ? 0 : 1400);
-      controls.autoRotate = !reduce;
+      map.flyTo([job.lat as number, job.lon as number], 16, { animate: !reduce, duration: 1.1 });
+    } else if (located.length === 1) {
+      map.setView([located[0].lat as number, located[0].lon as number], 14, { animate: !reduce });
+    } else if (located.length > 1) {
+      // Frame the main cluster: ignore far-off outliers (one job in another province would flatten the view).
+      const med = (a: number[]) => [...a].sort((x, y) => x - y)[Math.floor(a.length / 2)];
+      const mLat = med(located.map((j) => j.lat as number));
+      const mLon = med(located.map((j) => j.lon as number));
+      const near = located.filter((j) => Math.abs((j.lat as number) - mLat) < 1.2 && Math.abs((j.lon as number) - mLon) < 1.6);
+      const pts = (near.length ? near : located).map((j) => [j.lat as number, j.lon as number] as [number, number]);
+      map.fitBounds(L.latLngBounds(pts), { padding: [44, 44], maxZoom: 13, animate: !reduce });
     }
-    // Rebuild the pins so the selected one gets its bigger, bouncing style.
-    world.htmlElementsData([...located]);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selected, ready]);
+  }, [ready, key, selected]);
 
   return (
     <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: 16, alignItems: "start" }}>
-      <div className="cc-card" style={{ display: "grid", placeItems: "center", padding: 12 }}>
-        <div style={{ width: "100%", maxWidth: 520, aspectRatio: "1", position: "relative", overflow: "hidden", borderRadius: 16 }}>
-          <div ref={wrapRef} style={{ width: "100%", height: "100%", display: "grid", placeItems: "center", cursor: "grab" }} />
+      <div className="cc-card" style={{ padding: 10, position: "sticky", top: 16 }}>
+        <div style={{ position: "relative", borderRadius: 20, overflow: "hidden" }}>
+          <div ref={wrapRef} className="jobs-map" />
           {!ready && (
-            <div style={{ position: "absolute", inset: 0, display: "grid", placeItems: "center", color: "var(--mute)", fontSize: 13 }}>
-              Loading globe…
-            </div>
+            <div style={{ position: "absolute", inset: 0, display: "grid", placeItems: "center", color: "var(--mute)", fontSize: 13, zIndex: 500 }}>Loading map…</div>
           )}
           <div
             aria-live="polite"
             style={{
               position: "absolute",
-              left: 10,
-              top: 10,
-              zIndex: 2,
-              maxWidth: "70%",
-              padding: "8px 12px",
-              borderRadius: 12,
+              left: 12,
+              top: 12,
+              zIndex: 900,
+              maxWidth: "72%",
+              padding: "10px 14px",
+              borderRadius: 16,
               background: "var(--glass)",
+              backdropFilter: "blur(12px)",
               border: "1px solid var(--line2)",
               fontSize: 12.5,
               lineHeight: 1.4,
               opacity: selectedJob ? 1 : 0,
               transform: selectedJob ? "translateY(0)" : "translateY(-8px)",
-              transition: "opacity .45s ease, transform .45s ease",
+              transition: "opacity .35s ease, transform .35s ease",
               pointerEvents: selectedJob ? "auto" : "none",
             }}
           >
@@ -199,22 +168,22 @@ export function JobsGlobe({ jobs: jobsIn }: { jobs: JobCard[] }) {
                 </b>
                 <div style={{ color: "var(--mute)", fontSize: 11.5 }}>{selectedJob.address ?? "No address"}</div>
                 <button type="button" className="cc-btn ghost sm" style={{ marginTop: 6 }} onClick={() => setSelected(null)}>
-                  ↩ Zoom out
+                  Show all jobs
                 </button>
               </>
             )}
           </div>
         </div>
-        <div style={{ display: "flex", gap: 14, fontSize: 11.5, color: "var(--mute)", marginTop: 6, flexWrap: "wrap", justifyContent: "center" }}>
-          <Legend color="var(--lime)" label="Active" />
+        <div style={{ display: "flex", gap: 14, fontSize: 11.5, color: "var(--mute)", marginTop: 8, flexWrap: "wrap", justifyContent: "center" }}>
+          <Legend color="var(--lime)" label="People on site" />
+          <Legend color="var(--text)" label="Active" />
           <Legend color="var(--amber)" label="Holdback" />
           <Legend color="var(--mute)" label="Closed" />
-          <span>· drag to spin · scroll to zoom · tap a pin or a job</span>
-          <span style={{ width: "100%", textAlign: "center", fontSize: 10 }}>Imagery © Esri, Maxar, Earthstar Geographics</span>
+          <span>· tap a pin or a job</span>
         </div>
         {located.length === 0 && (
           <div style={{ color: "var(--mute)", fontSize: 12.5, marginTop: 8, textAlign: "center" }}>
-            No job has GPS coordinates yet. Add an address (or use your location) when creating a job and it will appear here.
+            No job has a map location yet. Tap a job in the list and it will be found from its address.
           </div>
         )}
       </div>

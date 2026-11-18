@@ -86,10 +86,8 @@ rate per job. Job margin on `/jobs` = (billed − bills coded to the job −
 labour cost) ÷ billed. Shifts for someone with no rate set count as $0 and
 are flagged on the job card. Overhead is not allocated to jobs.
 
-### Jobs globe
-`/jobs` shows a globe.gl real-Earth globe (SVG map pins) with a pin per job (from `jobs.geofence_lat/lon`).
-New jobs get coordinates from their address via OpenStreetMap Nominatim
-(best-effort, 5 s timeout) or the "use my current location" button.
+### Jobs map
+`/jobs` shows a Leaflet street map (OpenStreetMap tiles, softened with a CSS filter, dark by inversion) with a pin per job (from `jobs.geofence_lat/lon`): green and pulsing when people are clocked in, black for active, amber for holdback, grey for closed. Click a pin or a job card to fly to it. A job with an address but no coordinates is looked up when its card is tapped (`locateJob`, OpenStreetMap Nominatim) and saved. Before selling, swap the free tiles for a licensed provider (see pending API keys).
 
 ### Field app launcher and role routing
 `lib/auth/home.ts` `homeFor(role)`: Foreman/Worker logins land on `/m`, Owner/PM on

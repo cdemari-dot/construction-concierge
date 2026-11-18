@@ -63,7 +63,7 @@ export default async function NewJobPage() {
         </label>
 
         <label style={{ fontSize: 12, color: "var(--mute)", display: "grid", gap: 4 }}>
-          Address (used to place the job on the globe)
+          Address (used to place the job on the map)
           <input name="address" style={inputStyle} />
         </label>
 

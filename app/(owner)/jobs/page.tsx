@@ -3,7 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/supabase/env";
 import { SetupBanner } from "@/components/ui/SetupBanner";
 import { LiveRefresh } from "@/components/ui/LiveRefresh";
-import { JobsGlobe, type JobCard } from "@/components/jobs/JobsGlobe";
+import { JobsMap, type JobCard } from "@/components/jobs/JobsMap";
 import type { Job, JobFinancialSummary, JobLabourCost, WhoIsClockedIn } from "@/lib/types/database";
 
 export default async function JobsPage() {
@@ -67,7 +67,7 @@ export default async function JobsPage() {
         Margin = (billed − bills coded to the job − labour cost) ÷ billed. Labour = shift hours × each person&apos;s hourly cost (set on the Team page). It is live: people still clocked in count up to this minute, and the page refreshes every 30 seconds.
       </p>
       <LiveRefresh seconds={30} />
-      <JobsGlobe jobs={cards} />
+      <JobsMap jobs={cards} />
     </div>
   );
 }
