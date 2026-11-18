@@ -230,6 +230,7 @@ export default async function DashboardPage() {
                 <div style={{ textAlign: "right" }}>
                   <div className="mono">{fmtTime(c.clock_in_at)}</div>
                   {c.geofence_ok === false && <Tag color="amber">off geofence</Tag>}
+                  {c.geofence_ok == null && <Tag color="amber">location not checked</Tag>}
                 </div>
               </div>
             ))}
