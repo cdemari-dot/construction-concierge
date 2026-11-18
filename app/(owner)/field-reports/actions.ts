@@ -65,24 +65,21 @@ const esc = (v: string) =>
 
 // Emails the signed T&M ticket to the GC super (via Resend). Sent from the app's
 // address, Reply-To the signed-in user, and the user is CC'd so they keep a copy.
-export async function emailTmTicket(id: string) {
+export async function emailTmTicket(id: string): Promise<string> {
   const apiKey = process.env.RESEND_API_KEY;
-  const from = process.env.EMAIL_FROM;
-  if (!apiKey || !from) throw new Error("Email is not set up yet (RESEND_API_KEY / EMAIL_FROM missing).");
+  const from = process.env.EMAIL_FROM || "Construction Concierge <hello@constructionconcierge.ai>";
+  if (!apiKey) throw new Error("Email is not set up yet (RESEND_API_KEY missing).");
 
   const user = await getCurrentUser();
   if (!user) throw new Error("Not signed in");
   const supabase = await createClient();
-  const { data: authData } = await supabase.auth.getUser();
-  const replyTo = authData.user?.email;
 
   const { data: t, error } = await supabase.from("tm_tickets").select("*").eq("id", id).single();
   if (error || !t) throw new Error(error?.message ?? "Ticket not found");
-  if (!t.super_email) throw new Error("This ticket has no superintendent email.");
   if (!t.super_signature_path) throw new Error("Ticket is not signed yet.");
 
   const [{ data: job }, { data: company }, { data: file, error: dlError }] = await Promise.all([
-    supabase.from("jobs").select("job_number, name, address").eq("id", t.job_id).single(),
+    supabase.from("jobs").select("job_number, name, address, pm_id, client_id").eq("id", t.job_id).single(),
     supabase.from("companies").select("name").eq("id", t.company_id).single(),
     supabase.storage.from("signatures").download(t.super_signature_path),
   ]);
@@ -119,24 +116,52 @@ ${t.work_description ? `<p style="margin:16px 0 4px"><b>Work performed</b><br>${
 <p style="margin:16px 0 4px">Signed by <b>${esc(t.super_name)}</b>${signedAt}.</p>
 <p style="color:#555;font-size:13px">Signature and photos attached. Reply to this email with any questions.</p></div>`;
 
-  const res = await fetch("https://api.resend.com/emails", {
-    method: "POST",
-    headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
-    body: JSON.stringify({
-      from,
-      to: [t.super_email],
-      cc: replyTo ? [replyTo] : undefined,
-      reply_to: replyTo,
-      subject: `T&M ticket ${t.ticket_date} — ${jobLine} — ${companyName}`,
-      html,
-      attachments: [{ filename: "signature.png", content: sigBase64 }, ...photoFiles],
-    }),
-  });
-  if (!res.ok) throw new Error(`Email failed (${res.status}): ${(await res.text()).slice(0, 200)}`);
+  // Who gets the two copies: the client (super's email on the ticket, else the client's contact
+  // email) and the PM designated on the job (else the company owner).
+  let clientEmail: string | null = t.super_email || null;
+  if (!clientEmail && job?.client_id) {
+    const { data: cl } = await supabase.from("clients").select("contact_email").eq("id", job.client_id).maybeSingle();
+    clientEmail = (cl as { contact_email: string | null } | null)?.contact_email ?? null;
+  }
+  let pmEmail: string | null = null;
+  if (job?.pm_id) {
+    const { data: pm } = await supabase.from("profiles").select("email").eq("id", job.pm_id).maybeSingle();
+    pmEmail = (pm as { email: string | null } | null)?.email ?? null;
+  }
+  if (!pmEmail) {
+    const { data: owners } = await supabase.from("profiles").select("email").eq("role", "owner").eq("status", "active").not("email", "is", null).limit(1);
+    pmEmail = (owners?.[0] as { email: string | null } | undefined)?.email ?? null;
+  }
+  if (!clientEmail && !pmEmail) throw new Error("No client email on the ticket and no PM or owner email to send to.");
 
-  if (t.status === "signed") await supabase.from("tm_tickets").update({ status: "sent_to_gc" }).eq("id", id);
+  const attachments = [{ filename: "signature.png", content: sigBase64 }, ...photoFiles];
+  const subject = `T&M ticket ${t.ticket_date} — ${jobLine} — ${companyName}`;
+  const send = async (to: string, replyTo: string | null | undefined, subj: string, body: string) => {
+    const res = await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ from, to: [to], reply_to: replyTo ?? undefined, subject: subj, html: body, attachments }),
+    });
+    if (!res.ok) throw new Error(`Email to ${to} failed (${res.status}): ${(await res.text()).slice(0, 200)}`);
+  };
+
+  const sent: string[] = [];
+  if (clientEmail) {
+    await send(clientEmail, pmEmail, subject, html);
+    sent.push("client");
+    if (t.status === "signed") await supabase.from("tm_tickets").update({ status: "sent_to_gc" }).eq("id", id);
+  }
+  if (pmEmail) {
+    await send(pmEmail, pmEmail, `PM copy: ${subject}`, `<p style="font-family:Arial,sans-serif;color:#555">Copy for the PM. ${clientEmail ? "The client has received the same ticket." : "No client email was on this ticket, so it was not sent to the client."}</p>${html}`);
+    sent.push("PM");
+  }
   revalidatePath("/field-reports");
   revalidatePath("/dashboard");
+  return `Sent to ${sent.join(" and ")}.${clientEmail ? "" : " (No client email on this ticket.)"}`;
+}
+
+export async function resendTmTicket(id: string): Promise<void> {
+  await emailTmTicket(id);
 }
 
 // Saves the path of the company logo the browser just uploaded to the private "company-logos" bucket.

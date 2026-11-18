@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { fetchTodayCrew } from "@/lib/todayCrew";
 import { todayToronto } from "@/lib/today";
+import { emailTmTicket } from "@/app/(owner)/field-reports/actions";
 import { SignaturePad } from "./SignaturePad";
 import { Icon } from "./Icon";
 import { Label, Notice, Stepper, Title } from "./ui";
@@ -119,7 +120,18 @@ export function TmTicketForm({ companyId, jobId, createdBy }: { companyId: strin
       setError(`Ticket NOT saved: ${insertError.message}`);
       return;
     }
-    setOk(signaturePath ? "Ticket signed and saved. The office can send the super a copy." : "Saved as a draft (not signed yet).");
+    if (signaturePath) {
+      setOk("Ticket signed and saved. Sending copies…");
+      try {
+        const sent = await emailTmTicket(ticketId);
+        setOk(`Ticket signed and saved. ${sent}`);
+      } catch (e) {
+        setOk("Ticket signed and saved.");
+        setError(`Saved, but the email was not sent: ${e instanceof Error ? e.message : "unknown error"}. The office can resend it from Field Reports.`);
+      }
+    } else {
+      setOk("Saved as a draft (not signed yet).");
+    }
     setSuperName("");
     setSuperEmail("");
     setHours(0);

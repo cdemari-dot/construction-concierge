@@ -20,10 +20,12 @@ export default async function NewJobPage() {
   if (!isSupabaseConfigured) return <SetupBanner />;
 
   const supabase = await createClient();
-  const [{ data: clients }, { data: foremen }] = await Promise.all([
+  const [{ data: clients }, { data: foremen }, { data: pms }] = await Promise.all([
     supabase.from("clients").select("*").order("name"),
     supabase.from("profiles").select("*").eq("role", "foreman").eq("status", "active"),
+    supabase.from("profiles").select("*").in("role", ["pm", "owner"]).eq("status", "active"),
   ]);
+  const pmList = ((pms ?? []) as Profile[]).filter((p) => p.email);
   const clientList = (clients ?? []) as Client[];
   const foremanList = (foremen ?? []) as Profile[];
 
@@ -87,6 +89,18 @@ export default async function NewJobPage() {
             {foremanList.map((f) => (
               <option key={f.id} value={f.id}>
                 {f.full_name}
+              </option>
+            ))}
+          </select>
+        </label>
+
+        <label style={{ fontSize: 12, color: "var(--mute)", display: "grid", gap: 4 }}>
+          PM for this job (gets a copy of every signed T&amp;M ticket)
+          <select name="pm_id" style={inputStyle} defaultValue="">
+            <option value="">— none (copies go to the owner) —</option>
+            {pmList.map((f) => (
+              <option key={f.id} value={f.id}>
+                {f.full_name} ({f.email})
               </option>
             ))}
           </select>

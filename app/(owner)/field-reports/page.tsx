@@ -4,7 +4,7 @@ import { isSupabaseConfigured } from "@/lib/supabase/env";
 import { SetupBanner } from "@/components/ui/SetupBanner";
 import { Tag } from "@/components/ui/Tag";
 import { ReportButton } from "@/components/dashboard/ReportButton";
-import { closeIncident, emailTmTicket, extraToChangeOrder, setTmStatus } from "./actions";
+import { closeIncident, resendTmTicket, extraToChangeOrder, setTmStatus } from "./actions";
 import { fmt } from "@/lib/format";
 import type { DailyLog, Extra, IncidentReport, Job, Profile, TmTicket } from "@/lib/types/database";
 
@@ -159,10 +159,10 @@ export default async function FieldReportsPage({ searchParams }: { searchParams:
           <Link href={`/field-reports/tm/${r.id}`} className="cc-btn lime sm">
             View / print sheet
           </Link>
-          {r.super_email && r.super_signature_path && (r.status === "signed" || r.status === "sent_to_gc") && (
+          {r.super_signature_path && (r.status === "signed" || r.status === "sent_to_gc") && (
             <ReportButton
-              label={r.status === "signed" ? `Email copy to ${r.super_email}` : "Email again"}
-              run={emailTmTicket.bind(null, r.id)}
+              label={r.status === "signed" ? "Email client + PM copies" : "Email again (client + PM)"}
+              run={resendTmTicket.bind(null, r.id)}
             />
           )}
           {r.status === "signed" && <ReportButton ghost label="Mark sent (no email)" run={setTmStatus.bind(null, r.id, "sent_to_gc")} />}

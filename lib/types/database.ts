@@ -60,6 +60,7 @@ export interface Job {
   contract_value: number;
   status: JobStatus;
   foreman_id: string | null;
+  pm_id: string | null;
   percent_complete: number;
   start_date: string | null;
   created_at: string;

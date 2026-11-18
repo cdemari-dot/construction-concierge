@@ -13,6 +13,7 @@ export async function createJob(formData: FormData) {
 
   const clientId = String(formData.get("client_id") || "") || null;
   const foremanId = String(formData.get("foreman_id") || "") || null;
+  const pmId = String(formData.get("pm_id") || "") || null;
   const geofenceLat = String(formData.get("geofence_lat") || "");
   const geofenceLon = String(formData.get("geofence_lon") || "");
 
@@ -36,6 +37,7 @@ export async function createJob(formData: FormData) {
       geofence_lon: lon,
       contract_value: Number(formData.get("contract_value") || 0),
       foreman_id: foremanId,
+      pm_id: pmId,
       start_date: String(formData.get("start_date") || "") || null,
     })
     .select()
@@ -62,4 +64,14 @@ export async function locateJob(jobId: string): Promise<{ lat: number; lon: numb
   if (error) return null;
   revalidatePath("/jobs");
   return { lat, lon };
+}
+
+// Who gets the PM copy of every signed T&M ticket on this job.
+export async function setJobPm(jobId: string, pmId: string | null) {
+  const user = await getCurrentUser();
+  if (!user) throw new Error("Not signed in");
+  const supabase = await createClient();
+  const { error } = await supabase.from("jobs").update({ pm_id: pmId || null }).eq("id", jobId);
+  if (error) throw new Error(error.message);
+  revalidatePath(`/jobs/${jobId}`);
 }
