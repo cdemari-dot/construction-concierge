@@ -139,6 +139,8 @@ export function TodayView({ firstName, week, onOpenSite, onGo }: { firstName: st
                 <span>
                   {c.name}
                   {c.offSchedule && <span style={{ ...chip("warn"), marginLeft: 8 }}>Off schedule</span>}
+                  {c.geo === "off" && <span style={{ ...chip("warn"), marginLeft: 8 }}>Punched in off site</span>}
+                  {c.geo === "unknown" && <span style={{ ...chip("warn"), marginLeft: 8 }}>Location not checked</span>}
                 </span>
                 <span style={chip(st.kind)}>{st.text}</span>
               </div>

@@ -11,6 +11,7 @@ export interface CrewRow {
   clockedOut: boolean;
   signedTalk: boolean;
   offSchedule: boolean;
+  geo: "off" | "unknown" | null;
 }
 
 export interface SiteDay {
@@ -75,13 +76,14 @@ export async function loadFieldWeek(supabase: SupabaseClient, me: Profile): Prom
   const visibleIds = visibleJobs.map((j) => j.id);
   const since = new Date(Date.now() - 30 * 3600 * 1000).toISOString();
   const punches = visibleIds.length
-    ? (((await supabase.from("time_entries").select("id, job_id, worker_id, clock_in_at, clock_out_at, off_schedule").in("job_id", visibleIds).gte("clock_in_at", since)).data ?? []) as {
+    ? (((await supabase.from("time_entries").select("id, job_id, worker_id, clock_in_at, clock_out_at, off_schedule, geofence_ok").in("job_id", visibleIds).gte("clock_in_at", since)).data ?? []) as {
         id: string;
         job_id: string;
         worker_id: string;
         clock_in_at: string;
         clock_out_at: string | null;
         off_schedule: boolean;
+        geofence_ok: boolean | null;
       }[]).filter((p) => new Date(p.clock_in_at).toLocaleDateString("en-CA", { timeZone: "America/Toronto" }) === today)
     : [];
   const todaysJobIds = [...new Set([...entries.filter((e) => e.work_date === today).map((e) => e.job_id), ...punches.map((p) => p.job_id)])].filter((id) => visibleIds.includes(id));
@@ -113,6 +115,7 @@ export async function loadFieldWeek(supabase: SupabaseClient, me: Profile): Prom
             clockedOut: Boolean(p?.clock_out_at),
             signedTalk: p ? signedEntry.has(p.id) : false,
             offSchedule: false,
+            geo: p ? (p.geofence_ok === false ? "off" : p.geofence_ok == null ? "unknown" : null) : null,
           };
         });
       if (isToday) {
@@ -126,6 +129,7 @@ export async function loadFieldWeek(supabase: SupabaseClient, me: Profile): Prom
             clockedOut: Boolean(p.clock_out_at),
             signedTalk: signedEntry.has(p.id),
             offSchedule: true,
+            geo: p.geofence_ok === false ? "off" : p.geofence_ok == null ? "unknown" : null,
           });
         }
       }
