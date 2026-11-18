@@ -17,6 +17,7 @@ const inputStyle: React.CSSProperties = {
 
 export function AddCrewForm() {
   const [error, setError] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
 
   return (
@@ -27,7 +28,8 @@ export function AddCrewForm() {
         startTransition(async () => {
           setError(null);
           try {
-            await addCrewMember(formData);
+            const r = await addCrewMember(formData);
+            setNotice(`${r.name}'s PIN is ${r.pin}. Write it down, it isn't shown again.`);
             (document.getElementById("add-crew-form") as HTMLFormElement)?.reset();
           } catch (e) {
             setError(e instanceof Error ? e.message : "Failed to add crew member");
@@ -37,9 +39,10 @@ export function AddCrewForm() {
       id="add-crew-form"
     >
       <h3 style={{ fontSize: 11.5, letterSpacing: 1.4, textTransform: "uppercase", color: "var(--mute)" }}>
-        Add Foreman / Worker (PIN, no login)
+        Add Foreman / Worker (auto PIN, no login)
       </h3>
       {error && <div style={{ color: "var(--red)", fontSize: 12.5 }}>{error}</div>}
+      {notice && <div style={{ fontSize: 15, fontWeight: 700 }}>{notice}</div>}
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
         <input name="full_name" placeholder="Full name" required style={inputStyle} />
         <select name="role" style={inputStyle} defaultValue="worker">
@@ -49,7 +52,7 @@ export function AddCrewForm() {
       </div>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
         <input name="phone" placeholder="Phone (optional)" style={inputStyle} />
-        <input name="pin" placeholder="4-digit PIN" required pattern="[0-9]{4}" maxLength={4} style={inputStyle} />
+        <div style={{ ...inputStyle, color: "var(--mute)", display: "flex", alignItems: "center" }}>PIN is made for you</div>
       </div>
       <label style={{ fontSize: 11.5, color: "var(--mute)", display: "grid", gap: 4 }}>
         Hourly cost to you, $/hr (wage plus payroll burden — only Owner/PM can see this)
@@ -110,8 +113,7 @@ export function InviteTeamForm() {
 }
 
 export function CrewRow({ profile, isSelf, rate }: { profile: Profile; isSelf: boolean; rate: number | null }) {
-  const [editingPin, setEditingPin] = useState(false);
-  const [pin, setPin] = useState("");
+  const [newPin, setNewPin] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
   const hasLogin = profile.role === "owner" || profile.role === "pm";
@@ -166,41 +168,28 @@ export function CrewRow({ profile, isSelf, rate }: { profile: Profile; isSelf: b
             </button>
           </span>
         )}
-        {!hasLogin &&
-          (editingPin ? (
-            <>
-              <input
-                value={pin}
-                onChange={(e) => setPin(e.target.value)}
-                placeholder="New 4-digit PIN"
-                maxLength={4}
-                style={{ ...inputStyle, width: 120, padding: "5px 8px" }}
-              />
-              <button
-                className="cc-btn sm"
-                disabled={pending}
-                onClick={() =>
-                  startTransition(async () => {
-                    setError(null);
-                    try {
-                      await changeWorkerPin(profile.id, pin);
-                      setEditingPin(false);
-                      setPin("");
-                    } catch (e) {
-                      setError(e instanceof Error ? e.message : "Failed");
-                    }
-                  })
-                }
-                type="button"
-              >
-                Save
-              </button>
-            </>
-          ) : (
-            <button className="cc-btn ghost sm" onClick={() => setEditingPin(true)} type="button">
-              Change PIN
+        {!hasLogin && (
+          <>
+            {newPin && <b style={{ fontSize: 15 }}>New PIN: {newPin}</b>}
+            <button
+              className="cc-btn ghost sm"
+              disabled={pending}
+              onClick={() =>
+                startTransition(async () => {
+                  setError(null);
+                  try {
+                    setNewPin(await changeWorkerPin(profile.id));
+                  } catch (e) {
+                    setError(e instanceof Error ? e.message : "Failed");
+                  }
+                })
+              }
+              type="button"
+            >
+              New PIN
             </button>
-          ))}
+          </>
+        )}
         {profile.status === "active" && !isSelf && (
           <button
             className="cc-btn ghost sm"

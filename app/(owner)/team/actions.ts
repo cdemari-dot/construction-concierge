@@ -5,10 +5,22 @@ import { createClient } from "@/lib/supabase/server";
 import { getCurrentUser } from "@/lib/auth/session";
 import type { UserRole } from "@/lib/types/database";
 
-// Foreman/Worker: no login, identified by PIN at the kiosk. Owner picks the
-// PIN here and it's hashed server-side via the set_worker_pin RPC — this
+// Random 4-digit PIN that no active person in this company already uses
+// (checked through verify_worker_pin, since hashes can't be compared).
+async function freshPin(supabase: Awaited<ReturnType<typeof createClient>>): Promise<string> {
+  for (let i = 0; i < 40; i++) {
+    const pin = String(Math.floor(1000 + Math.random() * 9000));
+    if (/^(\d)\1{3}$/.test(pin) || pin === "1234" || pin === "4321") continue;
+    const { data } = await supabase.rpc("verify_worker_pin", { p_pin: pin });
+    if (!data || data.length === 0) return pin;
+  }
+  throw new Error("Could not find a free PIN, try again");
+}
+
+// Foreman/Worker: no login, identified by PIN at the kiosk. The PIN is
+// auto-generated here and hashed server-side via the set_worker_pin RPC — this
 // app never stores or transmits a plaintext PIN anywhere else.
-export async function addCrewMember(formData: FormData) {
+export async function addCrewMember(formData: FormData): Promise<{ name: string; pin: string }> {
   const user = await getCurrentUser();
   if (!user) throw new Error("Not signed in");
   const supabase = await createClient();
@@ -16,9 +28,9 @@ export async function addCrewMember(formData: FormData) {
   const fullName = String(formData.get("full_name"));
   const role = String(formData.get("role")) as UserRole;
   const phone = String(formData.get("phone") || "") || null;
-  const pin = String(formData.get("pin"));
   const rateText = String(formData.get("hourly_rate") || "").trim();
 
+  const pin = await freshPin(supabase);
   const { data: profile, error } = await supabase
     .from("profiles")
     .insert({ company_id: user.profile.company_id, full_name: fullName, role, phone })
@@ -43,6 +55,7 @@ export async function addCrewMember(formData: FormData) {
   }
 
   revalidatePath("/team");
+  return { name: fullName, pin };
 }
 
 // Owner/PM: real login, invited by email. Creates a placeholder profile with
@@ -68,11 +81,13 @@ export async function inviteTeamMember(formData: FormData) {
   revalidatePath("/team");
 }
 
-export async function changeWorkerPin(profileId: string, pin: string) {
+export async function changeWorkerPin(profileId: string): Promise<string> {
   const supabase = await createClient();
+  const pin = await freshPin(supabase);
   const { error } = await supabase.rpc("set_worker_pin", { p_profile_id: profileId, p_pin: pin });
   if (error) throw new Error(error.message);
   revalidatePath("/team");
+  return pin;
 }
 
 export async function deactivateCrewMember(profileId: string) {
