@@ -75,7 +75,11 @@ export default function LoginPage() {
       tag={mode === "sign-in" ? "Welcome back" : "Get started"}
       title={mode === "sign-in" ? "Log in." : "Start your company."}
       lede={mode === "sign-in" ? "Your jobs, crew and cash, live." : "Create your owner account and set up your company in minutes."}
-      foot="Jobsite iPad: sign in with its email and 6-digit login code (set up at /accept-invite?kiosk=1). Worker PINs (4 digits) are only for the punch pad after that."
+      foot={
+        <>
+          Jobsite iPad? <a href="/accept-invite?kiosk=1" style={{ fontWeight: 700, textDecoration: "underline" }}>Set up its 6-digit login code</a>, then sign in here with the iPad&apos;s email and that code. Worker PINs (4 digits) are only for the punch pad.
+        </>
+      }
     >
       {!isSupabaseConfigured && <SetupBanner />}
 

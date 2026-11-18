@@ -59,7 +59,7 @@ function AcceptInvite() {
   }
 
   return (
-    <AuthShell tag="Join your company" title="Set your password." lede={kiosk ? "Use the exact email your Owner invited for this iPad. A 6-digit login code is made for you." : "Use the exact email your Owner or PM invited. It links your new account to the company automatically."}>
+    <AuthShell tag={kiosk ? "Jobsite iPad" : "Join your company"} title={kiosk ? "Set up this iPad." : "Set your password."} lede={kiosk ? "Use the exact email your Owner invited for this iPad. A 6-digit login code is made for you." : "Use the exact email your Owner or PM invited. It links your new account to the company automatically."}>
       {error && <div className="auth-err">{error}</div>}
       {notice && <div className="auth-ok">{notice}</div>}
       {code && (
