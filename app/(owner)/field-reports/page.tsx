@@ -59,6 +59,15 @@ export default async function FieldReportsPage({ searchParams }: { searchParams:
   if (tab === "logs") {
     const { data } = await supabase.from("daily_logs").select("*").order("log_date", { ascending: false }).limit(100);
     const rows = (data ?? []) as DailyLog[];
+    const logPhotos = new Map<string, string[]>();
+    for (const r of rows) {
+      const urls: string[] = [];
+      for (const path of (r.photo_paths ?? []).slice(0, 12)) {
+        const u = (await supabase.storage.from("daily-log-photos").createSignedUrl(path, 3600)).data?.signedUrl;
+        if (u) urls.push(u);
+      }
+      logPhotos.set(r.id, urls);
+    }
     body = rows.map((r) => (
       <div key={r.id} className="cc-card" style={{ display: "grid", gap: 4 }}>
         <div style={{ fontSize: 11.5, color: "var(--mute)" }}>
@@ -67,6 +76,28 @@ export default async function FieldReportsPage({ searchParams }: { searchParams:
         </div>
         <div style={{ fontSize: 13.5 }}>{r.work_performed || "No work noted."}</div>
         {r.delays && <div style={{ fontSize: 12.5, color: "var(--amber)" }}>Delays: {r.delays}</div>}
+        {(r.containers ?? []).length > 0 && (
+          <div style={{ fontSize: 12.5, color: "var(--mute)" }}>
+            Containers: {(r.containers ?? []).map((c) => `${c.qty} × ${c.type} (${c.status})`).join(", ")}
+          </div>
+        )}
+        {r.hospital_name && (
+          <div style={{ fontSize: 12.5, color: "var(--mute)" }}>
+            Closest hospital: {r.hospital_name}
+            {r.hospital_distance_m != null ? ` · ${(r.hospital_distance_m / 1000).toFixed(1)} km` : ""}
+            {r.hospital_address ? ` · ${r.hospital_address}` : ""}
+            {r.hospital_phone ? ` · ${r.hospital_phone}` : ""}
+          </div>
+        )}
+        {(logPhotos.get(r.id) ?? []).length > 0 && (
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(96px, 1fr))", gap: 6, marginTop: 4 }}>
+            {(logPhotos.get(r.id) ?? []).map((u) => (
+              // Signed storage URL, not a static asset.
+              // eslint-disable-next-line @next/next/no-img-element
+              <a key={u} href={u} target="_blank" rel="noreferrer"><img src={u} alt="Daily log photo" style={{ width: "100%", aspectRatio: "1", objectFit: "cover", borderRadius: 8 }} /></a>
+            ))}
+          </div>
+        )}
       </div>
     ));
     if (rows.length === 0) body = <Empty text="No daily logs yet." />;

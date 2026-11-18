@@ -133,6 +133,15 @@ export interface DailyLog {
   work_performed: string | null;
   delays: string | null;
   photo_paths: string[];
+  gps_lat: number | null;
+  gps_lon: number | null;
+  hospital_name: string | null;
+  hospital_address: string | null;
+  hospital_phone: string | null;
+  hospital_lat: number | null;
+  hospital_lon: number | null;
+  hospital_distance_m: number | null;
+  containers: { type: string; qty: number; status: string }[];
   created_at: string;
 }
 
