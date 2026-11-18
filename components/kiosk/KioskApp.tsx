@@ -10,9 +10,10 @@ import { PinPad } from "./PinPad";
 import { PhotoStep } from "./PhotoStep";
 import { PpeStep } from "./PpeStep";
 import { ToolboxTalkStep } from "./ToolboxTalkStep";
+import { ForemanBoard } from "./ForemanBoard";
 import { InjuryFormStep, InjuryQuestionStep, ReportStep } from "./ClockOutSteps";
 
-type Step = "pin" | "photo" | "ppe" | "ppe-missing" | "toolbox" | "done-in" | "injury-q" | "injury-form" | "report" | "done-out" | "error";
+type Step = "pin" | "menu" | "board" | "photo" | "ppe" | "ppe-missing" | "toolbox" | "done-in" | "injury-q" | "injury-form" | "report" | "done-out" | "error";
 
 interface KioskJob {
   id: string;
@@ -59,6 +60,14 @@ export function KioskApp({ job, toolboxTalk }: { job: KioskJob; toolboxTalk: Kio
     if (resetTimer.current) clearTimeout(resetTimer.current);
   }, []);
 
+  // Foreman screens close themselves after a minute so the next person starts at the PIN pad.
+  useEffect(() => {
+    if (step !== "menu" && step !== "board") return;
+    const t = setTimeout(() => resetAll(), 60000);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [step]);
+
   function resetAll() {
     setStep("pin");
     setPin("");
@@ -104,6 +113,17 @@ export function KioskApp({ job, toolboxTalk }: { job: KioskJob; toolboxTalk: Kio
 
     const w = data[0] as Worker;
     setWorker(w);
+    if (w.role === "foreman") {
+      // Foremen get a menu: punch like everyone else, or see who is on site.
+      setBusy(false);
+      setStep("menu");
+      return;
+    }
+    await beginPunch(w);
+  }
+
+  async function beginPunch(w: Worker) {
+    setBusy(true);
 
     const { data: openEntries } = await supabase
       .from("time_entries")
@@ -276,6 +296,23 @@ export function KioskApp({ job, toolboxTalk }: { job: KioskJob; toolboxTalk: Kio
       {step === "pin" && (
         <PinPad pin={pin} onDigit={handleDigit} onClear={() => setPin("")} onBackspace={() => setPin((p) => p.slice(0, -1))} error={pinError} />
       )}
+
+      {step === "menu" && worker && (
+        <div style={{ display: "grid", gap: 12, textAlign: "center" }}>
+          <div className="display" style={{ fontSize: 26 }}>Hi {worker.full_name.split(" ")[0]}</div>
+          <button className="cc-btn lime" type="button" style={{ height: 64, fontSize: 19 }} onClick={() => beginPunch(worker)} disabled={busy}>
+            Clock in / out
+          </button>
+          <button className="cc-btn" type="button" style={{ height: 64, fontSize: 19 }} onClick={() => setStep("board")}>
+            Site board: who&apos;s on site
+          </button>
+          <button className="cc-btn ghost" type="button" style={{ height: 52 }} onClick={resetAll}>
+            Done
+          </button>
+        </div>
+      )}
+
+      {step === "board" && <ForemanBoard supabase={supabase} jobId={job.id} onBack={() => setStep("menu")} />}
 
       {step === "photo" && worker && (
         <PhotoStep title={`${mode === "in" ? "Clock in" : "Clock out"} · Hi ${worker.full_name.split(" ")[0]}`} onCaptured={handlePhotoCaptured} onCancel={resetAll} />
