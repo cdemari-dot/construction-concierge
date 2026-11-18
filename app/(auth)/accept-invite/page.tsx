@@ -69,9 +69,23 @@ function AcceptInvite() {
         </div>
       )}
       {code ? (
-        <button className="site-btn primary lg" type="button" onClick={() => { router.push("/"); router.refresh(); }}>
-          I wrote it down, continue
-        </button>
+        <>
+          <div className="auth-ok">Email: {email}</div>
+          <button
+            className="site-btn primary lg"
+            type="button"
+            onClick={async () => {
+              await createClient().auth.signOut();
+              router.push("/login");
+              router.refresh();
+            }}
+          >
+            Go to login
+          </button>
+          <button className="site-btn lg" type="button" onClick={() => { router.push("/"); router.refresh(); }} style={{ marginTop: 10 }}>
+            Continue on this device
+          </button>
+        </>
       ) : (
       <form className="auth-form" onSubmit={handleSubmit}>
         <AuthField label="Email (must match your invite)" type="email" value={email} onChange={setEmail} required autoComplete="email" />
