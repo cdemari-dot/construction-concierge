@@ -112,3 +112,16 @@ export async function setPayRate(profileId: string, rate: number) {
   revalidatePath("/team");
   revalidatePath("/jobs");
 }
+
+// Withdraws an invite that has not been used yet (no login exists for it).
+export async function cancelInvite(profileId: string) {
+  const user = await getCurrentUser();
+  if (!user) throw new Error("Not signed in");
+  const supabase = await createClient();
+  const { data: p } = await supabase.from("profiles").select("auth_user_id, email").eq("id", profileId).maybeSingle();
+  if (!p) throw new Error("Invite not found");
+  if (p.auth_user_id) throw new Error("This person already has a login. Deactivate them instead.");
+  const { error } = await supabase.from("profiles").delete().eq("id", profileId);
+  if (error) throw new Error(`Could not cancel the invite: ${error.message}`);
+  revalidatePath("/team");
+}

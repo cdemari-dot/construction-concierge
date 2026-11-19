@@ -378,3 +378,19 @@ export interface Bid {
   last_follow_up_at: string | null;
   submitted_at: string | null;
 }
+
+export interface SiteVisit {
+  id: string;
+  company_id: string;
+  bid_id: string | null;
+  job_id: string | null;
+  title: string;
+  address: string | null;
+  visit_on: string;
+  start_time: string | null;
+  assigned_to: string | null;
+  notes: string | null;
+  status: "scheduled" | "done" | "cancelled";
+  created_by: string | null;
+  created_at: string;
+}

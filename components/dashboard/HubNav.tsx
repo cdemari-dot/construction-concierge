@@ -9,6 +9,7 @@ const NAV = [
   { href: "/crm", label: "CRM" },
   { href: "/clients", label: "Clients" },
   { href: "/schedule", label: "Schedule" },
+  { href: "/visits", label: "Site visits" },
   { href: "/field", label: "Field app" },
   { href: "/toolbox", label: "Toolbox Talks" },
   { href: "/field-reports", label: "Field Reports" },

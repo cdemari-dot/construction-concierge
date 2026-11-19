@@ -143,3 +143,13 @@ export async function sendFollowUpNow(id: string) {
   await sendBidFollowUp(supabase, bid as Bid, { company: company?.name ?? "Our team", senderName: name, replyTo: auth.user?.email ?? undefined, kind: "manual" });
   revalidatePath("/crm");
 }
+
+// Permanently removes a bid (and its follow-up history). Visits linked to it are kept, unlinked.
+export async function deleteBid(id: string) {
+  await requireRole(["owner", "pm"]);
+  const supabase = await createClient();
+  const { error } = await supabase.from("bids").delete().eq("id", id);
+  if (error) throw new Error(error.message);
+  revalidatePath("/crm");
+  revalidatePath("/dashboard");
+}

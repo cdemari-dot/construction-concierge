@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { addCrewMember, changeWorkerPin, deactivateCrewMember, inviteTeamMember, setPayRate } from "@/app/(owner)/team/actions";
+import { addCrewMember, cancelInvite, changeWorkerPin, deactivateCrewMember, inviteTeamMember, setPayRate } from "@/app/(owner)/team/actions";
 import type { Profile } from "@/lib/types/database";
 
 const inputStyle: React.CSSProperties = {
@@ -191,6 +191,26 @@ export function CrewRow({ profile, isSelf, rate }: { profile: Profile; isSelf: b
               New PIN
             </button>
           </>
+        )}
+        {profile.email && !profile.auth_user_id && !isSelf && (
+          <button
+            className="cc-btn ghost sm"
+            disabled={pending}
+            onClick={() => {
+              if (!window.confirm(`Cancel the invite for ${profile.email}? They won't be able to sign up.`)) return;
+              startTransition(async () => {
+                setError(null);
+                try {
+                  await cancelInvite(profile.id);
+                } catch (e) {
+                  setError(e instanceof Error ? e.message : "Failed");
+                }
+              });
+            }}
+            type="button"
+          >
+            Cancel invite
+          </button>
         )}
         {profile.status === "active" && !isSelf && (
           <button

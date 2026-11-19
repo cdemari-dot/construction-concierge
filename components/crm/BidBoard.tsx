@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useState, useTransition } from "react";
-import { createJobFromBid, moveBid, sendFollowUpNow, setAutoFollowUp, setBidEmail, setBidFollowUp, updateBidValue } from "@/app/(owner)/crm/actions";
+import { createJobFromBid, deleteBid, moveBid, sendFollowUpNow, setAutoFollowUp, setBidEmail, setBidFollowUp, updateBidValue } from "@/app/(owner)/crm/actions";
 import { FOLLOW_UP_DAYS, nextFollowUpInDays } from "@/lib/crm/followup";
 import { fmt } from "@/lib/format";
 import { todayToronto } from "@/lib/today";
@@ -239,6 +239,21 @@ function BidCardView({
             </button>
           </div>
         ))}
+
+      <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+        <Link href={`/visits?bid=${bid.id}`} className="cc-btn ghost sm">
+          Schedule site visit
+        </Link>
+        <button
+          className="cc-btn ghost sm"
+          type="button"
+          onClick={() => {
+            if (window.confirm(`Delete the bid "${bid.name}"? This can't be undone. (To keep it for your records, move it to Lost instead.)`)) run(() => deleteBid(bid.id));
+          }}
+        >
+          Delete bid
+        </button>
+      </div>
 
       <select
         value={bid.stage}
