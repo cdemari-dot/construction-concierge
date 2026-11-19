@@ -7,17 +7,11 @@ import { isSupabaseConfigured } from "@/lib/supabase/env";
 import { AuthShell, AuthField } from "@/components/site/AuthShell";
 import { SetupBanner } from "@/components/ui/SetupBanner";
 
-type Mode = "sign-in" | "new-company";
-
 export default function LoginPage() {
   const router = useRouter();
-  const [mode, setMode] = useState<Mode>("sign-in");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [companyName, setCompanyName] = useState("");
-  const [fullName, setFullName] = useState("");
   const [error, setError] = useState<string | null>(null);
-  const [notice, setNotice] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
   async function handleSignIn(e: React.FormEvent) {
@@ -35,46 +29,11 @@ export default function LoginPage() {
     router.refresh();
   }
 
-  async function handleNewCompany(e: React.FormEvent) {
-    e.preventDefault();
-    setError(null);
-    setBusy(true);
-    const supabase = createClient();
-
-    const { data: signUpData, error: signUpError } = await supabase.auth.signUp({ email, password });
-    if (signUpError) {
-      setBusy(false);
-      setError(signUpError.message);
-      return;
-    }
-
-    if (!signUpData.session) {
-      // Email confirmation is required before create_company_and_owner can
-      // run (it needs an authenticated session).
-      setBusy(false);
-      setNotice("Check your email to confirm your account, then sign in to finish setting up your company.");
-      setMode("sign-in");
-      return;
-    }
-
-    const { error: rpcError } = await supabase.rpc("create_company_and_owner", {
-      company_name: companyName,
-      owner_full_name: fullName,
-    });
-    setBusy(false);
-    if (rpcError) {
-      setError(rpcError.message);
-      return;
-    }
-    router.push("/");
-    router.refresh();
-  }
-
   return (
     <AuthShell
-      tag={mode === "sign-in" ? "Welcome back" : "Get started"}
-      title={mode === "sign-in" ? "Log in." : "Start your company."}
-      lede={mode === "sign-in" ? "Your jobs, crew and cash, live." : "Create your owner account and set up your company in minutes."}
+      tag="Welcome back"
+      title="Log in."
+      lede="Your jobs, crew and cash, live. Access is by invitation only."
       foot={
         <>
           Jobsite iPad? <a href="/accept-invite?kiosk=1" style={{ fontWeight: 700, textDecoration: "underline" }}>Set up its 6-digit login code</a>, then sign in here with the iPad&apos;s email and that code. Worker PINs (4 digits) are only for the punch pad.
@@ -83,29 +42,13 @@ export default function LoginPage() {
     >
       {!isSupabaseConfigured && <SetupBanner />}
 
-      <div className="auth-seg" role="tablist" aria-label="Sign in or create a company">
-        <button className={mode === "sign-in" ? "on" : ""} onClick={() => setMode("sign-in")} type="button" role="tab" aria-selected={mode === "sign-in"}>
-          Sign in
-        </button>
-        <button className={mode === "new-company" ? "on" : ""} onClick={() => setMode("new-company")} type="button" role="tab" aria-selected={mode === "new-company"}>
-          Start a new company
-        </button>
-      </div>
-
-      {notice && <div className="auth-ok">{notice}</div>}
       {error && <div className="auth-err">{error}</div>}
 
-      <form className="auth-form" onSubmit={mode === "sign-in" ? handleSignIn : handleNewCompany}>
-        {mode === "new-company" && (
-          <>
-            <AuthField label="Your name" value={fullName} onChange={setFullName} required autoComplete="name" />
-            <AuthField label="Company name" value={companyName} onChange={setCompanyName} required autoComplete="organization" />
-          </>
-        )}
+      <form className="auth-form" onSubmit={handleSignIn}>
         <AuthField label="Email" type="email" value={email} onChange={setEmail} required autoComplete="email" />
-        <AuthField label="Password" type="password" value={password} onChange={setPassword} required minLength={6} autoComplete={mode === "sign-in" ? "current-password" : "new-password"} />
+        <AuthField label="Password" type="password" value={password} onChange={setPassword} required minLength={6} autoComplete="current-password" />
         <button className="site-btn primary lg" type="submit" disabled={busy || !isSupabaseConfigured}>
-          {busy ? "Working…" : mode === "sign-in" ? "Sign in" : "Create company"}
+          {busy ? "Working…" : "Sign in"}
         </button>
       </form>
     </AuthShell>

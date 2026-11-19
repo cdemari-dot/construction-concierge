@@ -42,7 +42,7 @@ function AcceptInvite() {
     const { data, error } = await supabase.auth.signUp({ email, password: pw });
     setBusy(false);
     if (error) {
-      setError(error.message);
+      setError(/database error|invitation only/i.test(error.message) ? "No invite was found for that email. Use the exact email you were invited with, or ask your owner to invite you." : error.message);
       return;
     }
     if (kiosk) {
