@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { StatCard } from "@/components/ui/StatCard";
 import { Tag } from "@/components/ui/Tag";
+import { AccessButtons } from "@/components/dashboard/AccessButtons";
 
 export const dynamic = "force-dynamic";
 
@@ -15,6 +16,9 @@ interface Login {
   company: string | null;
 }
 interface Company {
+  id: string;
+  access_status: "active" | "paused" | "cancelled";
+  is_mine: boolean;
   name: string;
   created_at: string;
   people: number;
@@ -77,7 +81,7 @@ export default async function AdminPage() {
         <h3 style={h3}>Companies</h3>
         <table style={{ width: "100%", fontSize: 13, borderCollapse: "collapse" }}>
           <thead>
-            <tr><th style={th}>Company</th><th style={th}>Created</th><th style={th}>People</th><th style={th}>Logins</th><th style={th}>Jobs</th><th style={th}>Punches (7d)</th><th style={th}>Last punch</th></tr>
+            <tr><th style={th}>Company</th><th style={th}>Created</th><th style={th}>People</th><th style={th}>Logins</th><th style={th}>Jobs</th><th style={th}>Punches (7d)</th><th style={th}>Last punch</th><th style={th}>Access</th></tr>
           </thead>
           <tbody>
             {companies.map((c) => (
@@ -89,6 +93,12 @@ export default async function AdminPage() {
                 <td style={td}>{c.jobs}</td>
                 <td style={td}>{c.punches_7d}</td>
                 <td style={td}>{when(c.last_punch)}</td>
+                <td style={td}>
+                  <div style={{ marginBottom: 6 }}>
+                    <Tag color={c.access_status === "active" ? "lime" : c.access_status === "paused" ? "amber" : "red"}>{c.access_status}</Tag>
+                  </div>
+                  <AccessButtons companyId={c.id} name={c.name} status={c.access_status} isMine={c.is_mine} />
+                </td>
               </tr>
             ))}
           </tbody>

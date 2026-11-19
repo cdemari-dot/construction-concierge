@@ -55,6 +55,11 @@ export async function proxy(request: NextRequest) {
   // whatever page sent them to /login.
   if (pathname === "/onboarding") return response;
 
+  // A paused or cancelled company is locked out (the database also hides its data from them).
+  if (pathname === "/suspended") return response;
+  const { data: access } = await supabase.rpc("my_access_status");
+  if (access === "paused" || access === "cancelled") return redirectTo(request, "/suspended");
+
   const { data: profile } = await supabase.from("profiles").select("role").eq("auth_user_id", user.id).maybeSingle();
 
   if (!profile) return redirectTo(request, "/onboarding");
