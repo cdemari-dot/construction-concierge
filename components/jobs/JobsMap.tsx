@@ -261,7 +261,7 @@ export function JobsMap({ jobs: jobsIn }: { jobs: JobCard[] }) {
 
               <div style={{ marginTop: 10 }}>
                 <Link href={`/jobs/${j.id}`} className="cc-btn ghost sm" onClick={(e) => e.stopPropagation()}>
-                  Open job
+                  Open job / set hours &amp; bin budget
                 </Link>
               </div>
             </div>
