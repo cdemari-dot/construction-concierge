@@ -75,3 +75,24 @@ export async function setJobPm(jobId: string, pmId: string | null) {
   if (error) throw new Error(error.message);
   revalidatePath(`/jobs/${jobId}`);
 }
+
+export async function saveJobBudget(
+  jobId: string,
+  v: { budget_hours: number | null; hours_pct: number; budget_bins: number | null; bins_pct: number },
+) {
+  const user = await getCurrentUser();
+  if (!user) throw new Error("Not signed in");
+  if (user.profile.role !== "owner" && user.profile.role !== "pm") throw new Error("Only the owner or PM can set budgets");
+  const supabase = await createClient();
+  const { error } = await supabase.from("job_budgets").upsert({
+    job_id: jobId,
+    company_id: user.profile.company_id,
+    budget_hours: v.budget_hours,
+    hours_pct: Math.min(200, Math.max(1, v.hours_pct)),
+    budget_bins: v.budget_bins,
+    bins_pct: Math.min(200, Math.max(1, v.bins_pct)),
+    updated_at: new Date().toISOString(),
+  });
+  if (error) throw new Error(error.message);
+  revalidatePath(`/jobs/${jobId}`);
+}

@@ -11,6 +11,7 @@ import { PhotoStep } from "./PhotoStep";
 import { PpeStep } from "./PpeStep";
 import { ToolboxTalkStep } from "./ToolboxTalkStep";
 import { ForemanBoard } from "./ForemanBoard";
+import { AllocationCard } from "@/components/field/AllocationCard";
 import { TmTicketForm } from "@/components/field/TmTicketForm";
 import { DailyLogForm } from "@/components/field/DailyLogForm";
 import { IncidentForm } from "@/components/field/IncidentForm";
@@ -303,6 +304,9 @@ export function KioskApp({ job, toolboxTalk }: { job: KioskJob; toolboxTalk: Kio
       {step === "menu" && worker && (
         <div style={{ display: "grid", gap: 12, textAlign: "center" }}>
           <div className="display" style={{ fontSize: 26 }}>Hi {worker.full_name.split(" ")[0]}</div>
+          <div style={{ textAlign: "left" }}>
+            <AllocationCard supabase={supabase} jobId={job.id} />
+          </div>
           <button className="cc-btn lime" type="button" style={{ height: 64, fontSize: 19 }} onClick={() => beginPunch(worker)} disabled={busy}>
             Clock in / out
           </button>

@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import type { FieldWeek, SiteDay } from "@/lib/fieldWeek";
 import { fetchJobWeather, type JobWeather } from "@/lib/weather";
 import { Icon } from "./Icon";
+import { AllocationCard } from "./AllocationCard";
+import { createClient } from "@/lib/supabase/client";
 
 const chip = (kind: "ok" | "warn" | "mute" | "bad"): React.CSSProperties => ({
   fontSize: 11,
@@ -33,6 +35,7 @@ export function TodayView({ firstName, week, onOpenSite, onGo }: { firstName: st
   const [di, setDi] = useState(todayIdx);
   const [si, setSi] = useState(0);
   const [wx, setWx] = useState<JobWeather | null>(null);
+  const [sb] = useState(() => createClient());
 
   const day = week.days[di];
   const isToday = day.date === week.today;
@@ -127,6 +130,8 @@ export function TodayView({ firstName, week, onOpenSite, onGo }: { firstName: st
           </button>
         );
       })}
+
+      {site && <AllocationCard key={`alloc${site.jobId}`} supabase={sb} jobId={site.jobId} />}
 
       {site && (
         <div className="cc-card cc-in" key={`${day.date}${site.jobId}`}>

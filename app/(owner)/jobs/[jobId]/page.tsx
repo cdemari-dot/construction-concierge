@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { StatCard } from "@/components/ui/StatCard";
 import { Tag } from "@/components/ui/Tag";
 import { fmt } from "@/lib/format";
+import { JobBudgetForm } from "@/components/jobs/JobBudgetForm";
 import { JobPmSelect } from "@/components/jobs/JobPmSelect";
 import type { ChangeOrder, Job, JobFinancialSummary, Profile } from "@/lib/types/database";
 
@@ -10,11 +11,13 @@ export default async function JobDetailPage({ params }: { params: Promise<{ jobI
   const { jobId } = await params;
   const supabase = await createClient();
 
-  const [{ data: job }, { data: summary }, { data: changeOrders }, { data: pms }] = await Promise.all([
+  const [{ data: job }, { data: summary }, { data: changeOrders }, { data: pms }, { data: budget }, { data: alloc }] = await Promise.all([
     supabase.from("jobs").select("*").eq("id", jobId).maybeSingle(),
     supabase.from("job_financial_summary").select("*").eq("job_id", jobId).maybeSingle(),
     supabase.from("change_orders").select("*").eq("job_id", jobId).order("created_at", { ascending: false }),
     supabase.from("profiles").select("*").in("role", ["pm", "owner"]).eq("status", "active"),
+    supabase.from("job_budgets").select("*").eq("job_id", jobId).maybeSingle(),
+    supabase.rpc("job_allocation", { p_job: jobId }),
   ]);
   const pmOptions = ((pms ?? []) as Profile[]).filter((p) => p.email).map((p) => ({ id: p.id, label: `${p.full_name} (${p.email})` }));
 
@@ -40,6 +43,13 @@ export default async function JobDetailPage({ params }: { params: Promise<{ jobI
       </div>
 
       <JobPmSelect jobId={j.id} current={j.pm_id} options={pmOptions} />
+
+      <JobBudgetForm
+        jobId={j.id}
+        initial={{ budget_hours: budget?.budget_hours ?? null, hours_pct: budget?.hours_pct ?? 100, budget_bins: budget?.budget_bins ?? null, bins_pct: budget?.bins_pct ?? 100 }}
+        hoursUsed={(alloc as { hours_used?: number } | null)?.hours_used ?? 0}
+        binsUsed={(alloc as { bins_used?: number } | null)?.bins_used ?? 0}
+      />
 
       <section className="cc-card">
         <h3 style={{ fontSize: 11.5, letterSpacing: 1.6, textTransform: "uppercase", color: "var(--mute)", marginBottom: 12 }}>
