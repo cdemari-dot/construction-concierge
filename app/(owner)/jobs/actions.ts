@@ -72,7 +72,12 @@ export async function setJobPm(jobId: string, pmId: string | null) {
   if (!user) throw new Error("Not signed in");
   const supabase = await createClient();
   const { error } = await supabase.from("jobs").update({ pm_id: pmId || null }).eq("id", jobId);
-  if (error) throw new Error(error.message);
+  if (error) {
+    if (/job_budgets|schema cache|does not exist/i.test(error.message)) {
+      throw new Error("Budgets aren't set up yet: run migration 0024_job_budgets.sql in the Supabase SQL editor, then try again.");
+    }
+    throw new Error(error.message);
+  }
   revalidatePath(`/jobs/${jobId}`);
 }
 
@@ -93,6 +98,11 @@ export async function saveJobBudget(
     bins_pct: Math.min(200, Math.max(1, v.bins_pct)),
     updated_at: new Date().toISOString(),
   });
-  if (error) throw new Error(error.message);
+  if (error) {
+    if (/job_budgets|schema cache|does not exist/i.test(error.message)) {
+      throw new Error("Budgets aren't set up yet: run migration 0024_job_budgets.sql in the Supabase SQL editor, then try again.");
+    }
+    throw new Error(error.message);
+  }
   revalidatePath(`/jobs/${jobId}`);
 }
