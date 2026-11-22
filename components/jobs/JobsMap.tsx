@@ -50,6 +50,8 @@ export function JobsMap({ jobs: jobsIn }: { jobs: JobCard[] }) {
 
   const located = jobs.filter((j) => j.lat != null && j.lon != null);
   const selectedJob = jobs.find((j) => j.id === selected) ?? null;
+  // Framing only depends on where jobs are, so a punch (onSite change) no longer snaps the map back mid-pan.
+  const frameKey = located.map((j) => `${j.id}:${j.lat}:${j.lon}`).join("|");
   const key = located.map((j) => `${j.id}:${j.lat}:${j.lon}:${j.status}:${j.onSite}`).join("|");
 
   // Build the map once (client only, lazy-loaded). Street tiles follow the light/dark setting.
@@ -127,7 +129,7 @@ export function JobsMap({ jobs: jobsIn }: { jobs: JobCard[] }) {
       map.fitBounds(L.latLngBounds(pts), { padding: [44, 44], maxZoom: 13, animate: !reduce });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [ready, key, selected]);
+  }, [ready, frameKey, selected]);
 
   return (
     <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: 16, alignItems: "start" }}>
