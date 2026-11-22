@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { addCrewMember, cancelInvite, changeWorkerPin, deactivateCrewMember, inviteTeamMember, setPayRate } from "@/app/(owner)/team/actions";
+import { addCrewMember, cancelInvite, changeWorkerPin, resetKioskCode, deactivateCrewMember, inviteTeamMember, setPayRate } from "@/app/(owner)/team/actions";
 import type { Profile } from "@/lib/types/database";
 
 const inputStyle: React.CSSProperties = {
@@ -169,6 +169,29 @@ export function CrewRow({ profile, isSelf, rate }: { profile: Profile; isSelf: b
               {rateSaved ? "Saved" : "Set rate"}
             </button>
           </span>
+        )}
+        {profile.role === "kiosk" && profile.auth_user_id && (
+          <>
+            {newPin && <b style={{ fontSize: 15 }}>New login code: {newPin}</b>}
+            <button
+              className="cc-btn ghost sm"
+              disabled={pending}
+              onClick={() => {
+                if (!window.confirm("Make a new 6-digit login code for this kiosk? The old code stops working.")) return;
+                startTransition(async () => {
+                  setError(null);
+                  try {
+                    setNewPin(await resetKioskCode(profile.id));
+                  } catch (e) {
+                    setError(e instanceof Error ? e.message : "Failed");
+                  }
+                });
+              }}
+              type="button"
+            >
+              New login code
+            </button>
+          </>
         )}
         {!hasLogin && (
           <>

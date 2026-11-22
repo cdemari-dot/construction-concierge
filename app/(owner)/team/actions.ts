@@ -90,6 +90,18 @@ export async function changeWorkerPin(profileId: string): Promise<string> {
   return pin;
 }
 
+export async function resetKioskCode(profileId: string): Promise<string> {
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc("reset_kiosk_code", { p_profile_id: profileId });
+  if (error) {
+    if (/reset_kiosk_code|schema cache/i.test(error.message)) {
+      throw new Error("Not set up yet: run migration 0025_reset_kiosk_code.sql in the Supabase SQL editor.");
+    }
+    throw new Error(error.message);
+  }
+  return String(data);
+}
+
 export async function deactivateCrewMember(profileId: string) {
   const supabase = await createClient();
   const { error } = await supabase.from("profiles").update({ status: "inactive" }).eq("id", profileId);
